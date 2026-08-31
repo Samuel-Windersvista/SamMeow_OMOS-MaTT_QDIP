@@ -1,0 +1,54 @@
+{
+  "packageName": "qdip-generic",
+  "version": "0.1.0",
+  "components": [
+    {
+      "name": "node-runtime",
+      "type": "dir",
+      "source": "tools/cache/node-v24.14.1-win-x64",
+      "target": "runtime/node",
+      "version": "24.14.1",
+      "required": true
+    },
+    {
+      "name": "opencode-cli",
+      "type": "dir",
+      "source": "tools/cache/opencode-1.18.25",
+      "target": "opencode/bin",
+      "version": "1.18.25",
+      "required": true
+    },
+    {
+      "name": "omoslim",
+      "type": "dir",
+      "source": "E:/云文件/GitHub/oh-my-opencode-slim/dist",
+      "target": "plugins/oh-my-opencode-slim",
+      "version": "2.2.17+patch-kit",
+      "required": true
+    },
+    {
+      "name": "omoslim-append",
+      "type": "dir",
+      "source": "C:/Users/Winde/.config/opencode/oh-my-opencode-slim",
+      "target": "plugins/oh-my-opencode-slim/custom",
+      "version": "latest",
+      "required": true
+    },
+    {
+      "name": "superpowers",
+      "type": "dir",
+      "source": "C:/Users/Winde/.config/opencode/node_modules/superpowers",
+      "target": "plugins/superpowers",
+      "version": "6.3.0",
+      "required": true
+    },
+    {
+      "name": "matt-skills",
+      "type": "dir",
+      "source": "C:/Users/Winde/.config/opencode/skills",
+      "target": "opencode/skills",
+      "version": "2026-08-24",
+      "required": true
+    }
+  ]
+}
