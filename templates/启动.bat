@@ -1,21 +1,20 @@
 @echo off
-chcp 65001 >nul
 setlocal EnableExtensions
-title SamMeow AI å·¥ä½œå°
+title SamMeow AI ¹¤×÷Ì¨
 cd /d "%~dp0"
 
-rem --- ç¯å¢ƒæ³¨å…¥ï¼šä¾¿æº Node + opencode CLI + é…ç½®éš”ç¦» ---
+rem --- »·¾³×¢Èë£º±ãĞ¯ Node + opencode CLI + ÅäÖÃ¸ôÀë ---
 set "ROOT=%~dp0"
 set "PATH=%ROOT%runtime\node;%ROOT%opencode\bin;%PATH%"
 set "XDG_DATA_HOME=%ROOT%opencode\auth"
 set "XDG_CONFIG_HOME=%ROOT%opencode\config"
-rem ROOTSï¼šROOT å»å°¾åæ–œæ ï¼ˆcmd ä¼šæŠŠ \" è§£é‡Šä¸ºè½¬ä¹‰å¼•å·ï¼Œä¼ ç»™å¼•å¯¼æœåŠ¡ä¼šå¸¦è„å­—ç¬¦ï¼‰
+rem ROOTS£ºROOT È¥Î²·´Ğ±¸Ü£¨cmd »á°Ñ \" ½âÊÍÎª×ªÒåÒıºÅ£¬´«¸øÒıµ¼·şÎñ»á´øÔà×Ö·û£©
 set "ROOTS=%ROOT:~0,-1%"
 
-rem --- è‡ªæ£€æ¨¡å¼ï¼šéªŒè¯è·¯å¾„ä¸ç‰ˆæœ¬ ---
+rem --- ×Ô¼ìÄ£Ê½£ºÑéÖ¤Â·¾¶Óë°æ±¾ ---
 if /i "%~1"=="--check" goto :check
 
-rem --- é¦–æ¬¡è¿è¡Œå¼•å¯¼ ---
+rem --- Ê×´ÎÔËĞĞÒıµ¼ ---
 if not exist "%ROOT%data\.configured" goto :guide
 goto :run
 
@@ -30,7 +29,7 @@ exit /b 0
 if not exist "%ROOT%data" mkdir "%ROOT%data"
 del /q "%ROOT%data\.guide-url" 2>nul
 start "QDIP-Guide" /min "%ROOT%runtime\node\node.exe" "%ROOT%setup\guide-server.js" "%ROOTS%"
-rem ç­‰å¾…å¼•å¯¼æœåŠ¡å†™å…¥ .guide-urlï¼ˆæœ€å¤š 15 ç§’ï¼‰
+rem µÈ´ıÒıµ¼·şÎñĞ´Èë .guide-url£¨×î¶à 15 Ãë£©
 set /a tries=0
 :waitguide
 if not exist "%ROOT%data\.guide-url" (
@@ -41,13 +40,14 @@ if not exist "%ROOT%data\.guide-url" (
 )
 set /p GUIDE_URL=<"%ROOT%data\.guide-url"
 start "" "%GUIDE_URL%"
-echo é¦–æ¬¡ä½¿ç”¨ï¼šè¯·åœ¨æµè§ˆå™¨ä¸­å®Œæˆæ¨¡å‹é…ç½®ï¼Œå®Œæˆåé‡æ–°åŒå‡»æœ¬æ–‡ä»¶å¯åŠ¨ã€‚
+echo Ê×´ÎÊ¹ÓÃ£ºÇëÔÚä¯ÀÀÆ÷ÖĞÍê³ÉÄ£ĞÍÅäÖÃ£¬Íê³ÉºóÖØĞÂË«»÷±¾ÎÄ¼şÆô¶¯¡£
 exit /b 0
 :guidefail
-echo [FAIL] å¼•å¯¼æœåŠ¡å¯åŠ¨å¤±è´¥ã€‚è¯·æˆªå›¾æœ¬çª—å£åé¦ˆã€‚
+echo [FAIL] Òıµ¼·şÎñÆô¶¯Ê§°Ü¡£Çë½ØÍ¼±¾´°¿Ú·´À¡¡£
 pause
 exit /b 1
 
 :run
 opencode %*
 exit /b %errorlevel%
+
