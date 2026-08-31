@@ -18,7 +18,7 @@ function makeRoot() {
 test('configure writes auth.json in measured opencode format (type + key)', () => {
   const root = makeRoot();
   configure({ root, providers: { deepseek: { apiKey: 'sk-test-123' } } });
-  const auth = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'auth', 'auth.json'), 'utf8'));
+  const auth = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'auth', 'opencode', 'auth.json'), 'utf8'));
   assert.strictEqual(auth.deepseek.type, 'api');
   assert.strictEqual(auth.deepseek.key, 'sk-test-123');
 });
