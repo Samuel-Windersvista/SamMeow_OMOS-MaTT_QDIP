@@ -1,0 +1,86 @@
+{
+  "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
+  "preset": "superpowers-bridge",
+  "showStartupToast": false,
+  "council": {
+    "presets": {
+      "default": {
+        "alpha": { "model": "deepseek/deepseek-v4-pro" },
+        "beta":  { "model": "deepseek/deepseek-v4-flash" },
+        "gamma": { "model": "kimi-for-coding/k3" }
+      },
+      "synthesizer": {
+        "alpha": { "model": "deepseek/deepseek-v4-pro" },
+        "beta":  { "model": "deepseek/deepseek-v4-flash" },
+        "gamma": { "model": "kimi-for-coding/k3" }
+      }
+    },
+    "default_preset": "synthesizer",
+    "councillor_execution_mode": "parallel",
+    "councillor_retries": 2
+  },
+  "presets": {
+    "superpowers-bridge": {
+      "orchestrator": {
+        "model": "deepseek/deepseek-v4-pro",
+        "variant": "max",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-beta": {
+        "model": "kimi-for-coding/k3",
+        "variant": "medium",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-gamma": {
+        "model": "deepseek/deepseek-v4-flash",
+        "variant": "max",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "oracle": {
+        "model": "kimi-for-coding/k3",
+        "variant": "high",
+        "skills": ["simplify"],
+        "mcps": []
+      },
+      "fixer": {
+        "model": "deepseek/deepseek-v4-flash",
+        "variant": "high",
+        "skills": [],
+        "mcps": []
+      },
+      "designer": {
+        "model": "kimi-for-coding/k3",
+        "variant": "medium",
+        "skills": ["agent-browser"],
+        "mcps": []
+      },
+      "explorer": {
+        "model": "deepseek/deepseek-v4-flash",
+        "variant": "medium",
+        "skills": [],
+        "mcps": []
+      },
+      "librarian": {
+        "model": "deepseek/deepseek-v4-flash",
+        "variant": "medium",
+        "skills": [],
+        "mcps": ["websearch", "context7", "grep_app"]
+      },
+      "observer": {
+        "model": "kimi-for-coding/k3",
+        "variant": "medium",
+        "skills": [],
+        "mcps": []
+      },
+      "council": {
+        "model": "kimi-for-coding/k3",
+        "variant": "max",
+        "skills": [],
+        "mcps": []
+      }
+    }
+  }
+}
