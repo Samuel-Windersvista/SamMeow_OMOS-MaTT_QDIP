@@ -38,6 +38,7 @@ New-Item -ItemType Directory -Path "$outDir\opencode\config" -Force | Out-Null
 Copy-Item "$templates\opencode.json" "$outDir\opencode\config\opencode.json" -Force
 Copy-Item "$templates\oh-my-opencode-slim.json" "$outDir\opencode\config\oh-my-opencode-slim.json" -Force
 New-Item -ItemType Directory -Path "$outDir\opencode\auth" -Force | Out-Null
+Copy-Item "$templates\验证清单.md" "$outDir\验证清单.md" -Force
 New-Item -ItemType Directory -Path "$outDir\data" -Force | Out-Null
 New-Item -ItemType File -Path "$outDir\data\.gitkeep" -Force | Out-Null
 
