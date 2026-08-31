@@ -16,7 +16,7 @@ const PROVIDERS = {
 
 function rootOf(root) {
   return {
-    configDir: path.join(root, 'opencode', 'config'),
+    configDir: path.join(root, 'opencode', 'config', 'opencode'),
     authFile: path.join(root, 'opencode', 'auth', 'opencode', 'auth.json'),
     configured: path.join(root, 'data', '.configured'),
   };

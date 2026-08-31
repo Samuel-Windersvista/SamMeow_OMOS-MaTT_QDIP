@@ -34,14 +34,21 @@ if (Test-Path "$templates\更新组件.bat") {
 }
 New-Item -ItemType Directory -Path "$outDir\setup" -Force | Out-Null
 Copy-Item "$templates\setup\*" "$outDir\setup" -Recurse -Force
-New-Item -ItemType Directory -Path "$outDir\opencode\config" -Force | Out-Null
-Copy-Item "$templates\opencode.json" "$outDir\opencode\config\opencode.json" -Force
-Copy-Item "$templates\oh-my-opencode-slim.json" "$outDir\opencode\config\oh-my-opencode-slim.json" -Force
+# opencode 在 XDG_CONFIG_HOME 下自动追加 opencode 段，实际读 $XDG_CONFIG_HOME\opencode\
+New-Item -ItemType Directory -Path "$outDir\opencode\config\opencode" -Force | Out-Null
+Copy-Item "$templates\opencode.json" "$outDir\opencode\config\opencode\opencode.json" -Force
+Copy-Item "$templates\oh-my-opencode-slim.json" "$outDir\opencode\config\opencode\oh-my-opencode-slim.json" -Force
+# 玩家本地修改区（spec 4.1）：与 opencode 实际读取的配置同目录
+New-Item -ItemType Directory -Path "$outDir\opencode\config\opencode\local" -Force | Out-Null
+$localNote = "玩家本地修改区`r`n`r`n把你想手动覆盖的配置放到本目录（例如自定义的 opencode.json 片段、额外指令文件）。`r`n主配置在上一级：opencode.json 与 oh-my-opencode-slim.json。`r`n更新整合包时保留本目录可保留你的自定义配置。"
+[System.IO.File]::WriteAllText("$outDir\opencode\config\opencode\local\说明.txt", $localNote, (New-Object System.Text.UTF8Encoding($false)))
 New-Item -ItemType Directory -Path "$outDir\opencode\auth" -Force | Out-Null
 Copy-Item "$templates\验证清单.md" "$outDir\验证清单.md" -Force
 Copy-Item "$templates\玩家使用指南.md" "$outDir\玩家使用指南.md" -Force
 New-Item -ItemType Directory -Path "$outDir\data" -Force | Out-Null
 New-Item -ItemType File -Path "$outDir\data\.gitkeep" -Force | Out-Null
+# F5: superpowers 组件夹带 .github 目录，分发时剔除
+Remove-Item "$outDir\plugins\superpowers\.github" -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "[4/5] 校验"
 & "$PSScriptRoot\check-sources.ps1" -ComponentsFile $ComponentsFile
