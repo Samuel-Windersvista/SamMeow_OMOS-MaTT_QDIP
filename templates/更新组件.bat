@@ -14,21 +14,29 @@ echo.
 
 rem --- 1. 更新 opencode（npm 官方源） ---
 echo [1/2] 更新 opencode ...
-call npm install -g opencode-ai@latest --prefix "%ROOT%opencode" --no-save 2>nul
+set "OC_UPDATE=%TEMP%\qdip-oc-update"
+if exist "%OC_UPDATE%" rd /s /q "%OC_UPDATE%"
+call npm install --prefix "%OC_UPDATE%" opencode-ai@latest --no-save 2>nul
 if errorlevel 1 goto :ocfail
+if not exist "%OC_UPDATE%\node_modules\opencode-ai\bin\opencode.exe" goto :ocfail
+copy /y "%OC_UPDATE%\node_modules\opencode-ai\bin\opencode.exe" "%ROOT%opencode\bin\opencode.exe" >nul
+if errorlevel 1 goto :ocfail
+rd /s /q "%OC_UPDATE%" 2>nul
 echo   [OK] opencode 已更新
 goto :step2
 :ocfail
+rd /s /q "%OC_UPDATE%" 2>nul
 echo   [FAIL] opencode 更新失败（网络问题？）。已保留原版本。
+echo         提示：也可到发布页下载新版整合包 zip 解压覆盖。
 
 :step2
 rem --- 2. 更新 superpowers ---
 echo [2/2] 更新 superpowers ...
 if not exist "%ROOT%plugins\superpowers\package.json" goto :spmissing
 pushd "%ROOT%plugins\superpowers"
-call npm update superpowers --prefix "%ROOT%plugins" --no-save 2>nul
+call npm update --no-save 2>nul
 popd
-echo   [OK] superpowers 已更新
+echo   [OK] superpowers 依赖已更新
 goto :done
 :spmissing
 echo   [SKIP] superpowers 组件缺失，跳过
