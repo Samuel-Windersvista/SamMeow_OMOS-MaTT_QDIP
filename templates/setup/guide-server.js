@@ -1,7 +1,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { configure, testConnection, PROVIDERS } = require('./config-writer');
+const { configure, testConnection, PROVIDERS, AVAILABLE_MODELS } = require('./config-writer');
 
 // 根路径来自 argv[2]（Task 3 启动器传入，无尾反斜杠形态）
 const root = path.resolve(process.argv[2] || '.');
@@ -15,14 +15,14 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/api/status') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ ok: true, providers: PROVIDERS, configured: fs.existsSync(path.join(dataDir, '.configured')) }));
+      res.end(JSON.stringify({ ok: true, providers: PROVIDERS, models: AVAILABLE_MODELS, configured: fs.existsSync(path.join(dataDir, '.configured')) }));
       return;
     }
     if (url.pathname === '/api/configure' && req.method === 'POST') {
       let body = '';
       for await (const chunk of req) body += chunk;
-      const { providers } = JSON.parse(body);
-      configure({ root, providers });
+      const { providers, persona, personaText, agentModels } = JSON.parse(body);
+      configure({ root, providers, persona, personaText, agentModels });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
       return;
