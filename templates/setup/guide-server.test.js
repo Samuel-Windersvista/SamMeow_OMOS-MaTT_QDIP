@@ -94,7 +94,7 @@ test('GET /api/status includes models list for the UI', async () => {
     assert.ok(Array.isArray(body.models.deepseek));
     assert.ok(Array.isArray(body.models.moonshot));
     assert.ok(Array.isArray(body.models.openai));
-    assert.ok(body.models.deepseek.includes('deepseek-chat'));
+    assert.ok(body.models.deepseek.includes('deepseek-v4-flash'));
   } finally {
     proc.kill();
   }
@@ -111,7 +111,7 @@ test('POST /api/configure with persona and agentModels writes persona and agent 
       body: JSON.stringify({
         providers: { deepseek: { apiKey: 'sk-fake-e2e' } },
         persona: 'vaulttec',
-        agentModels: { orchestrator: 'deepseek/deepseek-chat', 'council-beta': 'openai/gpt-4o' },
+        agentModels: { orchestrator: 'deepseek/deepseek-v4-flash', 'council-beta': 'openai/gpt-4o' },
       }),
     });
     assert.strictEqual(res.status, 200);
@@ -123,7 +123,7 @@ test('POST /api/configure with persona and agentModels writes persona and agent 
     const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'), 'utf8'));
     assert.ok(cfg.instructions.includes('opencode/config/opencode/instructions/persona.md'));
     const slim = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'oh-my-opencode-slim.json'), 'utf8'));
-    assert.strictEqual(slim.presets['superpowers-bridge'].orchestrator.model, 'deepseek/deepseek-chat');
+    assert.strictEqual(slim.presets['superpowers-bridge'].orchestrator.model, 'deepseek/deepseek-v4-flash');
     assert.strictEqual(slim.council.presets.default.beta.model, 'openai/gpt-4o');
     assert.strictEqual(slim.council.presets.synthesizer.beta.model, 'openai/gpt-4o');
     assert.strictEqual(slim.presets['superpowers-bridge'].fixer.model, 'deepseek/deepseek-v4-flash');

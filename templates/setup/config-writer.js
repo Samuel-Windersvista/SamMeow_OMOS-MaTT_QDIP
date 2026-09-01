@@ -9,7 +9,7 @@ const path = require('node:path');
  * - 非内置 provider 注册为 { npm: '@ai-sdk/openai-compatible', options: { baseURL } }。
  */
 const PROVIDERS = {
-  deepseek: { label: 'DeepSeek', testModel: 'deepseek-chat', baseUrl: 'https://api.deepseek.com', builtin: true },
+  deepseek: { label: 'DeepSeek', testModel: 'deepseek-v4-flash', baseUrl: 'https://api.deepseek.com', builtin: true },
   kimi: { label: 'Kimi (Moonshot)', testModel: 'moonshot-v1-8k', baseUrl: 'https://api.moonshot.cn/v1', builtin: false, npm: '@ai-sdk/openai-compatible' },
   openai: { label: 'OpenAI', testModel: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1', builtin: true },
 };
@@ -22,7 +22,7 @@ const PERSONAS = {
 
 /** 可分配模型静态列表（v0.2，供引导页下拉渲染；v1 取舍：不动态拉取 opencode models） */
 const AVAILABLE_MODELS = {
-  deepseek: ['deepseek-chat', 'deepseek-reasoner'],
+  deepseek: ['deepseek-v4-flash', 'deepseek-v4-pro'],
   moonshot: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
   openai: ['gpt-4o-mini', 'gpt-4o'],
 };
