@@ -224,6 +224,138 @@
   .done-panel .big::before { content: ">> "; }
   .done-panel p { margin: 0; color: var(--fg); font-size: 14px; }
 
+  /* ===== Section 通用（v0.2） ===== */
+  .section { margin-top: 34px; }
+  .section h2 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--fg);
+    letter-spacing: 2px;
+  }
+  .section h2::before { content: ":: "; color: var(--accent); }
+  .section h2 .opt {
+    font-size: 11px;
+    font-weight: normal;
+    color: var(--fg-dim);
+    border: 1px solid var(--line-dim);
+    border-radius: 3px;
+    padding: 0 5px;
+    margin-left: 6px;
+    vertical-align: 2px;
+    letter-spacing: 1px;
+  }
+  .section .sub { margin: 0 0 12px; color: var(--fg-dim); font-size: 13px; }
+
+  /* ===== 人格单选卡片 ===== */
+  .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pcard {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border: 1px solid var(--line-dim);
+    border-left: 4px solid var(--line-dim);
+    border-radius: 8px;
+    background: var(--panel-2);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .pcard:hover { border-color: var(--line); }
+  .pcard:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.25);
+  }
+  .pcard.sel {
+    border-color: var(--line);
+    border-left-color: var(--accent);
+    box-shadow: 0 0 18px rgba(102, 255, 102, 0.08);
+  }
+  .pradio {
+    flex: none;
+    width: 14px; height: 14px;
+    margin-top: 3px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .pcard.sel .pradio {
+    border-color: var(--accent);
+    background: radial-gradient(circle, var(--accent) 0 4px, transparent 5px);
+    box-shadow: 0 0 6px rgba(102, 255, 102, 0.5);
+  }
+  .pcard .pname { font-weight: bold; font-size: 14px; color: var(--fg); }
+  .pcard .pdesc { margin: 2px 0 0; color: var(--fg-dim); font-size: 12px; line-height: 1.5; }
+  #custom-wrap { display: none; margin-top: 10px; }
+  #custom-wrap.show { display: block; }
+  #custom-text {
+    width: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+  }
+  #custom-text::placeholder { color: #4a7a4a; }
+  #custom-text:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.25);
+  }
+
+  /* ===== 模型分配 ===== */
+  .quick-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 4px; }
+  .quick-row button { font-size: 13px; padding: 6px 12px; }
+  .mgroup-title {
+    margin: 16px 0 2px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed var(--line-dim);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+  .mrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+  }
+  .mrow .mname {
+    flex: none;
+    width: 130px;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--fg);
+  }
+  .mrow .mduty {
+    flex: 1;
+    min-width: 0;
+    color: var(--fg-dim);
+    font-size: 12px;
+  }
+  .model-select {
+    flex: none;
+    width: 230px;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 7px 8px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .model-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.25);
+  }
+
   /* ===== 窄屏 ===== */
   @media (max-width: 560px) {
     body { padding: 16px 10px 48px; }
@@ -232,6 +364,10 @@
     .desc, .msg { margin-left: 0; }
     .card-head .state-dot { display: none; }
     #submit { width: 100%; }
+    .pgrid { grid-template-columns: 1fr; }
+    .mrow { flex-wrap: wrap; gap: 4px 10px; }
+    .mrow .mname { width: 100%; }
+    .model-select { width: 100%; }
   }
 </style>
 </head>
@@ -247,6 +383,43 @@
   <p id="notice" class="notice">检测到本机已有配置。重新保存会覆盖旧的 key。</p>
 
   <div id="cards"><p class="msg busy">正在加载服务商列表...</p></div>
+
+  <div class="section" id="sec-persona">
+    <h2>AI 人格<span class="opt">可选</span></h2>
+    <p class="sub">决定 AI 平时用什么口吻跟你说话。不确定就保持默认。</p>
+    <div class="pgrid" id="persona-grid">
+      <div class="pcard sel" data-persona="default" tabindex="0" role="radio" aria-checked="true">
+        <span class="pradio"></span>
+        <div><span class="pname">专业默认</span><p class="pdesc">直接干活的实干型助手，标准工作口吻。</p></div>
+      </div>
+      <div class="pcard" data-persona="vaulttec" tabindex="0" role="radio" aria-checked="false">
+        <span class="pradio"></span>
+        <div><span class="pname">Vault-Tec 复古</span><p class="pdesc">1950 年代原子风企业终端口吻，有趣。</p></div>
+      </div>
+      <div class="pcard" data-persona="minimal" tabindex="0" role="radio" aria-checked="false">
+        <span class="pradio"></span>
+        <div><span class="pname">极简</span><p class="pdesc">一句话能说完绝不说两句。</p></div>
+      </div>
+      <div class="pcard" data-persona="custom" tabindex="0" role="radio" aria-checked="false">
+        <span class="pradio"></span>
+        <div><span class="pname">自定义</span><p class="pdesc">自己写一段要求，AI 会照着做。</p></div>
+      </div>
+    </div>
+    <div id="custom-wrap">
+      <textarea id="custom-text" rows="4" placeholder="例如：你是一位有耐心的老师，回答时喜欢举生活中的例子……"></textarea>
+      <p class="sub">留空则不设置人格。</p>
+    </div>
+  </div>
+
+  <div class="section" id="sec-models">
+    <h2>模型分配<span class="opt">可选</span></h2>
+    <p class="sub">给每个 AI 角色指定用哪个模型。全部"跟随默认"就很好用，以后随时能改。</p>
+    <div class="quick-row">
+      <button id="q-default" type="button">全部跟随默认</button>
+      <button id="q-fill" type="button" disabled>全部用同一模型</button>
+    </div>
+    <div id="agent-groups"><p class="msg busy">正在加载角色列表...</p></div>
+  </div>
 
   <div class="actions">
     <button id="submit" disabled>保存配置</button>
@@ -274,6 +447,118 @@ const cardsEl = document.getElementById('cards');
 const submitBtn = document.getElementById('submit');
 const resultEl = document.getElementById('result');
 
+/* ===== v0.2: 人格选择 ===== */
+let personaChoice = 'default';
+const pgrid = document.getElementById('persona-grid');
+const customWrap = document.getElementById('custom-wrap');
+const customText = document.getElementById('custom-text');
+pgrid.querySelectorAll('.pcard').forEach(card => {
+  const pick = () => {
+    personaChoice = card.dataset.persona;
+    pgrid.querySelectorAll('.pcard').forEach(c => {
+      c.classList.toggle('sel', c === card);
+      c.setAttribute('aria-checked', c === card ? 'true' : 'false');
+    });
+    customWrap.classList.toggle('show', personaChoice === 'custom');
+    if (personaChoice === 'custom') customText.focus();
+  };
+  card.addEventListener('click', pick);
+  card.addEventListener('keydown', e => {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pick(); }
+  });
+});
+
+/* ===== v0.2: 模型分配 ===== */
+// 注意：/api/status 的 providers 键是 kimi，models 键是 moonshot，需映射
+const PROVIDER_TO_MODELS_KEY = { deepseek: 'deepseek', kimi: 'moonshot', openai: 'openai' };
+const PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', openai: 'OpenAI' };
+const AGENT_GROUPS = [
+  { title: '核心角色', agents: [
+    ['orchestrator', '总指挥：拆解任务，给其他角色派活'],
+    ['oracle', '智囊：架构决策，攻克疑难问题'],
+    ['fixer', '执行者：写代码、修 bug'],
+  ]},
+  { title: '辅助角色', agents: [
+    ['designer', '美工：界面样式与视觉'],
+    ['explorer', '侦察兵：在代码库里找东西'],
+    ['librarian', '资料员：查文档、查资料'],
+    ['observer', '观察员：监督流程，提醒风险'],
+  ]},
+  { title: '议会', agents: [
+    ['council-alpha', '议会席位一：重大决策时参与投票'],
+    ['council-beta', '议会席位二：重大决策时参与投票'],
+    ['council-gamma', '议会席位三：重大决策时参与投票'],
+  ]},
+];
+let lastModels = null;
+const agentSelects = {};
+const qDefaultBtn = document.getElementById('q-default');
+const qFillBtn = document.getElementById('q-fill');
+
+function renderAgentGroups(models) {
+  const wrap = document.getElementById('agent-groups');
+  wrap.innerHTML = '';
+  for (const g of AGENT_GROUPS) {
+    const title = document.createElement('p');
+    title.className = 'mgroup-title';
+    title.textContent = g.title;
+    wrap.appendChild(title);
+    for (const [key, duty] of g.agents) {
+      const row = document.createElement('div');
+      row.className = 'mrow';
+      const name = document.createElement('span');
+      name.className = 'mname';
+      name.textContent = key;
+      const dutyEl = document.createElement('span');
+      dutyEl.className = 'mduty';
+      dutyEl.textContent = duty;
+      const sel = document.createElement('select');
+      sel.className = 'model-select';
+      const opt0 = document.createElement('option');
+      opt0.value = '';
+      opt0.textContent = '跟随默认';
+      sel.appendChild(opt0);
+      for (const [prov, list] of Object.entries(models)) {
+        for (const m of list) {
+          const o = document.createElement('option');
+          o.value = prov + '/' + m;
+          o.textContent = (PROVIDER_LABELS[prov] || prov) + ' / ' + m;
+          sel.appendChild(o);
+        }
+      }
+      agentSelects[key] = sel;
+      row.appendChild(name);
+      row.appendChild(dutyEl);
+      row.appendChild(sel);
+      wrap.appendChild(row);
+    }
+  }
+}
+
+// “全部用同一模型”：取第一个测试通过的服务商的首个模型
+function updateQuickFill() {
+  const first = Object.keys(state)[0];
+  const mk = first && PROVIDER_TO_MODELS_KEY[first];
+  const model = mk && lastModels && lastModels[mk] && lastModels[mk][0];
+  if (!model) {
+    qFillBtn.disabled = true;
+    qFillBtn.textContent = '全部用同一模型';
+    delete qFillBtn.dataset.value;
+    return;
+  }
+  qFillBtn.disabled = false;
+  qFillBtn.textContent = '全部用 ' + model;
+  qFillBtn.dataset.value = mk + '/' + model;
+}
+qDefaultBtn.addEventListener('click', () => {
+  for (const k in agentSelects) agentSelects[k].value = '';
+});
+qFillBtn.addEventListener('click', () => {
+  const v = qFillBtn.dataset.value;
+  if (!v) return;
+  for (const k in agentSelects) agentSelects[k].value = v;
+});
+
 async function api(path, opts) {
   const res = await fetch(path, opts);
   return res.json();
@@ -291,6 +576,7 @@ function friendlyError(e) {
 
 function refreshSubmit() {
   submitBtn.disabled = Object.keys(state).length === 0;
+  updateQuickFill();
 }
 
 function buildCard(name, meta) {
@@ -418,12 +704,15 @@ async function init() {
     err.className = 'msg err';
     err.textContent = '无法获取服务商列表，请关闭本页并重新双击启动器';
     cardsEl.appendChild(err);
+    document.getElementById('agent-groups').innerHTML = '';
     return;
   }
   cardsEl.innerHTML = '';
   for (const [name, meta] of Object.entries(status.providers)) {
     cardsEl.appendChild(buildCard(name, meta));
   }
+  lastModels = status.models || {};
+  renderAgentGroups(lastModels);
   if (status.configured) {
     document.getElementById('notice').classList.add('show');
   }
@@ -442,11 +731,22 @@ submitBtn.addEventListener('click', async () => {
   resultEl.textContent = '保存中...';
   const providers = {};
   for (const n of names) providers[n] = { apiKey: state[n] };
+  // v0.2: 人格（default = 不传，服务端即不写文件）与模型分配（只传玩家改过的角色）
+  const body = { providers };
+  if (personaChoice && personaChoice !== 'default') {
+    body.persona = personaChoice;
+    if (personaChoice === 'custom') body.personaText = customText.value.trim();
+  }
+  const agentModels = {};
+  for (const [k, sel] of Object.entries(agentSelects)) {
+    if (sel.value) agentModels[k] = sel.value;
+  }
+  if (Object.keys(agentModels).length > 0) body.agentModels = agentModels;
   try {
     const r = await api('/api/configure', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ providers })
+      body: JSON.stringify(body)
     });
     if (r.ok) {
       resultEl.className = '';
