@@ -309,6 +309,16 @@
   }
 
   /* ===== 模型分配 ===== */
+  .dep-notice {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--warn);
+    border-radius: 6px;
+    color: var(--warn);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .dep-notice::before { content: "[!!] "; font-weight: bold; }
   .quick-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 0 0 4px; }
   .quick-row button { font-size: 13px; padding: 6px 12px; }
   .mgroup-title {
@@ -414,6 +424,7 @@
   <div class="section" id="sec-models">
     <h2>模型分配<span class="opt">可选</span></h2>
     <p class="sub">给每个 AI 角色指定用哪个模型。全部"跟随默认"就很好用，以后随时能改。</p>
+    <p class="dep-notice">选择"跟随默认"会使用预设模型组合（DeepSeek v4 与 Kimi K3 等），需要对应的 API 才能生效。如果你只配置了一个服务商，请使用下面的"全部用 X"快捷按钮，避免部分角色无法工作。</p>
     <div class="quick-row">
       <button id="q-default" type="button">全部跟随默认</button>
       <button id="q-fill" type="button" disabled>全部用同一模型</button>
