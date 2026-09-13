@@ -183,6 +183,66 @@
   .msg.err::before { content: "[!!] "; }
   .msg.busy { color: var(--fg-dim); }
   .msg.busy::before { content: "[..] "; }
+  .msg.warn { color: var(--warn); }
+  .msg.warn::before { content: "[!] "; }
+
+  /* ===== v0.4: 自定义卡“检测到的模型”勾选列表 + 撞保留名警告 ===== */
+  .dmodels {
+    display: none;
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border: 1px dashed var(--line-dim);
+    border-radius: 6px;
+  }
+  .dmodels.show { display: block; }
+  .dmodels .dhead { margin: 0 0 4px; font-size: 12px; color: var(--accent); }
+  .dmodels .dlist { max-height: 150px; overflow-y: auto; }
+  .dmodels .dlist label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--fg);
+    padding: 3px 0;
+    cursor: pointer;
+  }
+  .dmodels .dlist label input { margin: 0; accent-color: #4caf50; cursor: pointer; }
+  .dmodels .dhint { margin: 6px 0 0; font-size: 12px; color: var(--fg-dim); }
+
+  #workspace-input { width: 100%; }
+
+  /* ===== 自定义服务商卡（v0.3） ===== */
+  .addcard {
+    margin: 16px 0 0;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--fg-dim);
+    text-align: center;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    letter-spacing: 1px;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .addcard:hover { color: var(--accent); border-color: var(--accent); background: rgba(102, 255, 102, 0.05); }
+  .ccard { border-left-color: var(--warn); }
+  .ccard .msg { margin-left: 0; }
+  .chead { display: flex; align-items: center; gap: 10px; }
+  .ctitle { font-weight: bold; font-size: 15px; color: var(--fg); min-height: 20px; }
+  .chead .remove {
+    margin-left: auto;
+    background: transparent;
+    border-color: #5a2a2a;
+    color: var(--err);
+    padding: 3px 12px;
+    font-size: 12px;
+  }
+  .chead .remove:hover:not(:disabled) { background: #3a1a1a; border-color: var(--err); }
+  .frow { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; }
+  .frow .flbl { flex: none; width: 72px; font-size: 12px; color: var(--fg-dim); }
+  .frow .key-input { flex: 1; min-width: 0; }
 
   /* ===== 底部操作区 ===== */
   .actions {
@@ -378,6 +438,8 @@
     .mrow { flex-wrap: wrap; gap: 4px 10px; }
     .mrow .mname { width: 100%; }
     .model-select { width: 100%; }
+    .ccard .frow { flex-wrap: wrap; gap: 6px; }
+    .ccard .frow .flbl { width: 100%; }
   }
 </style>
 </head>
@@ -424,12 +486,18 @@
   <div class="section" id="sec-models">
     <h2>模型分配<span class="opt">可选</span></h2>
     <p class="sub">给每个 AI 角色指定用哪个模型。全部"跟随默认"就很好用，以后随时能改。</p>
-    <p class="dep-notice">选择"跟随默认"需要 DeepSeek v4 与 kimi-for-coding 两套 API 的 key（kimi-for-coding 与页面上的 Kimi/Moonshot 不是同一服务）。只配了一个服务商时，请用下面的"全部用 X"一键指定，避免部分角色无法工作。</p>
+    <p class="dep-notice">选择"跟随默认"需要 DeepSeek 与 Kimi For Coding 两套 API 的 key。注意：页面上的 Kimi(Moonshot)卡与 Kimi For Coding(编程版)卡是不同服务——Moonshot 开放平台 key 与 Kimi For Coding 编程订阅 key 不通用；买编程订阅的玩家请选下方"Kimi For Coding"卡并填编程版 key。只配了一个服务商时，请用下面的"全部用 X"一键指定，避免部分角色无法工作。</p>
     <div class="quick-row">
       <button id="q-default" type="button">全部跟随默认</button>
       <button id="q-fill" type="button" disabled>全部用同一模型</button>
     </div>
     <div id="agent-groups"><p class="msg busy">正在加载角色列表...</p></div>
+  </div>
+
+  <div class="section" id="sec-workspace">
+    <h2>工作目录<span class="opt">可选</span></h2>
+    <p class="sub">AI 工作区在哪个项目文件夹里启动。留空则默认在 QDIP 包目录里启动。</p>
+    <input id="workspace-input" class="key-input" type="text" placeholder="D:\my-project（留空则默认在包目录启动）" autocomplete="off" spellcheck="false">
   </div>
 
   <div class="actions">
@@ -444,12 +512,15 @@
 </div>
 
 <script>
-// state[name] = 已通过测试的 apiKey；保存时一次性提交全部
+// state：精选卡 state[providerKey] = { kind:'curated', apiKey }；
+// 自定义卡 state[实例id 如 custom-1] = { kind:'custom', apiKey, baseUrl, models[], finalKey, label }；
+// 只有测试通过的卡会进入 state，保存时一次性提交全部
 const state = {};
 
 const DESCS = {
   deepseek: '国产模型，价格便宜，新用户注册送额度。不确定选哪个就选它。',
   kimi: '月之暗面出品，国内可直接访问，长文本表现好。',
+  'kimi-for-coding': 'Kimi 编程订阅版：在 Kimi 官网开通 Kimi For Coding 后，用编程套餐的 API key。与上面的 Kimi(Moonshot)开放平台是两套独立服务，key 不通用。',
   openai: '需要能访问海外网络，账户需绑定海外支付方式。'
 };
 const TAGS = { deepseek: '推荐' };
@@ -457,6 +528,7 @@ const TAGS = { deepseek: '推荐' };
 const cardsEl = document.getElementById('cards');
 const submitBtn = document.getElementById('submit');
 const resultEl = document.getElementById('result');
+const workspaceInput = document.getElementById('workspace-input');
 
 /* ===== v0.2: 人格选择 ===== */
 let personaChoice = 'default';
@@ -481,8 +553,10 @@ pgrid.querySelectorAll('.pcard').forEach(card => {
 
 /* ===== v0.2: 模型分配 ===== */
 // 注意：/api/status 的 providers 键是 kimi，models 键是 moonshot，需映射
-const PROVIDER_TO_MODELS_KEY = { deepseek: 'deepseek', kimi: 'moonshot', openai: 'openai' };
-const PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', openai: 'OpenAI' };
+const PROVIDER_TO_MODELS_KEY = { deepseek: 'deepseek', kimi: 'moonshot', 'kimi-for-coding': 'kimi-for-coding', openai: 'openai' };
+const PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', 'kimi-for-coding': 'Kimi For Coding', openai: 'OpenAI' };
+// 自定义服务商派生 key 必须避开的保留名（精选 key + 模型表键）
+const RESERVED_KEYS = ['deepseek', 'kimi', 'moonshot', 'openai', 'kimi-for-coding'];
 const AGENT_GROUPS = [
   { title: '核心角色', agents: [
     ['orchestrator', '总指挥：拆解任务，给其他角色派活'],
@@ -508,6 +582,9 @@ const qFillBtn = document.getElementById('q-fill');
 
 function renderAgentGroups(models) {
   const wrap = document.getElementById('agent-groups');
+  // 记住当前选择：测试自定义服务商后重渲会重建下拉，恢复仍有效的选择避免玩家丢失已分配模型
+  const prev = {};
+  for (const k in agentSelects) prev[k] = agentSelects[k].value;
   wrap.innerHTML = '';
   for (const g of AGENT_GROUPS) {
     const title = document.createElement('p');
@@ -544,12 +621,26 @@ function renderAgentGroups(models) {
       wrap.appendChild(row);
     }
   }
+  // 恢复原选择：来源服务商已不在模型表（如被移除/作废）则保持"跟随默认"
+  for (const [key, sel] of Object.entries(agentSelects)) {
+    const v = prev[key];
+    if (!v) continue;
+    const slash = v.indexOf('/');
+    const prov = slash > 0 ? v.slice(0, slash) : '';
+    const m = slash > 0 ? v.slice(slash + 1) : '';
+    const list = prov && models[prov];
+    if (list && list.includes(m)) sel.value = v;
+  }
 }
 
-// “全部用同一模型”：取第一个测试通过的服务商的首个模型
+// “全部用同一模型”：取第一个测试通过的服务商的首个模型（精选走 PROVIDER_TO_MODELS_KEY，自定义直接用派生 key 查 lastModels）
 function updateQuickFill() {
   const first = Object.keys(state)[0];
-  const mk = first && PROVIDER_TO_MODELS_KEY[first];
+  let mk = null;
+  if (first) {
+    const s = state[first];
+    mk = s.kind === 'custom' ? s.finalKey : PROVIDER_TO_MODELS_KEY[first];
+  }
   const model = mk && lastModels && lastModels[mk] && lastModels[mk][0];
   if (!model) {
     qFillBtn.disabled = true;
@@ -569,6 +660,324 @@ qFillBtn.addEventListener('click', () => {
   if (!v) return;
   for (const k in agentSelects) agentSelects[k].value = v;
 });
+
+/* ===== v0.3: 自定义 OpenAI 兼容服务商 ===== */
+let customSeq = 0; // 自定义卡实例计数（custom-1、custom-2...，UI state 用其做键）
+let addBtnEl = null; // "+ 添加自定义服务商"入口卡（init 时创建，新卡插在它前面）
+
+// 从 Base URL 派生 provider key：取主机名主标签（注册域左半段）；localhost / 本机 IP → 'local'；
+// 无法解析或空结果回退 'custom'。示例：open.bigmodel.cn → bigmodel；localhost:11434 → local。
+// 说明：规格示例"open.bigmodel.cn → bigmodel"按"注册域主标签"解释（api.deepseek.com → deepseek），
+// 而非主机名字面第一段（open）——两种知名 API 域名形态都能得到品牌名。
+function providerKeyFromBaseUrl(baseUrl) {
+  let host;
+  try {
+    host = new URL(baseUrl.trim()).hostname.toLowerCase().replace(/\.$/, '');
+  } catch (e) {
+    return 'custom';
+  }
+  if (host === 'localhost' || /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host.includes(':')) return 'local';
+  const parts = host.split('.');
+  const seg = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
+  const key = seg.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  return key || 'custom';
+}
+
+// 逗号（中英文均可）分隔解析模型 ID，去重、去空白
+function parseModelIds(text) {
+  const seen = [];
+  for (const raw of text.split(/[,，]/)) {
+    const m = raw.trim();
+    if (m && !seen.includes(m)) seen.push(m);
+  }
+  return seen;
+}
+
+// 当前已占用的 key：保留名 + 所有已测试通过自定义卡的 finalKey
+function usedProviderKeys() {
+  const used = new Set(RESERVED_KEYS);
+  for (const s of Object.values(state)) {
+    if (s && s.finalKey) used.add(s.finalKey);
+  }
+  return used;
+}
+
+// 派生不与保留名 / 已占用 key 冲突的最终 key；skipKey 用于重测时先释放本卡旧 key
+function deriveFinalKey(baseUrl, skipKey) {
+  const used = usedProviderKeys();
+  if (skipKey) used.delete(skipKey);
+  // 截断至 28 字符：后端校验 name ≤32，给 -2/-3 后缀留余量（长域名如 punycode 中文域名会派生超长 key）
+  let base = providerKeyFromBaseUrl(baseUrl).slice(0, 28);
+  if (!used.has(base)) return base;
+  for (let i = 2; i <= 1000; i++) {
+    const k = base + '-' + i;
+    if (!used.has(k)) return k;
+  }
+  return (base + '-' + Date.now().toString(36)).slice(0, 32);
+}
+
+// 撤销某自定义 key 对模型分配下拉的注入（测试结果作废 / 卡被移除时调用）
+function evictCustomProvider(finalKey) {
+  if (!lastModels || !lastModels[finalKey]) return;
+  delete lastModels[finalKey];
+  delete PROVIDER_LABELS[finalKey];
+  renderAgentGroups(lastModels);
+}
+
+function buildCustomCard() {
+  const id = 'custom-' + (++customSeq);
+  const div = document.createElement('div');
+  div.className = 'card ccard';
+
+  const head = document.createElement('div');
+  head.className = 'chead';
+  const title = document.createElement('span');
+  title.className = 'ctitle';
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'remove';
+  removeBtn.textContent = '移除';
+  head.appendChild(title);
+  head.appendChild(removeBtn);
+  div.appendChild(head);
+
+  // 卡片标题：自定义 · <显示名> (<派生 key>)；key 只在测试通过后出现
+  function setTitle() {
+    const label = labelInput.value.trim();
+    const s = state[id];
+    const parts = ['自定义'];
+    if (label) parts.push('· ' + label);
+    if (s && s.finalKey) parts.push('(' + s.finalKey + ')');
+    title.textContent = parts.join(' ');
+  }
+
+  function rowField(lbl, input, ph, type) {
+    const row = document.createElement('div');
+    row.className = 'frow';
+    const lab = document.createElement('span');
+    lab.className = 'flbl';
+    lab.textContent = lbl;
+    input.type = type || 'text';
+    input.className = 'key-input';
+    input.placeholder = ph;
+    input.autocomplete = 'off';
+    input.spellcheck = false;
+    row.appendChild(lab);
+    row.appendChild(input);
+    return row;
+  }
+
+  const labelInput = document.createElement('input');
+  const baseUrlInput = document.createElement('input');
+  const keyInput = document.createElement('input');
+  const modelsInput = document.createElement('input');
+  const msg = document.createElement('span');
+  msg.className = 'msg';
+  const testBtn = document.createElement('button');
+  testBtn.type = 'button';
+  testBtn.textContent = '测试连接';
+  const btnRow = document.createElement('div');
+  btnRow.className = 'frow';
+  const spacer = document.createElement('span');
+  spacer.className = 'flbl';
+  btnRow.appendChild(spacer);
+  btnRow.appendChild(testBtn);
+
+  // v0.4: “检测到的模型”勾选列表（端点返回模型列表时出现，默认全选，可勾选/取消）
+  const detectBox = document.createElement('div');
+  detectBox.className = 'dmodels';
+  const dhead = document.createElement('p');
+  dhead.className = 'dhead';
+  detectBox.appendChild(dhead);
+  const dlist = document.createElement('div');
+  dlist.className = 'dlist';
+  detectBox.appendChild(dlist);
+  const dhint = document.createElement('p');
+  dhint.className = 'dhint';
+  detectBox.appendChild(dhint);
+
+  // v0.4: 撞保留名警告（派生 base 命中 RESERVED_KEYS 时显示，黄色不阻断）
+  const resWarn = document.createElement('span');
+  resWarn.className = 'msg';
+
+  div.appendChild(rowField('显示名', labelInput, '给自己看的名字，如：智谱（可留空）'));
+  div.appendChild(rowField('Base URL', baseUrlInput, 'https://open.bigmodel.cn/api/paas/v4（必填）'));
+  div.appendChild(rowField('API Key', keyInput, '本地服务可留空（一般以 sk- 开头）', 'password'));
+  div.appendChild(rowField('模型 ID', modelsInput, '端点没返回模型时才手填，逗号分隔（可留空）'));
+  div.appendChild(btnRow);
+  div.appendChild(detectBox);
+  div.appendChild(resWarn);
+  div.appendChild(msg);
+
+  // 测试成功后按端点返回重建勾选列表；无返回则隐藏整块
+  function rebuildDetection(models) {
+    dlist.innerHTML = '';
+    if (!models || models.length === 0) {
+      detectBox.classList.remove('show');
+      dhead.textContent = '';
+      dhint.textContent = '';
+      return;
+    }
+    detectBox.classList.add('show');
+    dhead.textContent = '检测到的模型（默认全选，可取消不需要的）';
+    dhint.textContent = '勾选项与上方手填项合并去重后，作为该卡的模型列表';
+    for (const m of models) {
+      const lab = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = m;
+      cb.checked = true;
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(m));
+      dlist.appendChild(lab);
+    }
+  }
+
+  // 该卡最终模型 = 勾选的检测项 + 手填项，去重（勾选顺序在前，手填补充在后）
+  function computeModels() {
+    const out = [];
+    for (const cb of dlist.querySelectorAll('input[type="checkbox"]')) {
+      if (cb.checked) out.push(cb.value);
+    }
+    for (const m of parseModelIds(modelsInput.value)) {
+      if (!out.includes(m)) out.push(m);
+    }
+    return out;
+  }
+
+  // 勾选/手填变化实时同步该卡 models（连接已验证过，不需要重新测试）
+  function syncCardModels() {
+    const s = state[id];
+    if (!s) return;
+    s.models = computeModels();
+    if (s.finalKey) {
+      lastModels[s.finalKey] = s.models;
+      renderAgentGroups(lastModels);
+    }
+    refreshSubmit();
+  }
+
+  // 撞保留名警告：派生 base（未加后缀前）命中精选卡同名时提示
+  function setReservedWarning(baseUrl, finalKey) {
+    const base = providerKeyFromBaseUrl(baseUrl);
+    if (RESERVED_KEYS.includes(base)) {
+      resWarn.className = 'msg warn';
+      resWarn.textContent = '检测到该地址与精选卡同名，建议直接使用上方精选卡；继续保存将以 ' + finalKey + ' 注册';
+    } else {
+      resWarn.className = 'msg';
+      resWarn.textContent = '';
+    }
+  }
+
+  // baseUrl/key/显示名改动即作废该卡测试结果（含显示名），并撤销已注入的模型列表；
+  // “模型 ID”文本框不算作废——它只是手填补充，实时合并即可
+  function invalidate() {
+    setTitle();
+    rebuildDetection([]);
+    resWarn.className = 'msg';
+    resWarn.textContent = '';
+    const s = state[id];
+    if (!s) return;
+    delete state[id];
+    if (s.finalKey) evictCustomProvider(s.finalKey);
+    msg.className = 'msg';
+    msg.textContent = '信息已修改，请重新测试';
+    refreshSubmit();
+  }
+  labelInput.addEventListener('input', invalidate);
+  baseUrlInput.addEventListener('input', invalidate);
+  keyInput.addEventListener('input', invalidate);
+  modelsInput.addEventListener('input', syncCardModels);
+  detectBox.addEventListener('change', e => {
+    if (e.target && e.target.type === 'checkbox') syncCardModels();
+  });
+
+  removeBtn.addEventListener('click', () => {
+    const s = state[id];
+    delete state[id];
+    if (s && s.finalKey) evictCustomProvider(s.finalKey);
+    div.remove();
+    refreshSubmit();
+  });
+
+  testBtn.addEventListener('click', async () => {
+    const label = labelInput.value.trim();
+    const baseUrl = baseUrlInput.value.trim();
+    const apiKey = keyInput.value.trim();
+    if (!baseUrl) {
+      msg.className = 'msg err';
+      msg.textContent = '请先填写 Base URL 再测试';
+      baseUrlInput.focus();
+      return;
+    }
+    testBtn.disabled = true;
+    msg.className = 'msg busy';
+    msg.textContent = '测试中，请稍等...';
+    const prev = state[id]; // 重测时可能已有旧条目
+    try {
+      const r = await api('/api/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider: id, apiKey: apiKey || undefined, baseUrl }),
+      });
+      if (r.ok) {
+        // 成功回调里同步派生并占位：并发测试时后完成的会自动错开后缀
+        const finalKey = deriveFinalKey(baseUrl, prev && prev.finalKey);
+        // 若本次派生 key 与旧条目不同（如并发抢占导致换后缀），先撤销旧 key 的注入
+        if (prev && prev.finalKey && prev.finalKey !== finalKey) evictCustomProvider(prev.finalKey);
+        rebuildDetection(r.models || []);
+        setReservedWarning(baseUrl, finalKey);
+        const merged = computeModels();
+        if (merged.length === 0) {
+          // 端点既没返回模型列表、手填也为空：不登记该卡，提示玩家手填后重测
+          delete state[id];
+          if (prev && prev.finalKey) evictCustomProvider(prev.finalKey);
+          resWarn.className = 'msg';
+          resWarn.textContent = '';
+          msg.className = 'msg warn';
+          msg.textContent = '连接成功，但端点未返回模型列表：请在"模型 ID"里手动填写后重新测试';
+          return;
+        }
+        state[id] = { kind: 'custom', apiKey, baseUrl, models: merged, finalKey, label };
+        lastModels[finalKey] = merged;
+        PROVIDER_LABELS[finalKey] = label || finalKey;
+        renderAgentGroups(lastModels);
+        setTitle();
+        msg.className = 'msg ok';
+        msg.textContent = '连接成功 · 服务商标识: ' + finalKey + ' · 模型 ' + merged.length + ' 个';
+      } else {
+        delete state[id];
+        if (prev && prev.finalKey) evictCustomProvider(prev.finalKey);
+        rebuildDetection([]);
+        resWarn.className = 'msg';
+        resWarn.textContent = '';
+        msg.className = 'msg err';
+        msg.textContent = friendlyError(r.error || '未知错误');
+      }
+    } catch (e) {
+      delete state[id];
+      if (prev && prev.finalKey) evictCustomProvider(prev.finalKey);
+      rebuildDetection([]);
+      resWarn.className = 'msg';
+      resWarn.textContent = '';
+      msg.className = 'msg err';
+      msg.textContent = '连不上配置服务，请确认本页面是从启动器打开的';
+    } finally {
+      testBtn.disabled = false;
+      refreshSubmit();
+    }
+  });
+
+  setTitle();
+  return div;
+}
+
+// 新自定义卡插到入口卡之前并聚焦首字段
+function addCustomCard() {
+  const card = buildCustomCard();
+  addBtnEl.insertAdjacentElement('beforebegin', card);
+  card.querySelector('input').focus();
+}
 
 async function api(path, opts) {
   const res = await fetch(path, opts);
@@ -684,7 +1093,7 @@ function buildCard(name, meta) {
         body: JSON.stringify({ provider: name, apiKey: key })
       });
       if (r.ok) {
-        state[name] = key;
+        state[name] = { kind: 'curated', apiKey: key };
         msg.className = 'msg ok';
         msg.textContent = '连接成功，可以保存了';
       } else {
@@ -722,6 +1131,16 @@ async function init() {
   for (const [name, meta] of Object.entries(status.providers)) {
     cardsEl.appendChild(buildCard(name, meta));
   }
+  addBtnEl = document.createElement('div');
+  addBtnEl.className = 'addcard';
+  addBtnEl.textContent = '+ 添加自定义服务商';
+  addBtnEl.setAttribute('role', 'button');
+  addBtnEl.tabIndex = 0;
+  addBtnEl.addEventListener('click', addCustomCard);
+  addBtnEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addCustomCard(); }
+  });
+  cardsEl.appendChild(addBtnEl);
   lastModels = status.models || {};
   renderAgentGroups(lastModels);
   if (status.configured) {
@@ -737,11 +1156,26 @@ submitBtn.addEventListener('click', async () => {
     resultEl.textContent = '还没有测试通过的服务商：先勾选一家，填 key，点"测试连接"';
     return;
   }
+  // v0.4: 自定义卡保存前校验模型非空（检测项被全取消且手填为空时）
+  for (const s of Object.values(state)) {
+    if (s.kind === 'custom' && (!s.models || s.models.length === 0)) {
+      resultEl.className = 'err';
+      resultEl.textContent = '自定义服务商 ' + (s.label || s.finalKey) + ' 还没有模型：勾选"检测到的模型"，或在"模型 ID"里手动填写';
+      return;
+    }
+  }
   submitBtn.disabled = true;
   resultEl.className = '';
   resultEl.textContent = '保存中...';
   const providers = {};
-  for (const n of names) providers[n] = { apiKey: state[n] };
+  for (const [n, s] of Object.entries(state)) {
+    if (s.kind === 'custom') {
+      // 自定义条目：name 用派生好的 key，label 是纯 UI 标签不落盘
+      providers[s.finalKey] = { apiKey: s.apiKey, baseUrl: s.baseUrl, models: s.models };
+    } else {
+      providers[n] = { apiKey: s.apiKey };
+    }
+  }
   // v0.2: 人格（default = 不传，服务端即不写文件）与模型分配（只传玩家改过的角色）
   const body = { providers };
   if (personaChoice && personaChoice !== 'default') {
@@ -753,6 +1187,9 @@ submitBtn.addEventListener('click', async () => {
     if (sel.value) agentModels[k] = sel.value;
   }
   if (Object.keys(agentModels).length > 0) body.agentModels = agentModels;
+  // v0.4: 工作目录（可选，留空不传）
+  const ws = workspaceInput.value.trim();
+  if (ws) body.workspace = ws;
   try {
     const r = await api('/api/configure', {
       method: 'POST',

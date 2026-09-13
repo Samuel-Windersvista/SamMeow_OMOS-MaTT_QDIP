@@ -1,0 +1,13 @@
+{
+  "name": "qdip-omoslim-runtime",
+  "private": true,
+  "description": "OMOslim dist bundle 的运行时 external 依赖(随包 vendored 到 plugins/oh-my-opencode-slim/node_modules)。含 TUI 入口(tui.js/tui2.js)的裸导入 @opentui/core、@opentui/solid、solid-js——版本与 oh-my-opencode-slim 仓库 bun.lock 对齐(0.5.8/1.9.12)",
+  "dependencies": {
+    "@opencode-ai/plugin": "1.18.27",
+    "@opentui/core": "0.5.8",
+    "@opentui/solid": "0.5.8",
+    "solid-js": "1.9.12",
+    "jsdom": "^29.0.0",
+    "zod": "^4.4.3"
+  }
+}

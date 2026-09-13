@@ -1,0 +1,478 @@
+diff --git a/templates/setup/first-run.html b/templates/setup/first-run.html
+new file mode 100644
+index 0000000..e6a3b1a
+--- /dev/null
++++ b/templates/setup/first-run.html
+@@ -0,0 +1,472 @@
++<!DOCTYPE html>
++<html lang="zh-CN">
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1">
++<title>QDIP 首次配置</title>
++<style>
++  :root {
++    --bg: #0a0f0a;
++    --panel: #0e160e;
++    --panel-2: #101a10;
++    --line: #2a5a2a;
++    --line-dim: #1c3a1c;
++    --fg: #a8f0a8;
++    --fg-dim: #6fae6f;
++    --accent: #66ff66;
++    --err: #ff8080;
++    --warn: #ffd080;
++  }
++  * { box-sizing: border-box; }
++  body {
++    background: var(--bg);
++    background-image: radial-gradient(rgba(102, 255, 102, 0.04) 1px, transparent 1px);
++    background-size: 4px 4px;
++    color: var(--fg);
++    font-family: Consolas, "Courier New", monospace;
++    font-size: 15px;
++    line-height: 1.6;
++    max-width: 700px;
++    margin: 0 auto;
++    padding: 32px 16px 64px;
++  }
++
++  /* ===== 终端窗口头 ===== */
++  .term-bar {
++    display: flex;
++    align-items: center;
++    gap: 8px;
++    border: 1px solid var(--line);
++    border-bottom: none;
++    border-radius: 8px 8px 0 0;
++    background: var(--panel-2);
++    padding: 8px 14px;
++    color: var(--fg-dim);
++    font-size: 13px;
++  }
++  .term-bar .dot {
++    width: 10px; height: 10px;
++    border-radius: 50%;
++    border: 1px solid var(--line);
++    background: var(--line-dim);
++  }
++  .term-bar .dot.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
++  .term-bar .title { margin-left: 8px; letter-spacing: 1px; }
++  .term-body {
++    border: 1px solid var(--line);
++    border-radius: 0 0 8px 8px;
++    background: var(--panel);
++    padding: 24px 24px 28px;
++    box-shadow: 0 0 40px rgba(102, 255, 102, 0.06);
++  }
++  h1 {
++    margin: 0 0 4px;
++    font-size: 22px;
++    font-weight: bold;
++    color: var(--accent);
++    text-shadow: 0 0 12px rgba(102, 255, 102, 0.35);
++    letter-spacing: 2px;
++  }
++  h1::before { content: "> "; color: var(--fg-dim); }
++  .intro { margin: 8px 0 0; color: var(--fg-dim); }
++  .privacy {
++    margin: 16px 0 0;
++    padding: 10px 12px;
++    border: 1px dashed var(--line);
++    border-radius: 6px;
++    color: var(--fg-dim);
++    font-size: 13px;
++  }
++  .privacy::before { content: "[i] "; color: var(--accent); }
++
++  .notice {
++    display: none;
++    margin: 16px 0 0;
++    padding: 10px 12px;
++    border: 1px solid var(--warn);
++    border-radius: 6px;
++    color: var(--warn);
++    font-size: 13px;
++  }
++  .notice.show { display: block; }
++
++  /* ===== 服务商卡片 ===== */
++  .card {
++    position: relative;
++    border: 1px solid var(--line-dim);
++    border-left: 4px solid var(--line-dim);
++    border-radius: 8px;
++    background: var(--panel-2);
++    padding: 16px 18px;
++    margin: 16px 0 0;
++    transition: border-color 0.2s, box-shadow 0.2s;
++  }
++  .card.enabled {
++    border-color: var(--line);
++    border-left-color: var(--accent);
++    box-shadow: 0 0 18px rgba(102, 255, 102, 0.08);
++  }
++  .card-head {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++    cursor: pointer;
++    user-select: none;
++  }
++  .card-head input[type="checkbox"] {
++    width: 16px; height: 16px;
++    accent-color: #4caf50;
++    cursor: pointer;
++    margin: 0;
++  }
++  .card-head .name { font-weight: bold; font-size: 16px; color: var(--fg); }
++  .card-head .tag {
++    font-size: 12px;
++    color: var(--bg);
++    background: var(--accent);
++    border-radius: 3px;
++    padding: 0 6px;
++    line-height: 18px;
++  }
++  .card-head .state-dot {
++    margin-left: auto;
++    font-size: 12px;
++    color: var(--fg-dim);
++  }
++  .card.enabled .state-dot { color: var(--accent); }
++  .desc { margin: 6px 0 12px 26px; color: var(--fg-dim); font-size: 13px; }
++
++  .row { display: flex; gap: 10px; margin-left: 26px; }
++  .key-input {
++    flex: 1;
++    min-width: 0;
++    background: var(--bg);
++    color: var(--fg);
++    border: 1px solid var(--line);
++    border-radius: 4px;
++    padding: 8px 10px;
++    font-family: inherit;
++    font-size: 14px;
++  }
++  .key-input::placeholder { color: #4a7a4a; }
++  .key-input:focus {
++    outline: none;
++    border-color: var(--accent);
++    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.25);
++  }
++  .key-input:disabled { opacity: 0.35; cursor: not-allowed; }
++
++  button {
++    background: #1a3a1a;
++    color: var(--fg);
++    border: 1px solid var(--line);
++    border-radius: 4px;
++    padding: 8px 16px;
++    font-family: inherit;
++    font-size: 14px;
++    cursor: pointer;
++    white-space: nowrap;
++    transition: background 0.15s, border-color 0.15s;
++  }
++  button:hover:not(:disabled) { background: #234a23; border-color: var(--accent); }
++  button:focus-visible {
++    outline: none;
++    border-color: var(--accent);
++    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.35);
++  }
++  button:disabled { opacity: 0.35; cursor: not-allowed; }
++
++  .msg { display: block; min-height: 20px; margin: 8px 0 0 26px; font-size: 13px; color: var(--fg-dim); }
++  .msg.ok { color: var(--accent); }
++  .msg.ok::before { content: "[OK] "; }
++  .msg.err { color: var(--err); }
++  .msg.err::before { content: "[!!] "; }
++  .msg.busy { color: var(--fg-dim); }
++  .msg.busy::before { content: "[..] "; }
++
++  /* ===== 底部操作区 ===== */
++  .actions {
++    margin-top: 28px;
++    padding-top: 20px;
++    border-top: 1px dashed var(--line-dim);
++    display: flex;
++    align-items: center;
++    gap: 14px;
++    flex-wrap: wrap;
++  }
++  #submit { font-size: 15px; padding: 10px 24px; }
++  #submit:not(:disabled) {
++    background: var(--accent);
++    border-color: var(--accent);
++    color: var(--bg);
++    font-weight: bold;
++    box-shadow: 0 0 16px rgba(102, 255, 102, 0.35);
++  }
++  #submit:not(:disabled):hover { background: #8cff8c; }
++  .hint { color: var(--fg-dim); font-size: 13px; }
++
++  #result { margin-top: 14px; font-size: 14px; min-height: 22px; }
++  #result.err { color: var(--err); }
++  #result.err::before { content: "[!!] "; }
++
++  .done-panel {
++    display: none;
++    margin-top: 16px;
++    padding: 18px;
++    border: 1px solid var(--accent);
++    border-radius: 8px;
++    background: rgba(102, 255, 102, 0.06);
++    box-shadow: 0 0 24px rgba(102, 255, 102, 0.15);
++    color: var(--accent);
++  }
++  .done-panel.show { display: block; }
++  .done-panel .big { font-size: 17px; font-weight: bold; margin: 0 0 6px; }
++  .done-panel .big::before { content: ">> "; }
++  .done-panel p { margin: 0; color: var(--fg); font-size: 14px; }
++
++  /* ===== 窄屏 ===== */
++  @media (max-width: 560px) {
++    body { padding: 16px 10px 48px; }
++    .term-body { padding: 18px 14px 22px; }
++    .row { flex-direction: column; margin-left: 0; }
++    .desc, .msg { margin-left: 0; }
++    .card-head .state-dot { display: none; }
++    #submit { width: 100%; }
++  }
++</style>
++</head>
++<body>
++<div class="term-bar">
++  <span class="dot on"></span><span class="dot"></span><span class="dot"></span>
++  <span class="title">QDIP-SETUP :: first-run</span>
++</div>
++<div class="term-body">
++  <h1>QDIP 首次配置</h1>
++  <p class="intro">还差一步就能用了：勾选你想用的模型服务商，粘贴 API key，点"测试连接"。通过后保存配置即可。</p>
++  <p class="privacy">本页面完全离线运行，key 只保存在你自己的电脑上，不会上传到任何其他地方。</p>
++  <p id="notice" class="notice">检测到本机已有配置。重新保存会覆盖旧的 key。</p>
++
++  <div id="cards"><p class="msg busy">正在加载服务商列表...</p></div>
++
++  <div class="actions">
++    <button id="submit" disabled>保存配置</button>
++    <span class="hint">至少有一个服务商测试通过后才能保存</span>
++  </div>
++  <div id="result"></div>
++  <div id="done" class="done-panel">
++    <p class="big">配置完成</p>
++    <p>请关闭本页面，重新双击启动器，就可以开始使用了。</p>
++  </div>
++</div>
++
++<script>
++// state[name] = 已通过测试的 apiKey；保存时一次性提交全部
++const state = {};
++
++const DESCS = {
++  deepseek: '国产模型，价格便宜，新用户注册送额度。不确定选哪个就选它。',
++  kimi: '月之暗面出品，国内可直接访问，长文本表现好。',
++  openai: '需要能访问海外网络，账户需绑定海外支付方式。'
++};
++const TAGS = { deepseek: '推荐' };
++
++const cardsEl = document.getElementById('cards');
++const submitBtn = document.getElementById('submit');
++const resultEl = document.getElementById('result');
++
++async function api(path, opts) {
++  const res = await fetch(path, opts);
++  return res.json();
++}
++
++// 把服务端报错翻译成玩家能看懂的话
++function friendlyError(e) {
++  if (/401/.test(e)) return 'API key 无效，请检查有没有复制完整（401）';
++  if (/402/.test(e)) return '账户余额不足，请先到服务商官网充值（402）';
++  if (/网络错误|Failed to fetch|NetworkError|ECONN|ETIMEDOUT|timeout/i.test(e)) {
++    return '连不上服务商的服务器，请检查网络（或代理）后重试';
++  }
++  return e;
++}
++
++function refreshSubmit() {
++  submitBtn.disabled = Object.keys(state).length === 0;
++}
++
++function buildCard(name, meta) {
++  const div = document.createElement('div');
++  div.className = 'card';
++
++  const head = document.createElement('label');
++  head.className = 'card-head';
++  const cb = document.createElement('input');
++  cb.type = 'checkbox';
++  const nameSpan = document.createElement('span');
++  nameSpan.className = 'name';
++  nameSpan.textContent = meta.label;
++  head.appendChild(cb);
++  head.appendChild(nameSpan);
++  if (TAGS[name]) {
++    const tag = document.createElement('span');
++    tag.className = 'tag';
++    tag.textContent = TAGS[name];
++    head.appendChild(tag);
++  }
++  const dot = document.createElement('span');
++  dot.className = 'state-dot';
++  dot.textContent = '未启用';
++  head.appendChild(dot);
++
++  const desc = document.createElement('p');
++  desc.className = 'desc';
++  desc.textContent = DESCS[name] || meta.baseUrl;
++
++  const row = document.createElement('div');
++  row.className = 'row';
++  const keyInput = document.createElement('input');
++  keyInput.type = 'password';
++  keyInput.className = 'key-input';
++  keyInput.placeholder = '粘贴 API key（一般以 sk- 开头）';
++  keyInput.disabled = true;
++  keyInput.autocomplete = 'off';
++  const testBtn = document.createElement('button');
++  testBtn.textContent = '测试连接';
++  testBtn.disabled = true;
++  row.appendChild(keyInput);
++  row.appendChild(testBtn);
++
++  const msg = document.createElement('span');
++  msg.className = 'msg';
++
++  div.appendChild(head);
++  div.appendChild(desc);
++  div.appendChild(row);
++  div.appendChild(msg);
++
++  cb.addEventListener('change', () => {
++    const on = cb.checked;
++    div.classList.toggle('enabled', on);
++    dot.textContent = on ? '已启用' : '未启用';
++    keyInput.disabled = !on;
++    testBtn.disabled = !on;
++    if (!on) {
++      delete state[name];
++      msg.className = 'msg';
++      msg.textContent = '';
++      refreshSubmit();
++    } else {
++      keyInput.focus();
++    }
++  });
++
++  // key 有改动就作废之前的测试结果，避免保存未验证的 key
++  keyInput.addEventListener('input', () => {
++    if (state[name]) {
++      delete state[name];
++      msg.className = 'msg';
++      msg.textContent = 'key 已修改，请重新测试';
++      refreshSubmit();
++    }
++  });
++
++  testBtn.addEventListener('click', async () => {
++    const key = keyInput.value.trim();
++    if (!key) {
++      msg.className = 'msg err';
++      msg.textContent = '请先粘贴 API key 再测试';
++      keyInput.focus();
++      return;
++    }
++    testBtn.disabled = true;
++    msg.className = 'msg busy';
++    msg.textContent = '测试中，请稍等...';
++    try {
++      const r = await api('/api/test', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ provider: name, apiKey: key })
++      });
++      if (r.ok) {
++        state[name] = key;
++        msg.className = 'msg ok';
++        msg.textContent = '连接成功，可以保存了';
++      } else {
++        delete state[name];
++        msg.className = 'msg err';
++        msg.textContent = friendlyError(r.error || '未知错误');
++      }
++    } catch (e) {
++      delete state[name];
++      msg.className = 'msg err';
++      msg.textContent = '连不上配置服务，请确认本页面是从启动器打开的';
++    } finally {
++      testBtn.disabled = !cb.checked;
++      refreshSubmit();
++    }
++  });
++
++  return div;
++}
++
++async function init() {
++  let status;
++  try {
++    status = await api('/api/status');
++  } catch (e) {
++    cardsEl.innerHTML = '';
++    const err = document.createElement('p');
++    err.className = 'msg err';
++    err.textContent = '无法获取服务商列表，请关闭本页并重新双击启动器';
++    cardsEl.appendChild(err);
++    return;
++  }
++  cardsEl.innerHTML = '';
++  for (const [name, meta] of Object.entries(status.providers)) {
++    cardsEl.appendChild(buildCard(name, meta));
++  }
++  if (status.configured) {
++    document.getElementById('notice').classList.add('show');
++  }
++  refreshSubmit();
++}
++
++submitBtn.addEventListener('click', async () => {
++  const names = Object.keys(state);
++  if (names.length === 0) {
++    resultEl.className = 'err';
++    resultEl.textContent = '还没有测试通过的服务商：先勾选一家，填 key，点"测试连接"';
++    return;
++  }
++  submitBtn.disabled = true;
++  resultEl.className = '';
++  resultEl.textContent = '保存中...';
++  const providers = {};
++  for (const n of names) providers[n] = { apiKey: state[n] };
++  try {
++    const r = await api('/api/configure', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify({ providers })
++    });
++    if (r.ok) {
++      resultEl.className = '';
++      resultEl.textContent = '';
++      document.getElementById('done').classList.add('show');
++      document.getElementById('done').scrollIntoView({ block: 'nearest' });
++      submitBtn.textContent = '已保存';
++    } else {
++      resultEl.className = 'err';
++      resultEl.textContent = '保存失败：' + (r.error || '未知错误') + '，请重试';
++      submitBtn.disabled = false;
++    }
++  } catch (e) {
++    resultEl.className = 'err';
++    resultEl.textContent = '保存请求没发出去，请确认本页面是从启动器打开的，然后重试';
++    submitBtn.disabled = false;
++  }
++});
++
++init();
++</script>
++</body>
++</html>

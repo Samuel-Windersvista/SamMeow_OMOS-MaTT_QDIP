@@ -1,0 +1,1307 @@
+8bebf9e feat(qdip): player usage guide + packaging
+144d970 docs(qdip): readme and release checklist
+7a7f2a3 fix(qdip): launcher encoding to GBK for Chinese cmd parsing
+8bc1e6b feat(qdip): component updater script
+da2ec23 feat(qdip): packaging script with component assembly
+f4207fe feat(qdip): first-run guide page
+7be79bf feat(qdip): first-run guide server + config writer
+1dd66ab feat(qdip): launcher with env injection and first-run gate
+c054ecf feat(qdip): config templates with relative plugin paths
+1143dc6 chore(qdip): project skeleton + component manifest
+ .gitattributes                                     |   2 +
+ README.md                                          |  40 ++
+ build/.gitkeep                                     |   0
+ templates/.gitkeep                                 |   0
+ templates/oh-my-opencode-slim.json                 |  86 ++++
+ templates/opencode.json                            |   9 +
+ templates/setup/config-writer.js                   |  69 +++
+ templates/setup/config-writer.test.js              |  45 ++
+ templates/setup/first-run.html                     | 472 +++++++++++++++++++++
+ templates/setup/guide-server.js                    |  58 +++
+ templates/setup/guide-server.test.js               |  75 ++++
+ "templates/\345\220\257\345\212\250.bat"           |  53 +++
+ ...33\264\346\226\260\347\273\204\344\273\266.bat" |  39 ++
+ ...275\277\347\224\250\346\214\207\345\215\227.md" |  59 +++
+ ...252\214\350\257\201\346\270\205\345\215\225.md" |  33 ++
+ tools/build.ps1                                    |  62 +++
+ tools/cache/.gitkeep                               |   0
+ tools/check-sources.ps1                            |  15 +
+ tools/components.json                              |  54 +++
+ 19 files changed, 1171 insertions(+)
+  
+diff --git a/.gitattributes b/.gitattributes
+new file mode 100644
+index 0000000..f2cc609
+--- /dev/null
++++ b/.gitattributes
+@@ -0,0 +1,2 @@
++*.bat text eol=crlf
++*.ps1 text eol=crlf
+diff --git a/README.md b/README.md
+new file mode 100644
+index 0000000..21531e7
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,40 @@
++# SamMeow QDIP（Quick Deployment Integration Package）
++
++开箱即用的 AI 编程环境整合包构建仓库：把 opencode CLI、便携 Node、插件全家桶（OMOslim / superpowers / matt-skills）与首次配置引导服务组装成一个可分发 zip。玩家解压 → 双击 `启动.bat` → 浏览器配置 API key → 进入工作台。
++
++## 目录结构
++
++| 路径 | 说明 |
++|---|---|
++| `docs/` | 项目文档：需求说明书、通用版 spec、实施计划 |
++| `templates/` | 打包模板源：启动器、更新脚本、引导服务与配置写入（setup/）、引导页、opencode 配置模板、玩家使用指南、验证清单 |
++| `tools/` | 打包器 `build.ps1`、组件清单 `components.json`、源检查 `check-sources.ps1` |
++| `build/` | 组装产物（`qdip-generic-<version>/` 目录 + zip），git 忽略 |
++| `tools/cache/` | 离线组件缓存（便携 Node zip、opencode 离线包），git 忽略 |
++| `spt-edition/` | 预留 SPT 专业版目录（当前为空占位） |
++| `generic/` | 预留通用版辅助目录（当前为空占位） |
++
++## 维护者工作流
++
++1. **更新组件**：把新版本组件放入 `tools/cache/`（便携 Node 官方 zip 解压、opencode 用 `npm install --prefix` 后提取真实二进制），或更新 `components.json` 中的来源路径
++2. **组装**：`powershell -ExecutionPolicy Bypass -File tools\build.ps1`（从仓库根运行）
++3. **验证**：
++   - `build\qdip-generic-<version>\启动.bat --check`（自检 node/opencode）
++   - 首次引导冒烟（起 guide-server → .guide-url → 引导页 200）
++   - 端到端：解压 zip 到全新目录走首次配置（见 docs/ 验证方案）
++4. **发布**：把 `build/qdip-generic-<version>.zip` 放入 release/ 归档
++
++## 组件来源清单
++
++| 组件 | 来源 | 版本 | 许可 |
++|---|---|---|---|
++| 便携 Node | nodejs.org 官方发行版 zip | v24.14.1 | MIT |
++| opencode CLI | npm registry `opencode-ai` | 1.18.25 | MIT |
++| OMOslim | `oh-my-opencode-slim` 仓库 dist 构建产物 | 2.2.17+patch-kit | MIT |
++| superpowers | 本机 `~/.config/opencode/node_modules/superpowers` | 6.3.0 | MIT |
++| matt-skills | 本机 `~/.config/opencode/skills` | 2026-08-24 | MIT |
++| OMOslim 自定义片段 | 本机 `~/.config/opencode/oh-my-opencode-slim` | latest | MIT |
++
++## 许可
++
++各组件遵循其上游 MIT 许可（出处见上表）。本仓库的整合脚本与文档由 SamMeow 维护，MIT 许可。
+diff --git a/build/.gitkeep b/build/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/templates/.gitkeep b/templates/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/templates/oh-my-opencode-slim.json b/templates/oh-my-opencode-slim.json
+new file mode 100644
+index 0000000..7dadc93
+--- /dev/null
++++ b/templates/oh-my-opencode-slim.json
+@@ -0,0 +1,86 @@
++{
++  "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
++  "preset": "superpowers-bridge",
++  "showStartupToast": false,
++  "council": {
++    "presets": {
++      "default": {
++        "alpha": { "model": "deepseek/deepseek-v4-pro" },
++        "beta":  { "model": "deepseek/deepseek-v4-flash" },
++        "gamma": { "model": "kimi-for-coding/k3" }
++      },
++      "synthesizer": {
++        "alpha": { "model": "deepseek/deepseek-v4-pro" },
++        "beta":  { "model": "deepseek/deepseek-v4-flash" },
++        "gamma": { "model": "kimi-for-coding/k3" }
++      }
++    },
++    "default_preset": "synthesizer",
++    "councillor_execution_mode": "parallel",
++    "councillor_retries": 2
++  },
++  "presets": {
++    "superpowers-bridge": {
++      "orchestrator": {
++        "model": "deepseek/deepseek-v4-pro",
++        "variant": "max",
++        "skills": ["*"],
++        "mcps": ["*", "!context7"]
++      },
++      "orchestrator-beta": {
++        "model": "kimi-for-coding/k3",
++        "variant": "medium",
++        "skills": ["*"],
++        "mcps": ["*", "!context7"]
++      },
++      "orchestrator-gamma": {
++        "model": "deepseek/deepseek-v4-flash",
++        "variant": "max",
++        "skills": ["*"],
++        "mcps": ["*", "!context7"]
++      },
++      "oracle": {
++        "model": "kimi-for-coding/k3",
++        "variant": "high",
++        "skills": ["simplify"],
++        "mcps": []
++      },
++      "fixer": {
++        "model": "deepseek/deepseek-v4-flash",
++        "variant": "high",
++        "skills": [],
++        "mcps": []
++      },
++      "designer": {
++        "model": "kimi-for-coding/k3",
++        "variant": "medium",
++        "skills": ["agent-browser"],
++        "mcps": []
++      },
++      "explorer": {
++        "model": "deepseek/deepseek-v4-flash",
++        "variant": "medium",
++        "skills": [],
++        "mcps": []
++      },
++      "librarian": {
++        "model": "deepseek/deepseek-v4-flash",
++        "variant": "medium",
++        "skills": [],
++        "mcps": ["websearch", "context7", "grep_app"]
++      },
++      "observer": {
++        "model": "kimi-for-coding/k3",
++        "variant": "medium",
++        "skills": [],
++        "mcps": []
++      },
++      "council": {
++        "model": "kimi-for-coding/k3",
++        "variant": "max",
++        "skills": [],
++        "mcps": []
++      }
++    }
++  }
++}
+diff --git a/templates/opencode.json b/templates/opencode.json
+new file mode 100644
+index 0000000..f2da12c
+--- /dev/null
++++ b/templates/opencode.json
+@@ -0,0 +1,9 @@
++{
++  "$schema": "https://opencode.ai/config.json",
++  "plugin": [
++    "./plugins/oh-my-opencode-slim",
++    "./plugins/superpowers"
++  ],
++  "providers": {},
++  "lsp": true
++}
+diff --git a/templates/setup/config-writer.js b/templates/setup/config-writer.js
+new file mode 100644
+index 0000000..781c786
+--- /dev/null
++++ b/templates/setup/config-writer.js
+@@ -0,0 +1,69 @@
++const fs = require('node:fs');
++const path = require('node:path');
++
++/**
++ * 服务商元数据（基于 opencode 1.18.25 实测，证据见 task-4-report.md）：
++ * - builtin: 该 provider 是否在 opencode 内置注册表（~/.cache/opencode/models.json）中。
++ *   实测结论：deepseek / openai 内置；moonshot(kimi) 不在注册表 → 需按 openai-compatible 注册。
++ * - 内置 provider 只需写入 auth.json 即可生效，无需在 opencode.json 的 providers 段注册。
++ * - 非内置 provider 注册为 { npm: '@ai-sdk/openai-compatible', options: { baseURL } }。
++ */
++const PROVIDERS = {
++  deepseek: { label: 'DeepSeek', testModel: 'deepseek-chat', baseUrl: 'https://api.deepseek.com', builtin: true },
++  kimi: { label: 'Kimi (Moonshot)', testModel: 'moonshot-v1-8k', baseUrl: 'https://api.moonshot.cn/v1', builtin: false, npm: '@ai-sdk/openai-compatible' },
++  openai: { label: 'OpenAI', testModel: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1', builtin: true },
++};
++
++function rootOf(root) {
++  return {
++    configDir: path.join(root, 'opencode', 'config'),
++    authFile: path.join(root, 'opencode', 'auth', 'auth.json'),
++    configured: path.join(root, 'data', '.configured'),
++  };
++}
++
++function configure({ root, providers }) {
++  const { configDir, authFile, configured } = rootOf(root);
++  fs.mkdirSync(path.dirname(authFile), { recursive: true });
++  fs.mkdirSync(configDir, { recursive: true });
++
++  // 1) auth.json —— 实测格式为 { provider: { type: 'api', key } }（字段名是 key，不是 apiKey）
++  const auth = {};
++  for (const [name, p] of Object.entries(providers)) {
++    auth[name] = { type: 'api', key: p.apiKey };
++  }
++  fs.writeFileSync(authFile, JSON.stringify(auth, null, 2) + '\n', 'utf8');
++
++  // 2) opencode.json —— 仅注册非内置 provider（内置的 auth.json 即生效）
++  const cfgPath = path.join(configDir, 'opencode.json');
++  const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
++  cfg.providers = cfg.providers || {};
++  for (const [name, p] of Object.entries(providers)) {
++    const meta = PROVIDERS[name];
++    if (!meta || meta.builtin) continue;
++    cfg.providers[name] = { npm: meta.npm || '@ai-sdk/openai-compatible', options: { baseURL: meta.baseUrl } };
++  }
++  fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + '\n', 'utf8');
++
++  // 3) 标记
++  fs.writeFileSync(configured, JSON.stringify({ at: new Date().toISOString(), providers: Object.keys(providers) }), 'utf8');
++}
++
++async function testConnection({ provider, apiKey }) {
++  const meta = PROVIDERS[provider];
++  if (!meta) return { ok: false, error: `未知服务商: ${provider}` };
++  try {
++    const res = await fetch(`${meta.baseUrl}/models`, {
++      headers: { Authorization: `Bearer ${apiKey}` },
++      signal: AbortSignal.timeout(10000),
++    });
++    if (res.ok) return { ok: true };
++    if (res.status === 401) return { ok: false, error: 'API key 无效（401）' };
++    if (res.status === 402) return { ok: false, error: '余额不足（402）' };
++    return { ok: false, error: `HTTP ${res.status}` };
++  } catch (e) {
++    return { ok: false, error: `网络错误: ${e.message}` };
++  }
++}
++
++module.exports = { configure, testConnection, PROVIDERS };
+diff --git a/templates/setup/config-writer.test.js b/templates/setup/config-writer.test.js
+new file mode 100644
+index 0000000..bab9e8c
+--- /dev/null
++++ b/templates/setup/config-writer.test.js
+@@ -0,0 +1,45 @@
++const { test } = require('node:test');
++const assert = require('node:assert');
++const fs = require('node:fs');
++const os = require('node:os');
++const path = require('node:path');
++const { configure } = require('./config-writer');
++
++function makeRoot() {
++  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qdip-test-'));
++  fs.mkdirSync(path.join(root, 'opencode', 'config'), { recursive: true });
++  fs.mkdirSync(path.join(root, 'opencode', 'auth'), { recursive: true });
++  fs.mkdirSync(path.join(root, 'data'), { recursive: true });
++  fs.copyFileSync(path.join(__dirname, '..', 'opencode.json'), path.join(root, 'opencode', 'config', 'opencode.json'));
++  fs.copyFileSync(path.join(__dirname, '..', 'oh-my-opencode-slim.json'), path.join(root, 'opencode', 'config', 'oh-my-opencode-slim.json'));
++  return root;
++}
++
++test('configure writes auth.json in measured opencode format (type + key)', () => {
++  const root = makeRoot();
++  configure({ root, providers: { deepseek: { apiKey: 'sk-test-123' } } });
++  const auth = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'auth', 'auth.json'), 'utf8'));
++  assert.strictEqual(auth.deepseek.type, 'api');
++  assert.strictEqual(auth.deepseek.key, 'sk-test-123');
++});
++
++test('configure does not inject builtin providers (deepseek) into providers section', () => {
++  const root = makeRoot();
++  configure({ root, providers: { deepseek: { apiKey: 'sk-test-123' } } });
++  const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode.json'), 'utf8'));
++  assert.deepStrictEqual(cfg.providers, {});
++});
++
++test('configure registers non-builtin provider (kimi) as openai-compatible', () => {
++  const root = makeRoot();
++  configure({ root, providers: { kimi: { apiKey: 'sk-test-123' } } });
++  const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode.json'), 'utf8'));
++  assert.strictEqual(cfg.providers.kimi.npm, '@ai-sdk/openai-compatible');
++  assert.strictEqual(cfg.providers.kimi.options.baseURL, 'https://api.moonshot.cn/v1');
++});
++
++test('configure writes .configured marker', () => {
++  const root = makeRoot();
++  configure({ root, providers: { deepseek: { apiKey: 'sk-test-123' } } });
++  assert.ok(fs.existsSync(path.join(root, 'data', '.configured')));
++});
+diff --git a/templates/setup/first-run.html b/templates/setup/first-run.html
+new file mode 100644
+index 0000000..e6a3b1a
+--- /dev/null
++++ b/templates/setup/first-run.html
+@@ -0,0 +1,472 @@
++<!DOCTYPE html>
++<html lang="zh-CN">
++<head>
++<meta charset="utf-8">
++<meta name="viewport" content="width=device-width, initial-scale=1">
++<title>QDIP 首次配置</title>
++<style>
++  :root {
++    --bg: #0a0f0a;
++    --panel: #0e160e;
++    --panel-2: #101a10;
++    --line: #2a5a2a;
++    --line-dim: #1c3a1c;
++    --fg: #a8f0a8;
++    --fg-dim: #6fae6f;
++    --accent: #66ff66;
++    --err: #ff8080;
++    --warn: #ffd080;
++  }
++  * { box-sizing: border-box; }
++  body {
++    background: var(--bg);
++    background-image: radial-gradient(rgba(102, 255, 102, 0.04) 1px, transparent 1px);
++    background-size: 4px 4px;
++    color: var(--fg);
++    font-family: Consolas, "Courier New", monospace;
++    font-size: 15px;
++    line-height: 1.6;
++    max-width: 700px;
++    margin: 0 auto;
++    padding: 32px 16px 64px;
++  }
++
++  /* ===== 终端窗口头 ===== */
++  .term-bar {
++    display: flex;
++    align-items: center;
++    gap: 8px;
++    border: 1px solid var(--line);
++    border-bottom: none;
++    border-radius: 8px 8px 0 0;
++    background: var(--panel-2);
++    padding: 8px 14px;
++    color: var(--fg-dim);
++    font-size: 13px;
++  }
++  .term-bar .dot {
++    width: 10px; height: 10px;
++    border-radius: 50%;
++    border: 1px solid var(--line);
++    background: var(--line-dim);
++  }
++  .term-bar .dot.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
++  .term-bar .title { margin-left: 8px; letter-spacing: 1px; }
++  .term-body {
++    border: 1px solid var(--line);
++    border-radius: 0 0 8px 8px;
++    background: var(--panel);
++    padding: 24px 24px 28px;
++    box-shadow: 0 0 40px rgba(102, 255, 102, 0.06);
++  }
++  h1 {
++    margin: 0 0 4px;
++    font-size: 22px;
++    font-weight: bold;
++    color: var(--accent);
++    text-shadow: 0 0 12px rgba(102, 255, 102, 0.35);
++    letter-spacing: 2px;
++  }
++  h1::before { content: "> "; color: var(--fg-dim); }
++  .intro { margin: 8px 0 0; color: var(--fg-dim); }
++  .privacy {
++    margin: 16px 0 0;
++    padding: 10px 12px;
++    border: 1px dashed var(--line);
++    border-radius: 6px;
++    color: var(--fg-dim);
++    font-size: 13px;
++  }
++  .privacy::before { content: "[i] "; color: var(--accent); }
++
++  .notice {
++    display: none;
++    margin: 16px 0 0;
++    padding: 10px 12px;
++    border: 1px solid var(--warn);
++    border-radius: 6px;
++    color: var(--warn);
++    font-size: 13px;
++  }
++  .notice.show { display: block; }
++
++  /* ===== 服务商卡片 ===== */
++  .card {
++    position: relative;
++    border: 1px solid var(--line-dim);
++    border-left: 4px solid var(--line-dim);
++    border-radius: 8px;
++    background: var(--panel-2);
++    padding: 16px 18px;
++    margin: 16px 0 0;
++    transition: border-color 0.2s, box-shadow 0.2s;
++  }
++  .card.enabled {
++    border-color: var(--line);
++    border-left-color: var(--accent);
++    box-shadow: 0 0 18px rgba(102, 255, 102, 0.08);
++  }
++  .card-head {
++    display: flex;
++    align-items: center;
++    gap: 10px;
++    cursor: pointer;
++    user-select: none;
++  }
++  .card-head input[type="checkbox"] {
++    width: 16px; height: 16px;
++    accent-color: #4caf50;
++    cursor: pointer;
++    margin: 0;
++  }
++  .card-head .name { font-weight: bold; font-size: 16px; color: var(--fg); }
++  .card-head .tag {
++    font-size: 12px;
++    color: var(--bg);
++    background: var(--accent);
++    border-radius: 3px;
++    padding: 0 6px;
++    line-height: 18px;
++  }
++  .card-head .state-dot {
++    margin-left: auto;
++    font-size: 12px;
++    color: var(--fg-dim);
++  }
++  .card.enabled .state-dot { color: var(--accent); }
++  .desc { margin: 6px 0 12px 26px; color: var(--fg-dim); font-size: 13px; }
++
++  .row { display: flex; gap: 10px; margin-left: 26px; }
++  .key-input {
++    flex: 1;
++    min-width: 0;
++    background: var(--bg);
++    color: var(--fg);
++    border: 1px solid var(--line);
++    border-radius: 4px;
++    padding: 8px 10px;
++    font-family: inherit;
++    font-size: 14px;
++  }
++  .key-input::placeholder { color: #4a7a4a; }
++  .key-input:focus {
++    outline: none;
++    border-color: var(--accent);
++    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.25);
++  }
++  .key-input:disabled { opacity: 0.35; cursor: not-allowed; }
++
++  button {
++    background: #1a3a1a;
++    color: var(--fg);
++    border: 1px solid var(--line);
++    border-radius: 4px;
++    padding: 8px 16px;
++    font-family: inherit;
++    font-size: 14px;
++    cursor: pointer;
++    white-space: nowrap;
++    transition: background 0.15s, border-color 0.15s;
++  }
++  button:hover:not(:disabled) { background: #234a23; border-color: var(--accent); }
++  button:focus-visible {
++    outline: none;
++    border-color: var(--accent);
++    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.35);
++  }
++  button:disabled { opacity: 0.35; cursor: not-allowed; }
++
++  .msg { display: block; min-height: 20px; margin: 8px 0 0 26px; font-size: 13px; color: var(--fg-dim); }
++  .msg.ok { color: var(--accent); }
++  .msg.ok::before { content: "[OK] "; }
++  .msg.err { color: var(--err); }
++  .msg.err::before { content: "[!!] "; }
++  .msg.busy { color: var(--fg-dim); }
++  .msg.busy::before { content: "[..] "; }
++
++  /* ===== 底部操作区 ===== */
++  .actions {
++    margin-top: 28px;
++    padding-top: 20px;
++    border-top: 1px dashed var(--line-dim);
++    display: flex;
++    align-items: center;
++    gap: 14px;
++    flex-wrap: wrap;
++  }
++  #submit { font-size: 15px; padding: 10px 24px; }
++  #submit:not(:disabled) {
++    background: var(--accent);
++    border-color: var(--accent);
++    color: var(--bg);
++    font-weight: bold;
++    box-shadow: 0 0 16px rgba(102, 255, 102, 0.35);
++  }
++  #submit:not(:disabled):hover { background: #8cff8c; }
++  .hint { color: var(--fg-dim); font-size: 13px; }
++
++  #result { margin-top: 14px; font-size: 14px; min-height: 22px; }
++  #result.err { color: var(--err); }
++  #result.err::before { content: "[!!] "; }
++
++  .done-panel {
++    display: none;
++    margin-top: 16px;
++    padding: 18px;
++    border: 1px solid var(--accent);
++    border-radius: 8px;
++    background: rgba(102, 255, 102, 0.06);
++    box-shadow: 0 0 24px rgba(102, 255, 102, 0.15);
++    color: var(--accent);
++  }
++  .done-panel.show { display: block; }
++  .done-panel .big { font-size: 17px; font-weight: bold; margin: 0 0 6px; }
++  .done-panel .big::before { content: ">> "; }
++  .done-panel p { margin: 0; color: var(--fg); font-size: 14px; }
++
++  /* ===== 窄屏 ===== */
++  @media (max-width: 560px) {
++    body { padding: 16px 10px 48px; }
++    .term-body { padding: 18px 14px 22px; }
++    .row { flex-direction: column; margin-left: 0; }
++    .desc, .msg { margin-left: 0; }
++    .card-head .state-dot { display: none; }
++    #submit { width: 100%; }
++  }
++</style>
++</head>
++<body>
++<div class="term-bar">
++  <span class="dot on"></span><span class="dot"></span><span class="dot"></span>
++  <span class="title">QDIP-SETUP :: first-run</span>
++</div>
++<div class="term-body">
++  <h1>QDIP 首次配置</h1>
++  <p class="intro">还差一步就能用了：勾选你想用的模型服务商，粘贴 API key，点"测试连接"。通过后保存配置即可。</p>
++  <p class="privacy">本页面完全离线运行，key 只保存在你自己的电脑上，不会上传到任何其他地方。</p>
++  <p id="notice" class="notice">检测到本机已有配置。重新保存会覆盖旧的 key。</p>
++
++  <div id="cards"><p class="msg busy">正在加载服务商列表...</p></div>
++
++  <div class="actions">
++    <button id="submit" disabled>保存配置</button>
++    <span class="hint">至少有一个服务商测试通过后才能保存</span>
++  </div>
++  <div id="result"></div>
++  <div id="done" class="done-panel">
++    <p class="big">配置完成</p>
++    <p>请关闭本页面，重新双击启动器，就可以开始使用了。</p>
++  </div>
++</div>
++
++<script>
++// state[name] = 已通过测试的 apiKey；保存时一次性提交全部
++const state = {};
++
++const DESCS = {
++  deepseek: '国产模型，价格便宜，新用户注册送额度。不确定选哪个就选它。',
++  kimi: '月之暗面出品，国内可直接访问，长文本表现好。',
++  openai: '需要能访问海外网络，账户需绑定海外支付方式。'
++};
++const TAGS = { deepseek: '推荐' };
++
++const cardsEl = document.getElementById('cards');
++const submitBtn = document.getElementById('submit');
++const resultEl = document.getElementById('result');
++
++async function api(path, opts) {
++  const res = await fetch(path, opts);
++  return res.json();
++}
++
++// 把服务端报错翻译成玩家能看懂的话
++function friendlyError(e) {
++  if (/401/.test(e)) return 'API key 无效，请检查有没有复制完整（401）';
++  if (/402/.test(e)) return '账户余额不足，请先到服务商官网充值（402）';
++  if (/网络错误|Failed to fetch|NetworkError|ECONN|ETIMEDOUT|timeout/i.test(e)) {
++    return '连不上服务商的服务器，请检查网络（或代理）后重试';
++  }
++  return e;
++}
++
++function refreshSubmit() {
++  submitBtn.disabled = Object.keys(state).length === 0;
++}
++
++function buildCard(name, meta) {
++  const div = document.createElement('div');
++  div.className = 'card';
++
++  const head = document.createElement('label');
++  head.className = 'card-head';
++  const cb = document.createElement('input');
++  cb.type = 'checkbox';
++  const nameSpan = document.createElement('span');
++  nameSpan.className = 'name';
++  nameSpan.textContent = meta.label;
++  head.appendChild(cb);
++  head.appendChild(nameSpan);
++  if (TAGS[name]) {
++    const tag = document.createElement('span');
++    tag.className = 'tag';
++    tag.textContent = TAGS[name];
++    head.appendChild(tag);
++  }
++  const dot = document.createElement('span');
++  dot.className = 'state-dot';
++  dot.textContent = '未启用';
++  head.appendChild(dot);
++
++  const desc = document.createElement('p');
++  desc.className = 'desc';
++  desc.textContent = DESCS[name] || meta.baseUrl;
++
++  const row = document.createElement('div');
++  row.className = 'row';
++  const keyInput = document.createElement('input');
++  keyInput.type = 'password';
++  keyInput.className = 'key-input';
++  keyInput.placeholder = '粘贴 API key（一般以 sk- 开头）';
++  keyInput.disabled = true;
++  keyInput.autocomplete = 'off';
++  const testBtn = document.createElement('button');
++  testBtn.textContent = '测试连接';
++  testBtn.disabled = true;
++  row.appendChild(keyInput);
++  row.appendChild(testBtn);
++
++  const msg = document.createElement('span');
++  msg.className = 'msg';
++
++  div.appendChild(head);
++  div.appendChild(desc);
++  div.appendChild(row);
++  div.appendChild(msg);
++
++  cb.addEventListener('change', () => {
++    const on = cb.checked;
++    div.classList.toggle('enabled', on);
++    dot.textContent = on ? '已启用' : '未启用';
++    keyInput.disabled = !on;
++    testBtn.disabled = !on;
++    if (!on) {
++      delete state[name];
++      msg.className = 'msg';
++      msg.textContent = '';
++      refreshSubmit();
++    } else {
++      keyInput.focus();
++    }
++  });
++
++  // key 有改动就作废之前的测试结果，避免保存未验证的 key
++  keyInput.addEventListener('input', () => {
++    if (state[name]) {
++      delete state[name];
++      msg.className = 'msg';
++      msg.textContent = 'key 已修改，请重新测试';
++      refreshSubmit();
++    }
++  });
++
++  testBtn.addEventListener('click', async () => {
++    const key = keyInput.value.trim();
++    if (!key) {
++      msg.className = 'msg err';
++      msg.textContent = '请先粘贴 API key 再测试';
++      keyInput.focus();
++      return;
++    }
++    testBtn.disabled = true;
++    msg.className = 'msg busy';
++    msg.textContent = '测试中，请稍等...';
++    try {
++      const r = await api('/api/test', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ provider: name, apiKey: key })
++      });
++      if (r.ok) {
++        state[name] = key;
++        msg.className = 'msg ok';
++        msg.textContent = '连接成功，可以保存了';
++      } else {
++        delete state[name];
++        msg.className = 'msg err';
++        msg.textContent = friendlyError(r.error || '未知错误');
++      }
++    } catch (e) {
++      delete state[name];
++      msg.className = 'msg err';
++      msg.textContent = '连不上配置服务，请确认本页面是从启动器打开的';
++    } finally {
++      testBtn.disabled = !cb.checked;
++      refreshSubmit();
++    }
++  });
++
++  return div;
++}
++
++async function init() {
++  let status;
++  try {
++    status = await api('/api/status');
++  } catch (e) {
++    cardsEl.innerHTML = '';
++    const err = document.createElement('p');
++    err.className = 'msg err';
++    err.textContent = '无法获取服务商列表，请关闭本页并重新双击启动器';
++    cardsEl.appendChild(err);
++    return;
++  }
++  cardsEl.innerHTML = '';
++  for (const [name, meta] of Object.entries(status.providers)) {
++    cardsEl.appendChild(buildCard(name, meta));
++  }
++  if (status.configured) {
++    document.getElementById('notice').classList.add('show');
++  }
++  refreshSubmit();
++}
++
++submitBtn.addEventListener('click', async () => {
++  const names = Object.keys(state);
++  if (names.length === 0) {
++    resultEl.className = 'err';
++    resultEl.textContent = '还没有测试通过的服务商：先勾选一家，填 key，点"测试连接"';
++    return;
++  }
++  submitBtn.disabled = true;
++  resultEl.className = '';
++  resultEl.textContent = '保存中...';
++  const providers = {};
++  for (const n of names) providers[n] = { apiKey: state[n] };
++  try {
++    const r = await api('/api/configure', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify({ providers })
++    });
++    if (r.ok) {
++      resultEl.className = '';
++      resultEl.textContent = '';
++      document.getElementById('done').classList.add('show');
++      document.getElementById('done').scrollIntoView({ block: 'nearest' });
++      submitBtn.textContent = '已保存';
++    } else {
++      resultEl.className = 'err';
++      resultEl.textContent = '保存失败：' + (r.error || '未知错误') + '，请重试';
++      submitBtn.disabled = false;
++    }
++  } catch (e) {
++    resultEl.className = 'err';
++    resultEl.textContent = '保存请求没发出去，请确认本页面是从启动器打开的，然后重试';
++    submitBtn.disabled = false;
++  }
++});
++
++init();
++</script>
++</body>
++</html>
+diff --git a/templates/setup/guide-server.js b/templates/setup/guide-server.js
+new file mode 100644
+index 0000000..b9a8bee
+--- /dev/null
++++ b/templates/setup/guide-server.js
+@@ -0,0 +1,58 @@
++const http = require('node:http');
++const fs = require('node:fs');
++const path = require('node:path');
++const { configure, testConnection, PROVIDERS } = require('./config-writer');
++
++// 根路径来自 argv[2]（Task 3 启动器传入，无尾反斜杠形态）
++const root = path.resolve(process.argv[2] || '.');
++const dataDir = path.join(root, 'data');
++const setupDir = path.join(root, 'setup');
++
++const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
++
++const server = http.createServer(async (req, res) => {
++  const url = new URL(req.url, 'http://127.0.0.1');
++  try {
++    if (url.pathname === '/api/status') {
++      res.writeHead(200, { 'Content-Type': 'application/json' });
++      res.end(JSON.stringify({ ok: true, providers: PROVIDERS, configured: fs.existsSync(path.join(dataDir, '.configured')) }));
++      return;
++    }
++    if (url.pathname === '/api/configure' && req.method === 'POST') {
++      let body = '';
++      for await (const chunk of req) body += chunk;
++      const { providers } = JSON.parse(body);
++      configure({ root, providers });
++      res.writeHead(200, { 'Content-Type': 'application/json' });
++      res.end(JSON.stringify({ ok: true }));
++      return;
++    }
++    if (url.pathname === '/api/test' && req.method === 'POST') {
++      let body = '';
++      for await (const chunk of req) body += chunk;
++      const { provider, apiKey } = JSON.parse(body);
++      const result = await testConnection({ provider, apiKey });
++      res.writeHead(200, { 'Content-Type': 'application/json' });
++      res.end(JSON.stringify(result));
++      return;
++    }
++    // 静态文件：仅允许 setup 目录内（path.basename 防御路径穿越）
++    const rel = url.pathname.replace(/^\/setup\//, '');
++    const file = path.join(setupDir, path.basename(rel));
++    if (fs.existsSync(file) && fs.statSync(file).isFile()) {
++      res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
++      res.end(fs.readFileSync(file));
++      return;
++    }
++    res.writeHead(404); res.end('not found');
++  } catch (e) {
++    res.writeHead(500, { 'Content-Type': 'application/json' });
++    res.end(JSON.stringify({ ok: false, error: e.message }));
++  }
++});
++
++server.listen(0, '127.0.0.1', () => {
++  const port = server.address().port;
++  fs.mkdirSync(dataDir, { recursive: true });
++  fs.writeFileSync(path.join(dataDir, '.guide-url'), `http://127.0.0.1:${port}/setup/first-run.html`, 'utf8');
++});
+diff --git a/templates/setup/guide-server.test.js b/templates/setup/guide-server.test.js
+new file mode 100644
+index 0000000..3095a84
+--- /dev/null
++++ b/templates/setup/guide-server.test.js
+@@ -0,0 +1,75 @@
++const { test } = require('node:test');
++const assert = require('node:assert');
++const { spawn } = require('node:child_process');
++const fs = require('node:fs');
++const os = require('node:os');
++const path = require('node:path');
++
++function boot(root) {
++  const portFile = path.join(root, 'data', '.guide-url');
++  const proc = spawn(process.execPath, [path.join(__dirname, 'guide-server.js'), root], { stdio: 'ignore' });
++  return new Promise((resolve, reject) => {
++    const t0 = Date.now();
++    const timer = setInterval(() => {
++      if (fs.existsSync(portFile)) {
++        clearInterval(timer);
++        resolve({ proc, url: fs.readFileSync(portFile, 'utf8').trim() });
++      } else if (Date.now() - t0 > 8000) {
++        clearInterval(timer);
++        reject(new Error('guide-url not written in time'));
++      }
++    }, 100);
++  });
++}
++
++function makeRoot() {
++  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qdip-guide-'));
++  fs.mkdirSync(path.join(root, 'data'), { recursive: true });
++  return root;
++}
++
++test('server writes .guide-url and answers /api/status with providers', async () => {
++  const root = makeRoot();
++  const { proc, url } = await boot(root);
++  try {
++    const res = await fetch(url.replace('/setup/first-run.html', '/api/status'));
++    assert.strictEqual(res.status, 200);
++    const body = await res.json();
++    assert.strictEqual(body.ok, true);
++    assert.ok(body.providers.deepseek);
++  } finally {
++    proc.kill();
++  }
++});
++
++test('POST /api/test with fake key returns ok:false structure', async () => {
++  const root = makeRoot();
++  const { proc, url } = await boot(root);
++  try {
++    const base = url.replace('/setup/first-run.html', '');
++    const res = await fetch(base + '/api/test', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify({ provider: 'deepseek', apiKey: 'sk-invalid-dummy-key-123' }),
++    });
++    assert.strictEqual(res.status, 200);
++    const body = await res.json();
++    assert.strictEqual(body.ok, false);
++    assert.strictEqual(typeof body.error, 'string');
++  } finally {
++    proc.kill();
++  }
++});
++
++test('path traversal does not leak files outside setup', async () => {
++  const root = makeRoot();
++  fs.writeFileSync(path.join(root, 'data', '.configured'), 'secret', 'utf8');
++  const { proc, url } = await boot(root);
++  try {
++    const base = url.replace('/setup/first-run.html', '');
++    const res = await fetch(base + '/setup/../data/.configured');
++    assert.notStrictEqual(res.status, 200);
++  } finally {
++    proc.kill();
++  }
++});
+diff --git "a/templates/\345\220\257\345\212\250.bat" "b/templates/\345\220\257\345\212\250.bat"
+new file mode 100644
+index 0000000..f61daee
+--- /dev/null
++++ "b/templates/\345\220\257\345\212\250.bat"
+@@ -0,0 +1,53 @@
++@echo off
++setlocal EnableExtensions
++title SamMeow AI ����̨
++cd /d "%~dp0"
++
++rem --- ����ע�룺��Я Node + opencode CLI + ���ø��� ---
++set "ROOT=%~dp0"
++set "PATH=%ROOT%runtime\node;%ROOT%opencode\bin;%PATH%"
++set "XDG_DATA_HOME=%ROOT%opencode\auth"
++set "XDG_CONFIG_HOME=%ROOT%opencode\config"
++rem ROOTS��ROOT ȥβ��б�ܣ�cmd ��� \" ����Ϊת�����ţ������������������ַ���
++set "ROOTS=%ROOT:~0,-1%"
++
++rem --- �Լ�ģʽ����֤·����汾 ---
++if /i "%~1"=="--check" goto :check
++
++rem --- �״��������� ---
++if not exist "%ROOT%data\.configured" goto :guide
++goto :run
++
++:check
++echo [check] node: %ROOT%runtime\node\node.exe
++if not exist "%ROOT%runtime\node\node.exe" echo [FAIL] node missing
++if not exist "%ROOT%opencode\bin\opencode.exe" if not exist "%ROOT%opencode\bin\opencode.cmd" echo [FAIL] opencode missing
++"%ROOT%runtime\node\node.exe" --version
++exit /b 0
++
++:guide
++if not exist "%ROOT%data" mkdir "%ROOT%data"
++del /q "%ROOT%data\.guide-url" 2>nul
++start "QDIP-Guide" /min "%ROOT%runtime\node\node.exe" "%ROOT%setup\guide-server.js" "%ROOTS%"
++rem �ȴ���������д�� .guide-url����� 15 �룩
++set /a tries=0
++:waitguide
++if not exist "%ROOT%data\.guide-url" (
++  set /a tries+=1
++  if %tries% GEQ 15 goto guidefail
++  ping -n 2 127.0.0.1 >nul
++  goto waitguide
++)
++set /p GUIDE_URL=<"%ROOT%data\.guide-url"
++start "" "%GUIDE_URL%"
++echo �״�ʹ�ã���������������ģ�����ã���ɺ�����˫�����ļ�������
++exit /b 0
++:guidefail
++echo [FAIL] ������������ʧ�ܡ����ͼ�����ڷ�����
++pause
++exit /b 1
++
++:run
++opencode %*
++exit /b %errorlevel%
++
+diff --git "a/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat" "b/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat"
+new file mode 100644
+index 0000000..9bbbd49
+--- /dev/null
++++ "b/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat"
+@@ -0,0 +1,39 @@
++@echo off
++setlocal EnableExtensions
++title SamMeow �������
++cd /d "%~dp0"
++set "ROOT=%~dp0"
++set "PATH=%ROOT%runtime\node;%PATH%"
++
++echo ============================================
++echo   SamMeow AI ����̨ - �������
++echo   ˵�������� opencode �� superpowers �����
++echo   OMOslim �뼼�ܰ���ȴ��°����ϰ�������
++echo ============================================
++echo.
++
++rem --- 1. ���� opencode��npm �ٷ�Դ�� ---
++echo [1/2] ���� opencode ...
++call npm install -g opencode-ai@latest --prefix "%ROOT%opencode" --no-save 2>nul
++if errorlevel 1 goto :ocfail
++echo   [OK] opencode �Ѹ���
++goto :step2
++:ocfail
++echo   [FAIL] opencode ����ʧ�ܣ��������⣿�����ѱ���ԭ�汾��
++
++:step2
++rem --- 2. ���� superpowers ---
++echo [2/2] ���� superpowers ...
++if not exist "%ROOT%plugins\superpowers\package.json" goto :spmissing
++pushd "%ROOT%plugins\superpowers"
++call npm update superpowers --prefix "%ROOT%plugins" --no-save 2>nul
++popd
++echo   [OK] superpowers �Ѹ���
++goto :done
++:spmissing
++echo   [SKIP] superpowers ���ȱʧ������
++
++:done
++echo.
++echo ��ɡ�����˫�� ����.bat ��Ч��
++pause
+diff --git "a/templates/\347\216\251\345\256\266\344\275\277\347\224\250\346\214\207\345\215\227.md" "b/templates/\347\216\251\345\256\266\344\275\277\347\224\250\346\214\207\345\215\227.md"
+new file mode 100644
+index 0000000..1e134b6
+--- /dev/null
++++ "b/templates/\347\216\251\345\256\266\344\275\277\347\224\250\346\214\207\345\215\227.md"
+@@ -0,0 +1,59 @@
++# SamMeow AI 工作台 — 玩家使用指南
++
++## 这是什么
++一个开箱即用的 AI 编程环境（opencode + 插件全家桶）。你负责描述需求，AI 负责写代码。
++
++## 快速开始（5 步）
++1. 解压到任意文件夹（路径别带中文以外的问题：建议 D:\ 或 E:\ 根目录新建文件夹）
++2. 双击 启动.bat
++3. 浏览器弹出配置页：勾选模型服务商 → 粘贴 API key → 点"测试连接"（显示成功）
++4. 点"保存配置"，关闭浏览器
++5. 重新双击 启动.bat → 进入工作台
++
++## 怎么高效使用（工作流建议）
++### 1. 一个项目一个文件夹
++每个想法建一个独立文件夹（比如 D:\我的项目\子弹价格修改器），不要把多个项目混在一起。
++AI 会在当前文件夹里读写文件，项目隔离 = 修改互不干扰。
++
++### 2. 先想清楚再开口（需求描述公式）
++好的需求 = 做什么 + 给谁用 + 边界。
++- 差的：帮我写个工具
++- 好的：做一个给 SPT 用的工具，把 mods 文件夹里所有 json 的 "price" 字段统一打 8 折，保留原始文件备份
++
++### 3. 让 AI 先给你方案，再让它动手
++第一次对话先说"先给我一个方案/计划"，确认方向后再说"按这个做"。
++方向错了返工的成本远高于多问一句。
++
++### 4. 改不动了就说"看看哪里出问题了"
++遇到报错直接把报错文字复制给 AI，说"这个报错什么意思，怎么修"。
++不要自己猜，不要重开新对话——同一对话里 AI 记得上下文。
++
++### 5. 重要东西随手备份
++AI 写的代码也是代码，重要项目定期复制一份文件夹。
++工作台本身的重置很简单：删除 data 文件夹 = 回到初始状态（配置也重置）。
++
++## 适合做什么
++- 小工具/脚本（批量改文件、整理数据、自动下载）
++- 游戏 mod 配置（改数值、加物品、调平衡）
++- 学习编程（让 AI 解释它写的每行代码）
++- 数据处理（CSV/JSON/Excel 转换）
++
++## 不适合做什么（现阶段）
++- 大型商业软件（涉及复杂架构的项目需要专业开发）
++- 涉及别人账号密码/支付系统的程序（安全风险，别让 AI 写）
++
++## 常见问题
++| 问题 | 解决 |
++|---|---|
++| 双击没反应 | 杀毒软件拦截了 bat，添加信任；或右键"以管理员身份运行" |
++| 浏览器没弹出配置页 | 等 3 秒再双击一次；确认 启动.bat 所在路径无中文嵌套过深 |
++| API key 无效 | 检查是否复制完整（sk- 开头）、服务商后台是否已充值 |
++| 想换模型 | 删掉 data 文件夹重新配置，或直接改 opencode/config 下的文件 |
++| 怎么更新 | 等新版整合包发布，解压覆盖（保留 opencode/auth 与 opencode/config/local 不丢配置） |
++
++## 进阶成长路径
++1. 用工作台写你的第一个小工具
++2. 学会看 AI 写的代码（让它注释每一行）
++3. 自己改 AI 生成的代码（从改一个数字开始）
++4. 把 opencode 装进系统 PATH（安装到系统.bat），任何文件夹都能启动
++5. 加入 mod 开发社区，用这套环境写你的第一个 SPT mod
+diff --git "a/templates/\351\252\214\350\257\201\346\270\205\345\215\225.md" "b/templates/\351\252\214\350\257\201\346\270\205\345\215\225.md"
+new file mode 100644
+index 0000000..ae344b4
+--- /dev/null
++++ "b/templates/\351\252\214\350\257\201\346\270\205\345\215\225.md"
+@@ -0,0 +1,33 @@
++# QDIP 验证清单（玩家 FAQ）
++
++## 5 步上手
++
++1. 解压到任意文件夹（建议在 D:\ 或 E:\ 根目录下**新建一个文件夹**再解压，路径别太深、别带空格）
++2. 双击 `启动.bat`
++3. 浏览器弹出配置页：勾选模型服务商 → 粘贴 API key → 点"测试连接"（显示成功）
++4. 点"保存配置"，关闭浏览器
++5. 重新双击 `启动.bat` → 进入工作台
++
++## 常见报错对照
++
++| 现象 | 原因与解决 |
++|---|---|
++| 测试连接提示"API key 无效（401）" | key 复制不完整，或服务商后台未充值；重新复制以 `sk-` 开头的完整 key |
++| 测试连接提示"网络错误" | 本机无法访问该服务商 API（代理/防火墙限制）；检查网络后再试 |
++| 浏览器没弹出配置页 | 等 3 秒再双击一次；确认路径无中文嵌套过深 |
++| 双击没反应 | 杀毒软件拦截了 bat，添加信任；或右键"以管理员身份运行" |
++| 引导页打不开 / 端口被占用 | 关闭其他占用 127.0.0.1 端口的程序后重试 |
++| 想换模型服务商 | 删掉 `data` 文件夹重新配置，或直接改 `opencode/config` 下的文件 |
++
++## 重置方法
++
++删除整个 `data` 文件夹 = 回到首次配置状态（配置与 API key 也一起重置）。
++
++## 更新方法
++
++等新版整合包发布，下载新版 zip 解压覆盖到同一目录。保留 `opencode/auth`（登录态）与 `opencode/config/local`（本地配置）可以保留你的设置。
++
++## 提示
++
++- **勿解压至盘符根目录**（如直接解压到 C:\ 或 D:\ 根），请在根目录下新建文件夹再解压
++- 首次运行需要联网（测试连接与 AI 对话都要访问模型服务商 API）
+diff --git a/tools/build.ps1 b/tools/build.ps1
+new file mode 100644
+index 0000000..f952090
+--- /dev/null
++++ b/tools/build.ps1
+@@ -0,0 +1,62 @@
++﻿param(
++  [string]$ComponentsFile = "$PSScriptRoot\components.json",
++  [switch]$SkipZip
++)
++$ErrorActionPreference = 'Stop'
++$root = Split-Path $PSScriptRoot -Parent
++# 前序 carry：check-sources.ps1 按 CWD 解析相对 source 路径，必须锚定到项目根
++Set-Location $root
++$json = Get-Content $ComponentsFile -Raw -Encoding UTF8 | ConvertFrom-Json
++$version = $json.version
++$outDir = Join-Path $root "build\qdip-generic-$version"
++$templates = Join-Path $root "templates"
++
++Write-Host "[1/5] 清理组装目录"
++if (Test-Path $outDir) { Remove-Item $outDir -Recurse -Force }
++New-Item -ItemType Directory -Path $outDir -Force | Out-Null
++
++Write-Host "[2/5] 复制组件"
++foreach ($c in $json.components) {
++  $src = $c.source.Replace('/', '\')
++  $dst = Join-Path $outDir ($c.target.Replace('/', '\'))
++  New-Item -ItemType Directory -Path (Split-Path $dst -Parent) -Force | Out-Null
++  Copy-Item -LiteralPath $src -Destination $dst -Recurse -Force
++  Write-Host "  + $($c.name) -> $($c.target)"
++}
++
++Write-Host "[3/5] 部署模板"
++Copy-Item "$templates\启动.bat" "$outDir\启动.bat" -Force
++if (Test-Path "$templates\更新组件.bat") {
++  Copy-Item "$templates\更新组件.bat" "$outDir\更新组件.bat" -Force
++  Write-Host "  + 更新组件.bat"
++} else {
++  Write-Host "  (skip) 更新组件.bat 尚未创建（Task 7 未完成，部署时跳过）"
++}
++New-Item -ItemType Directory -Path "$outDir\setup" -Force | Out-Null
++Copy-Item "$templates\setup\*" "$outDir\setup" -Recurse -Force
++New-Item -ItemType Directory -Path "$outDir\opencode\config" -Force | Out-Null
++Copy-Item "$templates\opencode.json" "$outDir\opencode\config\opencode.json" -Force
++Copy-Item "$templates\oh-my-opencode-slim.json" "$outDir\opencode\config\oh-my-opencode-slim.json" -Force
++New-Item -ItemType Directory -Path "$outDir\opencode\auth" -Force | Out-Null
++Copy-Item "$templates\验证清单.md" "$outDir\验证清单.md" -Force
++Copy-Item "$templates\玩家使用指南.md" "$outDir\玩家使用指南.md" -Force
++New-Item -ItemType Directory -Path "$outDir\data" -Force | Out-Null
++New-Item -ItemType File -Path "$outDir\data\.gitkeep" -Force | Out-Null
++
++Write-Host "[4/5] 校验"
++& "$PSScriptRoot\check-sources.ps1" -ComponentsFile $ComponentsFile
++if ($LASTEXITCODE -ne 0) { throw "组件源缺失：请按 Task 6 Step 2 准备 tools/cache 离线缓存后重试" }
++$nodeOk = Test-Path "$outDir\runtime\node\node.exe"
++$ocOk = (Test-Path "$outDir\opencode\bin\opencode.exe") -or (Test-Path "$outDir\opencode\bin\opencode.cmd")
++if (-not $nodeOk) { throw "缺少便携 Node：请将 node-v24.14.1-win-x64 放入 tools/cache/ 并按 components.json 命名" }
++if (-not $ocOk) { throw "缺少 opencode CLI：请先 npm install opencode-ai@1.18.25 并部署到 tools/cache/opencode-1.18.25" }
++Write-Host "  [OK] node: $nodeOk  opencode: $ocOk"
++
++Write-Host "[5/5] 打包 zip"
++if (-not $SkipZip) {
++  $zip = Join-Path $root "build\qdip-generic-$version.zip"
++  if (Test-Path $zip) { Remove-Item $zip -Force }
++  Compress-Archive -Path "$outDir\*" -DestinationPath $zip -CompressionLevel Optimal
++  Write-Host "  -> $zip"
++}
++Write-Host "[DONE] 组装完成: $outDir"
+diff --git a/tools/cache/.gitkeep b/tools/cache/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/tools/check-sources.ps1 b/tools/check-sources.ps1
+new file mode 100644
+index 0000000..f80e8df
+--- /dev/null
++++ b/tools/check-sources.ps1
+@@ -0,0 +1,15 @@
++param([string]$ComponentsFile = "$PSScriptRoot\components.json")
++$json = Get-Content $ComponentsFile -Raw -Encoding UTF8 | ConvertFrom-Json
++$missing = @()
++foreach ($c in $json.components) {
++  $src = $c.source.Replace('/', '\')
++  if (-not (Test-Path -LiteralPath $src)) { $missing += "$($c.name): $src" }
++}
++if ($missing.Count -gt 0) {
++  Write-Host "[FAIL] missing sources:" -ForegroundColor Red
++  $missing | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
++  exit 1
++} else {
++  Write-Host "[OK] all $($json.components.Count) component sources exist"
++  exit 0
++}
+diff --git a/tools/components.json b/tools/components.json
+new file mode 100644
+index 0000000..bc46ed1
+--- /dev/null
++++ b/tools/components.json
+@@ -0,0 +1,54 @@
++{
++  "packageName": "qdip-generic",
++  "version": "0.1.0",
++  "components": [
++    {
++      "name": "node-runtime",
++      "type": "dir",
++      "source": "tools/cache/node-v24.14.1-win-x64",
++      "target": "runtime/node",
++      "version": "24.14.1",
++      "required": true
++    },
++    {
++      "name": "opencode-cli",
++      "type": "dir",
++      "source": "tools/cache/opencode-1.18.25",
++      "target": "opencode/bin",
++      "version": "1.18.25",
++      "required": true
++    },
++    {
++      "name": "omoslim",
++      "type": "dir",
++      "source": "E:/云文件/GitHub/oh-my-opencode-slim/dist",
++      "target": "plugins/oh-my-opencode-slim",
++      "version": "2.2.17+patch-kit",
++      "required": true
++    },
++    {
++      "name": "omoslim-append",
++      "type": "dir",
++      "source": "C:/Users/Winde/.config/opencode/oh-my-opencode-slim",
++      "target": "plugins/oh-my-opencode-slim/custom",
++      "version": "latest",
++      "required": true
++    },
++    {
++      "name": "superpowers",
++      "type": "dir",
++      "source": "C:/Users/Winde/.config/opencode/node_modules/superpowers",
++      "target": "plugins/superpowers",
++      "version": "6.3.0",
++      "required": true
++    },
++    {
++      "name": "matt-skills",
++      "type": "dir",
++      "source": "C:/Users/Winde/.config/opencode/skills",
++      "target": "opencode/skills",
++      "version": "2026-08-24",
++      "required": true
++    }
++  ]
++}

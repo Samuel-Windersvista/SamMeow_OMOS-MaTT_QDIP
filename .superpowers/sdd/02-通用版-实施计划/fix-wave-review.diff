@@ -1,0 +1,242 @@
+diff --git a/templates/opencode.json b/templates/opencode.json
+index f2da12c..4349f40 100644
+--- a/templates/opencode.json
++++ b/templates/opencode.json
+@@ -1,9 +1,12 @@
+ {
+   "$schema": "https://opencode.ai/config.json",
+   "plugin": [
+-    "./plugins/oh-my-opencode-slim",
+-    "./plugins/superpowers"
++    "../../../plugins/oh-my-opencode-slim",
++    "../../../plugins/superpowers"
+   ],
++  "skills": {
++    "paths": ["opencode/skills"]
++  },
+   "providers": {},
+   "lsp": true
+ }
+diff --git a/templates/setup/config-writer.js b/templates/setup/config-writer.js
+index 781c786..fcbee74 100644
+--- a/templates/setup/config-writer.js
++++ b/templates/setup/config-writer.js
+@@ -9,22 +9,22 @@ const path = require('node:path');
+  * - 非内置 provider 注册为 { npm: '@ai-sdk/openai-compatible', options: { baseURL } }。
+  */
+ const PROVIDERS = {
+   deepseek: { label: 'DeepSeek', testModel: 'deepseek-chat', baseUrl: 'https://api.deepseek.com', builtin: true },
+   kimi: { label: 'Kimi (Moonshot)', testModel: 'moonshot-v1-8k', baseUrl: 'https://api.moonshot.cn/v1', builtin: false, npm: '@ai-sdk/openai-compatible' },
+   openai: { label: 'OpenAI', testModel: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1', builtin: true },
+ };
+ 
+ function rootOf(root) {
+   return {
+-    configDir: path.join(root, 'opencode', 'config'),
+-    authFile: path.join(root, 'opencode', 'auth', 'auth.json'),
++    configDir: path.join(root, 'opencode', 'config', 'opencode'),
++    authFile: path.join(root, 'opencode', 'auth', 'opencode', 'auth.json'),
+     configured: path.join(root, 'data', '.configured'),
+   };
+ }
+ 
+ function configure({ root, providers }) {
+   const { configDir, authFile, configured } = rootOf(root);
+   fs.mkdirSync(path.dirname(authFile), { recursive: true });
+   fs.mkdirSync(configDir, { recursive: true });
+ 
+   // 1) auth.json —— 实测格式为 { provider: { type: 'api', key } }（字段名是 key，不是 apiKey）
+diff --git a/templates/setup/config-writer.test.js b/templates/setup/config-writer.test.js
+index bab9e8c..6242abb 100644
+--- a/templates/setup/config-writer.test.js
++++ b/templates/setup/config-writer.test.js
+@@ -1,45 +1,45 @@
+ const { test } = require('node:test');
+ const assert = require('node:assert');
+ const fs = require('node:fs');
+ const os = require('node:os');
+ const path = require('node:path');
+ const { configure } = require('./config-writer');
+ 
+ function makeRoot() {
+   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qdip-test-'));
+-  fs.mkdirSync(path.join(root, 'opencode', 'config'), { recursive: true });
++  fs.mkdirSync(path.join(root, 'opencode', 'config', 'opencode'), { recursive: true });
+   fs.mkdirSync(path.join(root, 'opencode', 'auth'), { recursive: true });
+   fs.mkdirSync(path.join(root, 'data'), { recursive: true });
+-  fs.copyFileSync(path.join(__dirname, '..', 'opencode.json'), path.join(root, 'opencode', 'config', 'opencode.json'));
+-  fs.copyFileSync(path.join(__dirname, '..', 'oh-my-opencode-slim.json'), path.join(root, 'opencode', 'config', 'oh-my-opencode-slim.json'));
++  fs.copyFileSync(path.join(__dirname, '..', 'opencode.json'), path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'));
++  fs.copyFileSync(path.join(__dirname, '..', 'oh-my-opencode-slim.json'), path.join(root, 'opencode', 'config', 'opencode', 'oh-my-opencode-slim.json'));
+   return root;
+ }
+ 
+ test('configure writes auth.json in measured opencode format (type + key)', () => {
+   const root = makeRoot();
+   configure({ root, providers: { deepseek: { apiKey: 'sk-test-123' } } });
+-  const auth = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'auth', 'auth.json'), 'utf8'));
++  const auth = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'auth', 'opencode', 'auth.json'), 'utf8'));
+   assert.strictEqual(auth.deepseek.type, 'api');
+   assert.strictEqual(auth.deepseek.key, 'sk-test-123');
+ });
+ 
+ test('configure does not inject builtin providers (deepseek) into providers section', () => {
+   const root = makeRoot();
+   configure({ root, providers: { deepseek: { apiKey: 'sk-test-123' } } });
+-  const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode.json'), 'utf8'));
++  const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'), 'utf8'));
+   assert.deepStrictEqual(cfg.providers, {});
+ });
+ 
+ test('configure registers non-builtin provider (kimi) as openai-compatible', () => {
+   const root = makeRoot();
+   configure({ root, providers: { kimi: { apiKey: 'sk-test-123' } } });
+-  const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode.json'), 'utf8'));
++  const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'), 'utf8'));
+   assert.strictEqual(cfg.providers.kimi.npm, '@ai-sdk/openai-compatible');
+   assert.strictEqual(cfg.providers.kimi.options.baseURL, 'https://api.moonshot.cn/v1');
+ });
+ 
+ test('configure writes .configured marker', () => {
+   const root = makeRoot();
+   configure({ root, providers: { deepseek: { apiKey: 'sk-test-123' } } });
+   assert.ok(fs.existsSync(path.join(root, 'data', '.configured')));
+ });
+diff --git "a/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat" "b/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat"
+index 9bbbd49..256efdb 100644
+--- "a/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat"
++++ "b/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat"
+@@ -7,33 +7,41 @@ set "PATH=%ROOT%runtime\node;%PATH%"
+ 
+ echo ============================================
+ echo   SamMeow AI ����̨ - �������
+ echo   ˵�������� opencode �� superpowers �����
+ echo   OMOslim �뼼�ܰ���ȴ��°����ϰ�������
+ echo ============================================
+ echo.
+ 
+ rem --- 1. ���� opencode��npm �ٷ�Դ�� ---
+ echo [1/2] ���� opencode ...
+-call npm install -g opencode-ai@latest --prefix "%ROOT%opencode" --no-save 2>nul
++set "OC_UPDATE=%TEMP%\qdip-oc-update"
++if exist "%OC_UPDATE%" rd /s /q "%OC_UPDATE%"
++call npm install --prefix "%OC_UPDATE%" opencode-ai@latest --no-save 2>nul
+ if errorlevel 1 goto :ocfail
++if not exist "%OC_UPDATE%\node_modules\opencode-ai\bin\opencode.exe" goto :ocfail
++copy /y "%OC_UPDATE%\node_modules\opencode-ai\bin\opencode.exe" "%ROOT%opencode\bin\opencode.exe" >nul
++if errorlevel 1 goto :ocfail
++rd /s /q "%OC_UPDATE%" 2>nul
+ echo   [OK] opencode �Ѹ���
+ goto :step2
+ :ocfail
++rd /s /q "%OC_UPDATE%" 2>nul
+ echo   [FAIL] opencode ����ʧ�ܣ��������⣿�����ѱ���ԭ�汾��
++echo         ��ʾ��Ҳ�ɵ�����ҳ�����°����ϰ� zip ��ѹ���ǡ�
+ 
+ :step2
+ rem --- 2. ���� superpowers ---
+ echo [2/2] ���� superpowers ...
+ if not exist "%ROOT%plugins\superpowers\package.json" goto :spmissing
+ pushd "%ROOT%plugins\superpowers"
+-call npm update superpowers --prefix "%ROOT%plugins" --no-save 2>nul
++call npm update --no-save 2>nul
+ popd
+-echo   [OK] superpowers �Ѹ���
++echo   [OK] superpowers �����Ѹ���
+ goto :done
+ :spmissing
+ echo   [SKIP] superpowers ���ȱʧ������
+ 
+ :done
+ echo.
+ echo ��ɡ�����˫�� ����.bat ��Ч��
+ pause
+diff --git "a/templates/\347\216\251\345\256\266\344\275\277\347\224\250\346\214\207\345\215\227.md" "b/templates/\347\216\251\345\256\266\344\275\277\347\224\250\346\214\207\345\215\227.md"
+index 1e134b6..980fda7 100644
+--- "a/templates/\347\216\251\345\256\266\344\275\277\347\224\250\346\214\207\345\215\227.md"
++++ "b/templates/\347\216\251\345\256\266\344\275\277\347\224\250\346\214\207\345\215\227.md"
+@@ -42,18 +42,18 @@ AI 写的代码也是代码，重要项目定期复制一份文件夹。
+ - 大型商业软件（涉及复杂架构的项目需要专业开发）
+ - 涉及别人账号密码/支付系统的程序（安全风险，别让 AI 写）
+ 
+ ## 常见问题
+ | 问题 | 解决 |
+ |---|---|
+ | 双击没反应 | 杀毒软件拦截了 bat，添加信任；或右键"以管理员身份运行" |
+ | 浏览器没弹出配置页 | 等 3 秒再双击一次；确认 启动.bat 所在路径无中文嵌套过深 |
+ | API key 无效 | 检查是否复制完整（sk- 开头）、服务商后台是否已充值 |
+ | 想换模型 | 删掉 data 文件夹重新配置，或直接改 opencode/config 下的文件 |
+-| 怎么更新 | 等新版整合包发布，解压覆盖（保留 opencode/auth 与 opencode/config/local 不丢配置） |
++| 怎么更新 | 等新版整合包发布，解压覆盖（保留 opencode/auth 与 opencode/config/opencode/local 不丢配置） |
+ 
+ ## 进阶成长路径
+ 1. 用工作台写你的第一个小工具
+ 2. 学会看 AI 写的代码（让它注释每一行）
+ 3. 自己改 AI 生成的代码（从改一个数字开始）
+ 4. 把 opencode 装进系统 PATH（安装到系统.bat），任何文件夹都能启动
+ 5. 加入 mod 开发社区，用这套环境写你的第一个 SPT mod
+diff --git "a/templates/\351\252\214\350\257\201\346\270\205\345\215\225.md" "b/templates/\351\252\214\350\257\201\346\270\205\345\215\225.md"
+index ae344b4..eea4682 100644
+--- "a/templates/\351\252\214\350\257\201\346\270\205\345\215\225.md"
++++ "b/templates/\351\252\214\350\257\201\346\270\205\345\215\225.md"
+@@ -18,16 +18,16 @@
+ | 双击没反应 | 杀毒软件拦截了 bat，添加信任；或右键"以管理员身份运行" |
+ | 引导页打不开 / 端口被占用 | 关闭其他占用 127.0.0.1 端口的程序后重试 |
+ | 想换模型服务商 | 删掉 `data` 文件夹重新配置，或直接改 `opencode/config` 下的文件 |
+ 
+ ## 重置方法
+ 
+ 删除整个 `data` 文件夹 = 回到首次配置状态（配置与 API key 也一起重置）。
+ 
+ ## 更新方法
+ 
+-等新版整合包发布，下载新版 zip 解压覆盖到同一目录。保留 `opencode/auth`（登录态）与 `opencode/config/local`（本地配置）可以保留你的设置。
++等新版整合包发布，下载新版 zip 解压覆盖到同一目录。保留 `opencode/auth`（登录态）与 `opencode/config/opencode/local`（本地修改区）可以保留你的设置。
+ 
+ ## 提示
+ 
+ - **勿解压至盘符根目录**（如直接解压到 C:\ 或 D:\ 根），请在根目录下新建文件夹再解压
+ - 首次运行需要联网（测试连接与 AI 对话都要访问模型服务商 API）
+diff --git a/tools/build.ps1 b/tools/build.ps1
+index f952090..dd04631 100644
+--- a/tools/build.ps1
++++ b/tools/build.ps1
+@@ -27,28 +27,35 @@ foreach ($c in $json.components) {
+ Write-Host "[3/5] 部署模板"
+ Copy-Item "$templates\启动.bat" "$outDir\启动.bat" -Force
+ if (Test-Path "$templates\更新组件.bat") {
+   Copy-Item "$templates\更新组件.bat" "$outDir\更新组件.bat" -Force
+   Write-Host "  + 更新组件.bat"
+ } else {
+   Write-Host "  (skip) 更新组件.bat 尚未创建（Task 7 未完成，部署时跳过）"
+ }
+ New-Item -ItemType Directory -Path "$outDir\setup" -Force | Out-Null
+ Copy-Item "$templates\setup\*" "$outDir\setup" -Recurse -Force
+-New-Item -ItemType Directory -Path "$outDir\opencode\config" -Force | Out-Null
+-Copy-Item "$templates\opencode.json" "$outDir\opencode\config\opencode.json" -Force
+-Copy-Item "$templates\oh-my-opencode-slim.json" "$outDir\opencode\config\oh-my-opencode-slim.json" -Force
++# opencode 在 XDG_CONFIG_HOME 下自动追加 opencode 段，实际读 $XDG_CONFIG_HOME\opencode\
++New-Item -ItemType Directory -Path "$outDir\opencode\config\opencode" -Force | Out-Null
++Copy-Item "$templates\opencode.json" "$outDir\opencode\config\opencode\opencode.json" -Force
++Copy-Item "$templates\oh-my-opencode-slim.json" "$outDir\opencode\config\opencode\oh-my-opencode-slim.json" -Force
++# 玩家本地修改区（spec 4.1）：与 opencode 实际读取的配置同目录
++New-Item -ItemType Directory -Path "$outDir\opencode\config\opencode\local" -Force | Out-Null
++$localNote = "玩家本地修改区`r`n`r`n把你想手动覆盖的配置放到本目录（例如自定义的 opencode.json 片段、额外指令文件）。`r`n主配置在上一级：opencode.json 与 oh-my-opencode-slim.json。`r`n更新整合包时保留本目录可保留你的自定义配置。"
++[System.IO.File]::WriteAllText("$outDir\opencode\config\opencode\local\说明.txt", $localNote, (New-Object System.Text.UTF8Encoding($false)))
+ New-Item -ItemType Directory -Path "$outDir\opencode\auth" -Force | Out-Null
+ Copy-Item "$templates\验证清单.md" "$outDir\验证清单.md" -Force
+ Copy-Item "$templates\玩家使用指南.md" "$outDir\玩家使用指南.md" -Force
+ New-Item -ItemType Directory -Path "$outDir\data" -Force | Out-Null
+ New-Item -ItemType File -Path "$outDir\data\.gitkeep" -Force | Out-Null
++# F5: superpowers 组件夹带 .github 目录，分发时剔除
++Remove-Item "$outDir\plugins\superpowers\.github" -Recurse -Force -ErrorAction SilentlyContinue
+ 
+ Write-Host "[4/5] 校验"
+ & "$PSScriptRoot\check-sources.ps1" -ComponentsFile $ComponentsFile
+ if ($LASTEXITCODE -ne 0) { throw "组件源缺失：请按 Task 6 Step 2 准备 tools/cache 离线缓存后重试" }
+ $nodeOk = Test-Path "$outDir\runtime\node\node.exe"
+ $ocOk = (Test-Path "$outDir\opencode\bin\opencode.exe") -or (Test-Path "$outDir\opencode\bin\opencode.cmd")
+ if (-not $nodeOk) { throw "缺少便携 Node：请将 node-v24.14.1-win-x64 放入 tools/cache/ 并按 components.json 命名" }
+ if (-not $ocOk) { throw "缺少 opencode CLI：请先 npm install opencode-ai@1.18.25 并部署到 tools/cache/opencode-1.18.25" }
+ Write-Host "  [OK] node: $nodeOk  opencode: $ocOk"
+ 

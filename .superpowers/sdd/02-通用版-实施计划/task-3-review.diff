@@ -1,0 +1,56 @@
+﻿diff --git "a/templates/\345\220\257\345\212\250.bat" "b/templates/\345\220\257\345\212\250.bat"
+new file mode 100644
+index 0000000..5343581
+--- /dev/null
++++ "b/templates/\345\220\257\345\212\250.bat"
+@@ -0,0 +1,53 @@
++@echo off
++chcp 65001 >nul
++setlocal EnableExtensions
++title SamMeow AI 宸ヤ綔鍙?+cd /d "%~dp0"
++
++rem --- 鐜娉ㄥ叆锛氫究鎼?Node + opencode CLI + 閰嶇疆闅旂 ---
++set "ROOT=%~dp0"
++set "PATH=%ROOT%runtime\node;%ROOT%opencode\bin;%PATH%"
++set "XDG_DATA_HOME=%ROOT%opencode\auth"
++set "XDG_CONFIG_HOME=%ROOT%opencode\config"
++rem ROOTS锛歊OOT 鍘诲熬鍙嶆枩鏉狅紙cmd 浼氭妸 \" 瑙ｉ噴涓鸿浆涔夊紩鍙凤紝浼犵粰寮曞鏈嶅姟浼氬甫鑴忓瓧绗︼級
++set "ROOTS=%ROOT:~0,-1%"
++
++rem --- 鑷妯″紡锛氶獙璇佽矾寰勪笌鐗堟湰 ---
++if /i "%~1"=="--check" goto :check
++
++rem --- 棣栨杩愯寮曞 ---
++if not exist "%ROOT%data\.configured" goto :guide
++goto :run
++
++:check
++echo [check] node: %ROOT%runtime\node\node.exe
++if not exist "%ROOT%runtime\node\node.exe" echo [FAIL] node missing
++if not exist "%ROOT%opencode\bin\opencode.exe" if not exist "%ROOT%opencode\bin\opencode.cmd" echo [FAIL] opencode missing
++"%ROOT%runtime\node\node.exe" --version
++exit /b 0
++
++:guide
++if not exist "%ROOT%data" mkdir "%ROOT%data"
++del /q "%ROOT%data\.guide-url" 2>nul
++start "QDIP-Guide" /min "%ROOT%runtime\node\node.exe" "%ROOT%setup\guide-server.js" "%ROOTS%"
++rem 绛夊緟寮曞鏈嶅姟鍐欏叆 .guide-url锛堟渶澶?15 绉掞級
++set /a tries=0
++:waitguide
++if not exist "%ROOT%data\.guide-url" (
++  set /a tries+=1
++  if %tries% GEQ 15 goto guidefail
++  ping -n 2 127.0.0.1 >nul
++  goto waitguide
++)
++set /p GUIDE_URL=<"%ROOT%data\.guide-url"
++start "" "%GUIDE_URL%"
++echo 棣栨浣跨敤锛氳鍦ㄦ祻瑙堝櫒涓畬鎴愭ā鍨嬮厤缃紝瀹屾垚鍚庨噸鏂板弻鍑绘湰鏂囦欢鍚姩銆?+exit /b 0
++:guidefail
++echo [FAIL] 寮曞鏈嶅姟鍚姩澶辫触銆傝鎴浘鏈獥鍙ｅ弽棣堛€?+pause
++exit /b 1
++
++:run
++opencode %*
++exit /b %errorlevel%

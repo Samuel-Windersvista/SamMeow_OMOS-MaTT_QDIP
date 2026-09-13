@@ -21,8 +21,8 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/configure' && req.method === 'POST') {
       let body = '';
       for await (const chunk of req) body += chunk;
-      const { providers, persona, personaText, agentModels } = JSON.parse(body);
-      configure({ root, providers, persona, personaText, agentModels });
+      const { providers, persona, personaText, agentModels, workspace } = JSON.parse(body);
+      configure({ root, providers, persona, personaText, agentModels, workspace });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
       return;
@@ -30,8 +30,9 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/test' && req.method === 'POST') {
       let body = '';
       for await (const chunk of req) body += chunk;
-      const { provider, apiKey } = JSON.parse(body);
-      const result = await testConnection({ provider, apiKey });
+      // baseUrl（可选）存在即自定义 OpenAI 兼容模式：直连该端点而非精选表
+      const { provider, apiKey, baseUrl } = JSON.parse(body);
+      const result = await testConnection({ provider, apiKey, baseUrl });
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(result));
       return;

@@ -1,0 +1,45 @@
+diff --git "a/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat" "b/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat"
+new file mode 100644
+index 0000000..9bbbd49
+--- /dev/null
++++ "b/templates/\346\233\264\346\226\260\347\273\204\344\273\266.bat"
+@@ -0,0 +1,39 @@
++@echo off
++setlocal EnableExtensions
++title SamMeow 更新组件
++cd /d "%~dp0"
++set "ROOT=%~dp0"
++set "PATH=%ROOT%runtime\node;%PATH%"
++
++echo ============================================
++echo   SamMeow AI 工作台 - 组件更新
++echo   说明：更新 opencode 与 superpowers 组件。
++echo   OMOslim 与技能包请等待新版整合包发布。
++echo ============================================
++echo.
++
++rem --- 1. 更新 opencode（npm 官方源） ---
++echo [1/2] 更新 opencode ...
++call npm install -g opencode-ai@latest --prefix "%ROOT%opencode" --no-save 2>nul
++if errorlevel 1 goto :ocfail
++echo   [OK] opencode 已更新
++goto :step2
++:ocfail
++echo   [FAIL] opencode 更新失败（网络问题？）。已保留原版本。
++
++:step2
++rem --- 2. 更新 superpowers ---
++echo [2/2] 更新 superpowers ...
++if not exist "%ROOT%plugins\superpowers\package.json" goto :spmissing
++pushd "%ROOT%plugins\superpowers"
++call npm update superpowers --prefix "%ROOT%plugins" --no-save 2>nul
++popd
++echo   [OK] superpowers 已更新
++goto :done
++:spmissing
++echo   [SKIP] superpowers 组件缺失，跳过
++
++:done
++echo.
++echo 完成。重新双击 启动.bat 生效。
++pause

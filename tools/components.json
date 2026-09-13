@@ -1,6 +1,6 @@
 {
   "packageName": "qdip-generic",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "components": [
     {
       "name": "node-runtime",
@@ -13,9 +13,9 @@
     {
       "name": "opencode-cli",
       "type": "dir",
-      "source": "tools/cache/opencode-1.18.25",
+      "source": "tools/cache/opencode-1.18.30",
       "target": "opencode/bin",
-      "version": "1.18.25",
+      "version": "1.18.30",
       "required": true
     },
     {
@@ -23,7 +23,7 @@
       "type": "dir",
       "source": "E:/云文件/GitHub/oh-my-opencode-slim/dist",
       "target": "plugins/oh-my-opencode-slim",
-      "version": "2.2.17+patch-kit",
+      "version": "2.2.18+patch-kit",
       "required": true
     },
     {
@@ -35,19 +35,59 @@
       "required": true
     },
     {
-      "name": "superpowers",
+      "name": "omo-skills",
       "type": "dir",
-      "source": "C:/Users/Winde/.config/opencode/node_modules/superpowers",
-      "target": "plugins/superpowers",
-      "version": "6.3.0",
+      "source": "C:/Users/Winde/.config/opencode/skills",
+      "target": "opencode/config/opencode/skills",
+      "version": "2.2.18",
       "required": true
     },
     {
       "name": "matt-skills",
       "type": "dir",
-      "source": "C:/Users/Winde/.config/opencode/skills",
-      "target": "opencode/skills",
-      "version": "2026-08-24",
+      "source": "C:/Users/Winde/.agents/skills",
+      "target": "opencode/config/opencode/skills",
+      "version": "2026-09-11",
+      "required": true
+    },
+    {
+      "name": "omoslim-runtime",
+      "type": "dir",
+      "source": "tools/cache/omoslim-runtime/node_modules",
+      "target": "plugins/oh-my-opencode-slim/node_modules",
+      "version": "2.2.18-deps+tui",
+      "required": true
+    },
+    {
+      "name": "opencode-quota",
+      "type": "dir",
+      "source": "C:/Users/Winde/.config/opencode/node_modules/@slkiser/opencode-quota",
+      "target": "plugins/opencode-quota",
+      "version": "3.8.3",
+      "required": true
+    },
+    {
+      "name": "quota-runtime",
+      "type": "dir",
+      "source": "tools/cache/quota-runtime/node_modules",
+      "target": "plugins/opencode-quota/node_modules",
+      "version": "3.8.3-deps",
+      "required": true
+    },
+    {
+      "name": "chrome-devtools-mcp",
+      "type": "dir",
+      "source": "tools/cache/chrome-devtools-mcp",
+      "target": "mcp/chrome-devtools-mcp",
+      "version": "1.8.0",
+      "required": true
+    },
+    {
+      "name": "windows-terminal",
+      "type": "dir",
+      "source": "tools/cache/terminal",
+      "target": "runtime/terminal",
+      "version": "1.24.11911.0",
       "required": true
     }
   ]

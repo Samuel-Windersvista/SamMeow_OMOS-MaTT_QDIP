@@ -2,11 +2,21 @@
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
     "../../../plugins/oh-my-opencode-slim",
-    "../../../plugins/superpowers"
+    "../../../plugins/opencode-quota"
   ],
-  "skills": {
-    "paths": ["opencode/skills"]
+  "provider": {},
+  "mcp": {
+    "chrome-devtools": {
+      "type": "local",
+      "command": [
+        "node",
+        "{env:QDIP_MCP_CHROME}"
+      ],
+      "enabled": true
+    }
   },
-  "providers": {},
+  "instructions": [
+    "{env:QDIP_PREFERENCES}"
+  ],
   "lsp": true
 }

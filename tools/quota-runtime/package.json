@@ -1,0 +1,12 @@
+{
+  "name": "qdip-quota-runtime",
+  "private": true,
+  "description": "opencode-quota 插件的运行时 external 依赖(随包 vendored 到 plugins/opencode-quota/node_modules)。@opentui/* 由 quota 包自带 nested node_modules(0.2.x 系列,与 omoslim 的 0.5.8 不冲突),此处只补其 package.json 声明的其余 dependencies + peer",
+  "dependencies": {
+    "@clack/prompts": "^1.2.0",
+    "@opencode-ai/plugin": "1.18.27",
+    "comment-json": "^5.0.0",
+    "solid-js": "1.9.12",
+    "xdg-basedir": "^5.1.0"
+  }
+}

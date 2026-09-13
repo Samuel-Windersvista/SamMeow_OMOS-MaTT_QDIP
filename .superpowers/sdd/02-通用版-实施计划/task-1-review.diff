@@ -1,0 +1,90 @@
+﻿diff --git a/build/.gitkeep b/build/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/templates/.gitkeep b/templates/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/tools/cache/.gitkeep b/tools/cache/.gitkeep
+new file mode 100644
+index 0000000..e69de29
+diff --git a/tools/check-sources.ps1 b/tools/check-sources.ps1
+new file mode 100644
+index 0000000..f80e8df
+--- /dev/null
++++ b/tools/check-sources.ps1
+@@ -0,0 +1,15 @@
++param([string]$ComponentsFile = "$PSScriptRoot\components.json")
++$json = Get-Content $ComponentsFile -Raw -Encoding UTF8 | ConvertFrom-Json
++$missing = @()
++foreach ($c in $json.components) {
++  $src = $c.source.Replace('/', '\')
++  if (-not (Test-Path -LiteralPath $src)) { $missing += "$($c.name): $src" }
++}
++if ($missing.Count -gt 0) {
++  Write-Host "[FAIL] missing sources:" -ForegroundColor Red
++  $missing | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
++  exit 1
++} else {
++  Write-Host "[OK] all $($json.components.Count) component sources exist"
++  exit 0
++}
+diff --git a/tools/components.json b/tools/components.json
+new file mode 100644
+index 0000000..bc46ed1
+--- /dev/null
++++ b/tools/components.json
+@@ -0,0 +1,54 @@
++{
++  "packageName": "qdip-generic",
++  "version": "0.1.0",
++  "components": [
++    {
++      "name": "node-runtime",
++      "type": "dir",
++      "source": "tools/cache/node-v24.14.1-win-x64",
++      "target": "runtime/node",
++      "version": "24.14.1",
++      "required": true
++    },
++    {
++      "name": "opencode-cli",
++      "type": "dir",
++      "source": "tools/cache/opencode-1.18.25",
++      "target": "opencode/bin",
++      "version": "1.18.25",
++      "required": true
++    },
++    {
++      "name": "omoslim",
++      "type": "dir",
++      "source": "E:/浜戞枃浠?GitHub/oh-my-opencode-slim/dist",
++      "target": "plugins/oh-my-opencode-slim",
++      "version": "2.2.17+patch-kit",
++      "required": true
++    },
++    {
++      "name": "omoslim-append",
++      "type": "dir",
++      "source": "C:/Users/Winde/.config/opencode/oh-my-opencode-slim",
++      "target": "plugins/oh-my-opencode-slim/custom",
++      "version": "latest",
++      "required": true
++    },
++    {
++      "name": "superpowers",
++      "type": "dir",
++      "source": "C:/Users/Winde/.config/opencode/node_modules/superpowers",
++      "target": "plugins/superpowers",
++      "version": "6.3.0",
++      "required": true
++    },
++    {
++      "name": "matt-skills",
++      "type": "dir",
++      "source": "C:/Users/Winde/.config/opencode/skills",
++      "target": "opencode/skills",
++      "version": "2026-08-24",
++      "required": true
++    }
++  ]
++}
