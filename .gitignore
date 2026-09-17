@@ -1,3 +1,6 @@
 ﻿build/
 tools/cache/
 node_modules/
+# 发行归档：存放 build/qdip-generic-<version>.zip 的副本。
+# 单个 zip 约 158 MB，超过 GitHub 的 100 MB 单文件上限，必须忽略。
+release/

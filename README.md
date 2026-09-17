@@ -23,7 +23,7 @@
    - `build\qdip-generic-<version>\启动.bat --check`（自检 node/opencode + OMOslim 插件加载 + Windows Terminal 存在性）
    - 首次引导冒烟（起 guide-server → .guide-url → 引导页 200）
    - 端到端：解压 zip 到全新目录走首次配置
-4. **发布**：先逐条过 `docs/发布前检查清单.md`，再把 `build/qdip-generic-<version>.zip` 放入 release/ 归档
+4. **发布**：先逐条过 `docs/发布前检查清单.md`，再把 `build/qdip-generic-<version>.zip` 复制到 `release/` 归档。该目录已加入 `.gitignore`——单个 zip 约 158 MB，超过 GitHub 的 100 MB 单文件上限，不要试图提交它
 
 ## 组件来源清单
 
