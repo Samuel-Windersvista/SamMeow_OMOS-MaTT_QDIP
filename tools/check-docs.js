@@ -245,7 +245,13 @@ function isRuntimeAllowlisted(candidate) {
   return RUNTIME_ALLOWLIST.some((pattern) => globMatch(pattern, candidate));
 }
 
-// 找最新的构建产物目录 build/qdip-generic-*（按 mtime，其次按名称倒序）；没有则 null。
+// 选当前版本的构建产物目录 build/qdip-generic-<components.json 的 version>；没有则 null。
+//
+// 不以 mtime 为主：目录的 mtime 会在其**直接子项**增减时更新，与「哪次构建才是当前版本」
+// 无关。曾因此在同一台机器上选中陈旧的 build/qdip-generic-0.3.4（它的目录 mtime 比刚构建
+// 出来的 0.5.0 还新），产生 36 条假违规并让「真实仓库零违规」回归锁失败。
+// 声明的版本目录不存在时才回退到「最新 mtime，其次名称倒序」，供尚未按当前版本构建过的
+// 仓库仍能做部分检查。
 function findProductDir(repoRoot) {
   const buildDir = path.join(repoRoot, 'build');
   let entries;
@@ -254,9 +260,26 @@ function findProductDir(repoRoot) {
   } catch {
     return null;
   }
-  const cands = [];
-  for (const e of entries) {
-    if (!e.isDirectory() || !e.name.startsWith('qdip-generic-')) continue;
+  const dirs = entries.filter((e) => e.isDirectory() && e.name.startsWith('qdip-generic-'));
+  if (dirs.length === 0) return null;
+
+  // 1) 首选：components.json 声明的版本
+  let declared = null;
+  try {
+    const comps = JSON.parse(fs.readFileSync(path.join(repoRoot, 'tools', 'components.json'), 'utf8'));
+    if (comps && typeof comps.version === 'string' && comps.version.trim() !== '') {
+      declared = comps.version.trim();
+    }
+  } catch {
+    declared = null;
+  }
+  if (declared) {
+    const exact = dirs.find((e) => e.name === `qdip-generic-${declared}`);
+    if (exact) return path.join(buildDir, exact.name);
+  }
+
+  // 2) 回退：最新 mtime，其次名称倒序
+  const cands = dirs.map((e) => {
     const full = path.join(buildDir, e.name);
     let mtime = 0;
     try {
@@ -264,9 +287,8 @@ function findProductDir(repoRoot) {
     } catch {
       mtime = 0;
     }
-    cands.push({ full, mtime, name: e.name });
-  }
-  if (cands.length === 0) return null;
+    return { full, mtime, name: e.name };
+  });
   cands.sort((a, b) => b.mtime - a.mtime || b.name.localeCompare(a.name));
   return cands[0].full;
 }

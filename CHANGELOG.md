@@ -2,7 +2,9 @@
 
 本仓库（SamMeow QDIP 快速部署整合包）的版本变更记录。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号取自 `tools/components.json`。各组件版本与来源见 README「组件来源清单」。
 
-## [Unreleased]
+## [0.5.0] - 2026-09-17
+
+构建产物：`build/qdip-generic-0.5.0.zip`
 
 ### 计划性变更
 - **`templates/验证清单.md` 改造为维护者侧的 `docs/发布前检查清单.md` 并移出分发产物**：原文件内容（5 步上手 + FAQ 对照 + 重置/更新）已被 `templates/玩家使用指南.md` 完全覆盖，对玩家无增量；改造后是维护者侧的发布前逐条检查清单，不随包分发。`tools/layout.json` 删除 `checklist` 条目（deploy 16 → 15），产物不再包含 `验证清单.md`。

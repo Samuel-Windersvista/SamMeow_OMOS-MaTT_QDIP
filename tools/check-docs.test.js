@@ -171,3 +171,38 @@ test('真实仓库：文档层零违规（核心回归锁）', () => {
   const repoRoot = path.join(__dirname, '..');
   assert.deepStrictEqual(checkDocs({ repoRoot }), []);
 });
+
+test('产物目录选择：以 components.json 声明的版本为准，更新的目录 mtime 不得夺权（回归锁）', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qdip-docs-prod-'));
+  writeText(path.join(root, 'tools', 'components.json'), JSON.stringify({ version: '9.9.9' }, null, 2));
+  fs.mkdirSync(path.join(root, 'build', 'qdip-generic-9.9.9'), { recursive: true });
+  const stale = path.join(root, 'build', 'qdip-generic-0.0.1');
+  fs.mkdirSync(stale, { recursive: true });
+  // 把陈旧目录的 mtime 推到未来，复现真实缺陷场景：
+  // 本机 build/qdip-generic-0.3.4 的目录 mtime 曾比刚构建出来的 0.5.0 还新，
+  // 导致校验器选中陈旧产物并报出 36 条假违规。
+  const future = Date.now() + 60000;
+  fs.utimesSync(stale, future / 1000, future / 1000);
+
+  const s = describeScope({ repoRoot: root });
+  assert.ok(s.productDir, 'productDir 不应为 null');
+  assert.match(String(s.productDir), /qdip-generic-9\.9\.9$/, '应选中 components.json 声明的版本，实际: ' + s.productDir);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('产物目录选择：声明版本目录不存在时回退到最新 mtime', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'qdip-docs-prod-'));
+  writeText(path.join(root, 'tools', 'components.json'), JSON.stringify({ version: '9.9.9' }, null, 2));
+  const older = path.join(root, 'build', 'qdip-generic-0.0.1');
+  const newer = path.join(root, 'build', 'qdip-generic-0.0.2');
+  fs.mkdirSync(older, { recursive: true });
+  fs.mkdirSync(newer, { recursive: true });
+  const past = Date.now() - 60000;
+  fs.utimesSync(older, past / 1000, past / 1000);
+
+  const s = describeScope({ repoRoot: root });
+  assert.match(String(s.productDir), /qdip-generic-0\.0\.2$/, '声明版本不存在时应回退到最新 mtime，实际: ' + s.productDir);
+
+  fs.rmSync(root, { recursive: true, force: true });
+});
