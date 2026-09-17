@@ -2,6 +2,35 @@
 
 本仓库（SamMeow QDIP 快速部署整合包）的版本变更记录。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号取自 `tools/components.json`。各组件版本与来源见 README「组件来源清单」。
 
+## [Unreleased]
+
+### 计划性变更
+- **`templates/验证清单.md` 改造为维护者侧的 `docs/发布前检查清单.md` 并移出分发产物**：原文件内容（5 步上手 + FAQ 对照 + 重置/更新）已被 `templates/玩家使用指南.md` 完全覆盖，对玩家无增量；改造后是维护者侧的发布前逐条检查清单，不随包分发。`tools/layout.json` 删除 `checklist` 条目（deploy 16 → 15），产物不再包含 `验证清单.md`。
+- **产物 `setup/` 不再分发测试文件与内部地图**：`templates/setup/config-writer.test.js`、`guide-server.test.js`、`codemap.md` 原先随 `dir` 内容合并进入产物，现由 `tools/layout.json` 的 `exclude` 声明排除。产物 `setup/` 只含 `config-writer.js`、`contract.js`、`first-run.html`、`guide-server.js`、`wt-profile.ps1` 五项。
+
+### 新增
+- **包布局单一声明 `tools/layout.json`**：15 条 `deploy` 声明（`name` / `source` / `target` / `kind` = `file` | `dir` | `emptydir` / `optional` / `exclude`）。`build.ps1` 的 [3/5] 阶段只按声明执行——增删部署条目不再需要改脚本。
+- **产物校验器 `tools/verify-package.js`**：零依赖，导出纯函数 `verifyPackage({ outDir, componentsFile, layoutFile })`，另可直接作 CLI（退出码 0/1/2）。把原先内联在 `build.ps1` 的异质断言收敛为 9 条规则：`layout/component-missing`、`layout/deploy-missing`、`layout/excluded-present`、`runtime/missing`、`skills/missing`、`skills/collision`、`plugin/unresolved`、`config/unparseable`、`env/unbound`。违规记录固定为 `{ rule, path, detail }`。
+- **文档/地图层校验器 `tools/check-docs.js`**：零依赖，导出纯函数 `checkDocs({ repoRoot })` 与 `describeScope({ repoRoot })`，违规记录同为 `{ rule, path, detail }`；另可直接作 CLI（`node tools/check-docs.js`，打印 `[SCOPE]`）。三条规则——`docs/path-missing`（反引号路径候选按三种基准解析：仓库根含去空格二次尝试、最新构建产物 `build/qdip-generic-*`、仓库自有文件 basename 索引；无产物时产物路径整类跳过并计入 `describeScope().skippedProductPaths`，不静默变成空操作）、`docs/encoding-broken`（按声明编码解码，禁止 U+FFFD 与私用区字符）、`docs/bom-missing`（`.ps1` 必须带 UTF-8 BOM，其余受检扩展名必须不带）。配套测试 `tools/check-docs.test.js` 含「真实仓库零违规」回归锁与「历史事故回归」探针（`docs/ 验证方案` 与 `安装到系统.bat`）。
+- **便携环境模块 `templates/env.bat`**：便携环境的唯一定义处（`ROOT` / `PATH` / `XDG_*` / `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS` / `QDIP_*` / `ROOTS` / `WSDIR`），内部推导后用 `endlocal & set` 导出，由两个启动器 `call` 复用。
+- **构建期版本闸门**：`tools/components.json` 新增 `verifyVersion` 声明（`exe` / `args` / `strip`），`check-sources.ps1` 在复制前运行探针并比对实物版本。当前覆盖 `node-runtime` 与 `opencode-cli`；其余组件的版本串非机器可读，故不受闸门保护。
+- **测试**：`tools/verify-package.test.js`（手写最小 fixture，逐条破坏）、`tools/launcher.test.js`（子 cmd 断言 `env.bat` 导出的变量集合）。
+- **领域文档**：`CONTEXT.md`（术语表）、`docs/adr/0001-opencode-relative-path-resolution.md`、`docs/adr/0002-layout-json-stays-out-of-the-package.md`、`docs/整合包说明书.md`（维护者说明书，不随包分发）。
+
+### 修改
+- **启动器去重**：环境注入块（2 份）、`workspace.txt` 解析（3 份）、Windows Terminal 发现（2 份）、`endlocal` 变量搬运表（2 份）全部收敛到 `env.bat`。`启动.bat` 95 → 79 行，`进入环境.bat` 31 → 10 行；WT 发现改为 `启动.bat` 内的 `:find_wt` 子例程。
+- **`templates/玩家使用指南.md` 扩写**（98 → 297 行）：新增「首次配置逐项说明」「自定义服务商（含本地 Ollama 示例）」「人格与角色模型分配」「工作目录」四节，FAQ 扩为 13 行表格，并补更新 / 重置 / 卸载 / `--check` 说明。
+- **`build.ps1` 的 [4/5] 阶段**：改为「输入校验（存在性 + 版本）→ 产物校验（用产物内的便携 Node 执行 `verify-package.js`）」；删除原 node/opencode 存在性断言、技能数量断言与 superpowers 迁移守卫。`check-sources.ps1` 改为 UTF-8 with BOM。
+- 四份 `codemap.md` 与两份 `README.md` 按上述改动回写；`templates/setup/codemap.md` 按当前实现重写。
+
+### 修复
+- **人格文件在设置工作目录后静默失效**：`instructions` 的相对路径按 `process.cwd()` 解析并向上 `globUp`，而启动器在设置工作目录后会把 CWD 切到玩家项目目录。改用启动器注入的 `{env:QDIP_PERSONA}` token（加载时展开为绝对路径），既脱离 CWD 又随 `%~dp0` 重新推导而耐搬运。
+- **构建阻断**：`build.ps1` 的技能数量断言写死为 47，而本机技能并集已是 48，导致 [4/5] 阶段必然失败。该断言已由产物校验器的集合比对（并集 ⊆ target + 跨源重名）取代。
+- **`templates/setup/codemap.md` 内容损坏**：原文为双重编码乱码（UTF-8 字节被按 GBK 解码后重存），人机均不可读；已按当前实现重写。
+- **文档缺陷**：删除引用不存在文件「安装到系统.bat」的条目；修正「双击 `启动.bat --workspace`」（Windows 双击不传参，该指令不可能生效）；修正「引导页打不开 = 端口被占用」的错误归因（引导服务用 `server.listen(0)` 取系统随机空闲端口）。
+- **`guide-server.test.js` 偶发失败**（约 4 次中 1 次，`TypeError: fetch failed`）：加入仅针对网络层异常、最多 3 次的重试，非 2xx 响应不重试。
+- **`启动.bat --check` 在 UTF-8 控制台下的误报**：`:check` 分支里含一条 GBK 编码的中文文件名字面量（`进入环境.bat`），cmd 按当前控制台代码页解释批处理字节，在 `chcp 65001` 下该串被错误解码，路径对不上而误报 `[FAIL] 进入环境.bat missing`（文件其实一直在）。删除该检查项——自检只诊断玩家机器上的运行时依赖，全部是 ASCII 可查的项；launcher 文件完整性改由构建期把关：`tools/layout.json` 去掉 `env-shell`/`updater` 的 `optional` 声明，`build.ps1` [3/5] 对非 optional 条目加源存在性断言（缺失即抛错，与产物侧 `layout/deploy-missing` 双重把关）。
+
 ## [0.4.0] - 2026-09-11
 
 构建产物：`build/qdip-generic-0.4.0.zip`

@@ -8,7 +8,8 @@
       "source": "tools/cache/node-v24.14.1-win-x64",
       "target": "runtime/node",
       "version": "24.14.1",
-      "required": true
+      "required": true,
+      "verifyVersion": { "exe": "node.exe", "args": ["--version"], "strip": "v" }
     },
     {
       "name": "opencode-cli",
@@ -16,7 +17,8 @@
       "source": "tools/cache/opencode-1.18.30",
       "target": "opencode/bin",
       "version": "1.18.30",
-      "required": true
+      "required": true,
+      "verifyVersion": { "exe": "opencode.exe", "args": ["--version"] }
     },
     {
       "name": "omoslim",

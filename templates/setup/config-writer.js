@@ -1,22 +1,15 @@
 const fs = require('node:fs');
 const path = require('node:path');
-
-/**
- * 服务商元数据（基于 opencode 1.18.25 实测，证据见 task-4-report.md）：
- * - builtin: 该 provider 是否在 opencode 内置注册表（~/.cache/opencode/models.json）中。
- *   实测结论：deepseek / openai 内置；moonshot(kimi) 不在注册表 → 需按 openai-compatible 注册。
- * - 内置 provider 只需写入 auth.json 即可生效，无需在 opencode.json 的 provider 段注册。
- * - 非内置 provider 注册为 { npm: '@ai-sdk/openai-compatible', options: { baseURL } }。
- */
-const PROVIDERS = {
-  deepseek: { label: 'DeepSeek', testModel: 'deepseek-v4-flash', baseUrl: 'https://api.deepseek.com', builtin: true },
-  kimi: { label: 'Kimi (Moonshot)', testModel: 'moonshot-v1-8k', baseUrl: 'https://api.moonshot.cn/v1', builtin: false, npm: '@ai-sdk/openai-compatible' },
-  'kimi-for-coding': { label: 'Kimi For Coding(编程版)', testModel: 'k3', baseUrl: 'https://api.kimi.com/coding/v1', builtin: true },
-  openai: { label: 'OpenAI', testModel: 'gpt-4o-mini', baseUrl: 'https://api.openai.com/v1', builtin: true },
-};
-
-// 自定义服务商不得使用的保留名（精选卡 key + opencode 内置模型表键 moonshot）
-const RESERVED_PROVIDER_NAMES = ['deepseek', 'kimi', 'moonshot', 'openai', 'kimi-for-coding'];
+// 服务商契约（PROVIDERS / 保留名 / 名称规则 / 条目分类）与浏览器引导页共享同一份：templates/setup/contract.js
+const {
+  PROVIDERS,
+  RESERVED_PROVIDER_NAMES,
+  NAME_PATTERN,
+  NAME_MAX_LENGTH,
+  AVAILABLE_MODELS,
+  isCustomEntry,
+  isCuratedEntry,
+} = require('./contract');
 
 // 无 key 的自定义服务商（如本地 Ollama）在 auth.json 中写占位 key：
 // opencode 要求 provider 的 auth 条目存在，本地端点会忽略该头
@@ -26,14 +19,6 @@ const LOCAL_PLACEHOLDER_KEY = 'sk-local';
 const PERSONAS = {
   vaulttec: '你是 Vault-Tec 自动化研究终端 VT-OS/OPENCODE。以 1950 年代原子时代乐观主义的复古企业口吻交流：使用"Preparing for the Future!"等 Vault-Tec 口号式语气，称呼用户为 Overseer（监督者）。把 bug 称为 containment breach、错误称为 radiation leak、测试通过称为 Vault seal integrity: NOMINAL、构建成功称为 All-Clear siren、部署称为 Vault Door opening。回复简洁无废话，偶尔自然引用 Nuka-Cola、RobCo、General Atomics 等前战企业。任何时候工程准确性优先于角色扮演。',
   minimal: '直接回答，不要寒暄，不要客套，不要开场白，不要总结。只给结论、必要的代码或操作步骤。用户问什么答什么，避免任何与任务无关的文本。',
-};
-
-/** 可分配模型静态列表（v0.2，供引导页下拉渲染；v1 取舍：不动态拉取 opencode models） */
-const AVAILABLE_MODELS = {
-  deepseek: ['deepseek-v4-flash', 'deepseek-v4-flash-vision-exp', 'deepseek-v4-pro'],
-  moonshot: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
-  'kimi-for-coding': ['k3', 'k3-256k', 'kimi-for-coding', 'kimi-for-coding-highspeed'],
-  openai: ['gpt-4o-mini', 'gpt-4o'],
 };
 
 // 分发默认预设名（oh-my-opencode-slim.json 的 presets 键）；所有 agent 模型分配统一写入该预设
@@ -56,8 +41,11 @@ const AGENT_MODEL_PATHS = {
 // council 席位额外写入 synthesizer 预设
 const COUNCIL_SEATS = { 'council-alpha': 'alpha', 'council-beta': 'beta', 'council-gamma': 'gamma' };
 
-// 实测：instructions 相对路径以 CWD（包根）为基准（启动器 cd /d "%~dp0" 保证 CWD=包根）
-const PERSONA_INSTRUCTION_REL = 'opencode/config/opencode/instructions/persona.md';
+// instructions 的相对路径以 CWD（process.cwd()）为基准并向上 globUp（opencode 1.18.30
+// src/session/instruction.ts → systemPaths）。启动器在设置 workspace 时会 cd 到玩家项目目录，
+// 裸相对路径会静默失效。改用启动器注入的环境变量：{env:X} 在配置加载时（src/config/variable.ts
+// → substitute，早于 JSON 解析）被替换为绝对路径，既脱离 CWD 又随 %~dp0 重新推导而耐搬运。
+const PERSONA_INSTRUCTION_TOKEN = '{env:QDIP_PERSONA}';
 
 function rootOf(root) {
   return {
@@ -80,24 +68,12 @@ function providerEntries(providers) {
   return Object.entries(providers || {});
 }
 
-/** 自定义条目 = 值带非空 baseUrl（前端派生好 name；后端据此走自定义分支） */
-function isCustomEntry(p) {
-  return !!(p && typeof p.baseUrl === 'string' && p.baseUrl.trim() !== '');
-}
-
-/** 精选条目 = 名称在精选表内，且未带自定义特征（baseUrl/models） */
-function isCuratedEntry(name, p) {
-  if (!PROVIDERS[name]) return false;
-  if (!p) return true;
-  return !(typeof p.baseUrl === 'string' || Array.isArray(p.models));
-}
-
 /** 自定义条目防御性校验：违规抛中文错误，configure 在落盘前统一执行 */
 function assertValidCustomEntry(name, p) {
-  if (typeof name !== 'string' || !/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+  if (typeof name !== 'string' || !NAME_PATTERN.test(name)) {
     throw new Error(`服务商名称只能由小写字母、数字和连字符组成，且必须以字母或数字开头: ${name}`);
   }
-  if (name.length > 32) {
+  if (name.length > NAME_MAX_LENGTH) {
     throw new Error(`服务商名称不能超过 32 个字符: ${name}`);
   }
   if (RESERVED_PROVIDER_NAMES.includes(name)) {
@@ -172,8 +148,8 @@ function configure({ root, providers, persona, personaText, agentModels, workspa
       fs.mkdirSync(instrDir, { recursive: true });
       fs.writeFileSync(path.join(instrDir, 'persona.md'), content, 'utf8');
       cfg.instructions = cfg.instructions || [];
-      if (!cfg.instructions.includes(PERSONA_INSTRUCTION_REL)) {
-        cfg.instructions.push(PERSONA_INSTRUCTION_REL);
+      if (!cfg.instructions.includes(PERSONA_INSTRUCTION_TOKEN)) {
+        cfg.instructions.push(PERSONA_INSTRUCTION_TOKEN);
       }
     }
   }

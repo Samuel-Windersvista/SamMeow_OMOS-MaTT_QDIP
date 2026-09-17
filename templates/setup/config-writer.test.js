@@ -56,7 +56,7 @@ test('configure writes persona.md and appends instructions for persona=vaulttec'
   assert.ok(content.length <= 1000);
   const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'), 'utf8'));
   assert.ok(Array.isArray(cfg.instructions));
-  assert.ok(cfg.instructions.includes('opencode/config/opencode/instructions/persona.md'));
+  assert.ok(cfg.instructions.includes('{env:QDIP_PERSONA}'));
 });
 
 test('configure writes custom personaText for persona=custom', () => {
@@ -65,7 +65,7 @@ test('configure writes custom personaText for persona=custom', () => {
   const personaPath = path.join(root, 'opencode', 'config', 'opencode', 'instructions', 'persona.md');
   assert.strictEqual(fs.readFileSync(personaPath, 'utf8'), '自定义人格文本XYZ');
   const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'), 'utf8'));
-  assert.ok(cfg.instructions.includes('opencode/config/opencode/instructions/persona.md'));
+  assert.ok(cfg.instructions.includes('{env:QDIP_PERSONA}'));
 });
 
 test('configure without persona does not write persona file', () => {
@@ -74,7 +74,7 @@ test('configure without persona does not write persona file', () => {
   assert.ok(!fs.existsSync(path.join(root, 'opencode', 'config', 'opencode', 'instructions', 'persona.md')));
   const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'), 'utf8'));
   // 模板自带基础 instructions（{env:QDIP_PREFERENCES}），此处仅断言未注入 persona 指令
-  assert.ok(!(cfg.instructions || []).includes('opencode/config/opencode/instructions/persona.md'));
+  assert.ok(!(cfg.instructions || []).includes('{env:QDIP_PERSONA}'));
 });
 
 test('configure overrides only specified agent models, preserving other agents and fields', () => {

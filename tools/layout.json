@@ -1,0 +1,19 @@
+{
+  "deploy": [
+    { "name": "launcher", "kind": "file", "source": "templates/启动.bat", "target": "启动.bat" },
+    { "name": "env-bat", "kind": "file", "source": "templates/env.bat", "target": "env.bat" },
+    { "name": "env-shell", "kind": "file", "source": "templates/进入环境.bat", "target": "进入环境.bat" },
+    { "name": "updater", "kind": "file", "source": "templates/更新组件.bat", "target": "更新组件.bat" },
+    { "name": "setup", "kind": "dir", "source": "templates/setup", "target": "setup", "exclude": ["*.test.js", "codemap.md"] },
+    { "name": "config-opencode", "kind": "file", "source": "templates/opencode.json", "target": "opencode/config/opencode/opencode.json" },
+    { "name": "config-omoslim", "kind": "file", "source": "templates/oh-my-opencode-slim.json", "target": "opencode/config/opencode/oh-my-opencode-slim.json" },
+    { "name": "config-tui", "kind": "file", "source": "templates/tui.json", "target": "opencode/config/opencode/tui.json" },
+    { "name": "config-preferences", "kind": "file", "source": "templates/preferences.md", "target": "opencode/config/opencode/preferences.md" },
+    { "name": "local-note", "kind": "file", "source": "templates/local/说明.txt", "target": "opencode/config/opencode/local/说明.txt" },
+    { "name": "auth-dir", "kind": "emptydir", "target": "opencode/auth" },
+    { "name": "player-guide", "kind": "file", "source": "templates/玩家使用指南.md", "target": "玩家使用指南.md" },
+    { "name": "package-readme", "kind": "file", "source": "templates/README.md", "target": "README.md" },
+    { "name": "changelog", "kind": "file", "source": "CHANGELOG.md", "target": "CHANGELOG.md" },
+    { "name": "data-gitkeep", "kind": "file", "source": "templates/data/.gitkeep", "target": "data/.gitkeep" }
+  ]
+}

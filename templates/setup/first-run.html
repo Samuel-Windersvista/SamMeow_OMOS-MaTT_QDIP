@@ -511,9 +511,11 @@
   </div>
 </div>
 
+<script src="/setup/contract.js"></script>
 <script>
-// state：精选卡 state[providerKey] = { kind:'curated', apiKey }；
-// 自定义卡 state[实例id 如 custom-1] = { kind:'custom', apiKey, baseUrl, models[], finalKey, label }；
+// state：精选卡 state[providerKey] = { apiKey }；
+// 自定义卡 state[实例id 如 custom-1] = { apiKey, baseUrl, models[], finalKey, label }；
+// 是否自定义由共享契约 QDIPContract.isCustomEntry(s)（看 baseUrl）判定，页面不再自存 kind。
 // 只有测试通过的卡会进入 state，保存时一次性提交全部
 const state = {};
 
@@ -552,11 +554,11 @@ pgrid.querySelectorAll('.pcard').forEach(card => {
 });
 
 /* ===== v0.2: 模型分配 ===== */
-// 注意：/api/status 的 providers 键是 kimi，models 键是 moonshot，需映射
-const PROVIDER_TO_MODELS_KEY = { deepseek: 'deepseek', kimi: 'moonshot', 'kimi-for-coding': 'kimi-for-coding', openai: 'openai' };
-const PROVIDER_LABELS = { deepseek: 'DeepSeek', moonshot: 'Kimi', 'kimi-for-coding': 'Kimi For Coding', openai: 'OpenAI' };
-// 自定义服务商派生 key 必须避开的保留名（精选 key + 模型表键）
-const RESERVED_KEYS = ['deepseek', 'kimi', 'moonshot', 'openai', 'kimi-for-coding'];
+// 服务商事实与纯算法来自共享契约 /setup/contract.js（全局 QDIPContract）：
+// providers 与 models 的键现已统一，直接用 providerKey 查 status.models。
+// PROVIDER_LABELS 是运行时可变的显示名注册表：精选卡在 init 时从 status.providers[key].label 播种，
+// 自定义卡测试通过后写入自己的 label（作废/移除时删除）。
+const PROVIDER_LABELS = {};
 const AGENT_GROUPS = [
   { title: '核心角色', agents: [
     ['orchestrator', '总指挥：拆解任务，给其他角色派活'],
@@ -633,13 +635,13 @@ function renderAgentGroups(models) {
   }
 }
 
-// “全部用同一模型”：取第一个测试通过的服务商的首个模型（精选走 PROVIDER_TO_MODELS_KEY，自定义直接用派生 key 查 lastModels）
+// “全部用同一模型”：取第一个测试通过的服务商的首个模型（精选卡 key 即 provider 名，自定义卡用派生 key）
 function updateQuickFill() {
   const first = Object.keys(state)[0];
   let mk = null;
   if (first) {
     const s = state[first];
-    mk = s.kind === 'custom' ? s.finalKey : PROVIDER_TO_MODELS_KEY[first];
+    mk = QDIPContract.isCustomEntry(s) ? s.finalKey : first;
   }
   const model = mk && lastModels && lastModels[mk] && lastModels[mk][0];
   if (!model) {
@@ -665,55 +667,13 @@ qFillBtn.addEventListener('click', () => {
 let customSeq = 0; // 自定义卡实例计数（custom-1、custom-2...，UI state 用其做键）
 let addBtnEl = null; // "+ 添加自定义服务商"入口卡（init 时创建，新卡插在它前面）
 
-// 从 Base URL 派生 provider key：取主机名主标签（注册域左半段）；localhost / 本机 IP → 'local'；
-// 无法解析或空结果回退 'custom'。示例：open.bigmodel.cn → bigmodel；localhost:11434 → local。
-// 说明：规格示例"open.bigmodel.cn → bigmodel"按"注册域主标签"解释（api.deepseek.com → deepseek），
-// 而非主机名字面第一段（open）——两种知名 API 域名形态都能得到品牌名。
-function providerKeyFromBaseUrl(baseUrl) {
-  let host;
-  try {
-    host = new URL(baseUrl.trim()).hostname.toLowerCase().replace(/\.$/, '');
-  } catch (e) {
-    return 'custom';
-  }
-  if (host === 'localhost' || /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host.includes(':')) return 'local';
-  const parts = host.split('.');
-  const seg = parts.length >= 2 ? parts[parts.length - 2] : parts[0];
-  const key = seg.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-  return key || 'custom';
-}
-
-// 逗号（中英文均可）分隔解析模型 ID，去重、去空白
-function parseModelIds(text) {
-  const seen = [];
-  for (const raw of text.split(/[,，]/)) {
-    const m = raw.trim();
-    if (m && !seen.includes(m)) seen.push(m);
-  }
-  return seen;
-}
-
 // 当前已占用的 key：保留名 + 所有已测试通过自定义卡的 finalKey
 function usedProviderKeys() {
-  const used = new Set(RESERVED_KEYS);
+  const used = new Set(QDIPContract.RESERVED_PROVIDER_NAMES);
   for (const s of Object.values(state)) {
     if (s && s.finalKey) used.add(s.finalKey);
   }
   return used;
-}
-
-// 派生不与保留名 / 已占用 key 冲突的最终 key；skipKey 用于重测时先释放本卡旧 key
-function deriveFinalKey(baseUrl, skipKey) {
-  const used = usedProviderKeys();
-  if (skipKey) used.delete(skipKey);
-  // 截断至 28 字符：后端校验 name ≤32，给 -2/-3 后缀留余量（长域名如 punycode 中文域名会派生超长 key）
-  let base = providerKeyFromBaseUrl(baseUrl).slice(0, 28);
-  if (!used.has(base)) return base;
-  for (let i = 2; i <= 1000; i++) {
-    const k = base + '-' + i;
-    if (!used.has(k)) return k;
-  }
-  return (base + '-' + Date.now().toString(36)).slice(0, 32);
 }
 
 // 撤销某自定义 key 对模型分配下拉的注入（测试结果作废 / 卡被移除时调用）
@@ -796,7 +756,7 @@ function buildCustomCard() {
   dhint.className = 'dhint';
   detectBox.appendChild(dhint);
 
-  // v0.4: 撞保留名警告（派生 base 命中 RESERVED_KEYS 时显示，黄色不阻断）
+  // v0.4: 撞保留名警告（派生 base 命中契约保留名时显示，黄色不阻断）
   const resWarn = document.createElement('span');
   resWarn.className = 'msg';
 
@@ -833,16 +793,13 @@ function buildCustomCard() {
     }
   }
 
-  // 该卡最终模型 = 勾选的检测项 + 手填项，去重（勾选顺序在前，手填补充在后）
+  // 该卡最终模型 = 勾选的检测项 + 手填项，去重（合并算法在共享契约里：勾选顺序在前，手填补充在后）
   function computeModels() {
-    const out = [];
+    const checked = [];
     for (const cb of dlist.querySelectorAll('input[type="checkbox"]')) {
-      if (cb.checked) out.push(cb.value);
+      if (cb.checked) checked.push(cb.value);
     }
-    for (const m of parseModelIds(modelsInput.value)) {
-      if (!out.includes(m)) out.push(m);
-    }
-    return out;
+    return QDIPContract.mergeModelIds(checked, QDIPContract.parseModelIds(modelsInput.value));
   }
 
   // 勾选/手填变化实时同步该卡 models（连接已验证过，不需要重新测试）
@@ -859,8 +816,8 @@ function buildCustomCard() {
 
   // 撞保留名警告：派生 base（未加后缀前）命中精选卡同名时提示
   function setReservedWarning(baseUrl, finalKey) {
-    const base = providerKeyFromBaseUrl(baseUrl);
-    if (RESERVED_KEYS.includes(base)) {
+    const base = QDIPContract.providerKeyFromBaseUrl(baseUrl);
+    if (QDIPContract.RESERVED_PROVIDER_NAMES.includes(base)) {
       resWarn.className = 'msg warn';
       resWarn.textContent = '检测到该地址与精选卡同名，建议直接使用上方精选卡；继续保存将以 ' + finalKey + ' 注册';
     } else {
@@ -922,7 +879,7 @@ function buildCustomCard() {
       });
       if (r.ok) {
         // 成功回调里同步派生并占位：并发测试时后完成的会自动错开后缀
-        const finalKey = deriveFinalKey(baseUrl, prev && prev.finalKey);
+        const finalKey = QDIPContract.deriveFinalKey(baseUrl, usedProviderKeys(), prev && prev.finalKey);
         // 若本次派生 key 与旧条目不同（如并发抢占导致换后缀），先撤销旧 key 的注入
         if (prev && prev.finalKey && prev.finalKey !== finalKey) evictCustomProvider(prev.finalKey);
         rebuildDetection(r.models || []);
@@ -938,7 +895,7 @@ function buildCustomCard() {
           msg.textContent = '连接成功，但端点未返回模型列表：请在"模型 ID"里手动填写后重新测试';
           return;
         }
-        state[id] = { kind: 'custom', apiKey, baseUrl, models: merged, finalKey, label };
+        state[id] = { apiKey, baseUrl, models: merged, finalKey, label };
         lastModels[finalKey] = merged;
         PROVIDER_LABELS[finalKey] = label || finalKey;
         renderAgentGroups(lastModels);
@@ -952,7 +909,7 @@ function buildCustomCard() {
         resWarn.className = 'msg';
         resWarn.textContent = '';
         msg.className = 'msg err';
-        msg.textContent = friendlyError(r.error || '未知错误');
+        msg.textContent = QDIPContract.friendlyError(r.error || '未知错误');
       }
     } catch (e) {
       delete state[id];
@@ -982,16 +939,6 @@ function addCustomCard() {
 async function api(path, opts) {
   const res = await fetch(path, opts);
   return res.json();
-}
-
-// 把服务端报错翻译成玩家能看懂的话
-function friendlyError(e) {
-  if (/401/.test(e)) return 'API key 无效，请检查有没有复制完整（401）';
-  if (/402/.test(e)) return '账户余额不足，请先到服务商官网充值（402）';
-  if (/网络错误|Failed to fetch|NetworkError|ECONN|ETIMEDOUT|timeout/i.test(e)) {
-    return '连不上服务商的服务器，请检查网络（或代理）后重试';
-  }
-  return e;
 }
 
 function refreshSubmit() {
@@ -1093,13 +1040,13 @@ function buildCard(name, meta) {
         body: JSON.stringify({ provider: name, apiKey: key })
       });
       if (r.ok) {
-        state[name] = { kind: 'curated', apiKey: key };
+        state[name] = { apiKey: key };
         msg.className = 'msg ok';
         msg.textContent = '连接成功，可以保存了';
       } else {
         delete state[name];
         msg.className = 'msg err';
-        msg.textContent = friendlyError(r.error || '未知错误');
+        msg.textContent = QDIPContract.friendlyError(r.error || '未知错误');
       }
     } catch (e) {
       delete state[name];
@@ -1129,6 +1076,8 @@ async function init() {
   }
   cardsEl.innerHTML = '';
   for (const [name, meta] of Object.entries(status.providers)) {
+    // 显示名注册表从服务端契约播种（键与 status.models 已统一，无需映射表）
+    PROVIDER_LABELS[name] = meta.label;
     cardsEl.appendChild(buildCard(name, meta));
   }
   addBtnEl = document.createElement('div');
@@ -1158,7 +1107,7 @@ submitBtn.addEventListener('click', async () => {
   }
   // v0.4: 自定义卡保存前校验模型非空（检测项被全取消且手填为空时）
   for (const s of Object.values(state)) {
-    if (s.kind === 'custom' && (!s.models || s.models.length === 0)) {
+    if (QDIPContract.isCustomEntry(s) && (!s.models || s.models.length === 0)) {
       resultEl.className = 'err';
       resultEl.textContent = '自定义服务商 ' + (s.label || s.finalKey) + ' 还没有模型：勾选"检测到的模型"，或在"模型 ID"里手动填写';
       return;
@@ -1169,7 +1118,7 @@ submitBtn.addEventListener('click', async () => {
   resultEl.textContent = '保存中...';
   const providers = {};
   for (const [n, s] of Object.entries(state)) {
-    if (s.kind === 'custom') {
+    if (QDIPContract.isCustomEntry(s)) {
       // 自定义条目：name 用派生好的 key，label 是纯 UI 标签不落盘
       providers[s.finalKey] = { apiKey: s.apiKey, baseUrl: s.baseUrl, models: s.models };
     } else {

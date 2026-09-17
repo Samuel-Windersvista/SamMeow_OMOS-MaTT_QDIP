@@ -1,0 +1,5 @@
+玩家本地修改区
+
+把你想手动覆盖的配置放到本目录（例如自定义的 opencode.json 片段、额外指令文件）。
+主配置在上一级：opencode.json 与 oh-my-opencode-slim.json。
+更新整合包时保留本目录可保留你的自定义配置。

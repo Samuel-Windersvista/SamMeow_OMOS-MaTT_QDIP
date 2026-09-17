@@ -6,9 +6,9 @@
 
 | 路径 | 说明 |
 |---|---|
-| `docs/` | 项目文档：需求说明书、通用版 spec、实施计划、工作流诊断报告（Matt Pocock 思想差异与建议） |
-| `templates/` | 打包模板源：启动器（`启动.bat`/`进入环境.bat`）、更新脚本、引导服务与配置写入（setup/）、引导页、opencode 配置模板（含 `tui.json`）、玩家使用指南、验证清单 |
-| `tools/` | 打包器 `build.ps1`、组件清单 `components.json`、源检查 `check-sources.ps1`、vendored 依赖清单（`omoslim-runtime/`、`quota-runtime/`） |
+| `docs/` | 项目文档：需求说明书、通用版 spec、实施计划、工作流诊断报告（Matt Pocock 思想差异与建议）、维护者说明书、发布前检查清单 |
+| `templates/` | 打包模板源：便携环境模块 `env.bat`（被两个启动器 call）、启动器（`启动.bat`/`进入环境.bat`）、更新脚本、引导服务与配置写入（setup/）、引导页、opencode 配置模板（含 `tui.json`）、玩家本地修改区说明模板（local/）、数据目录占位模板（data/）、玩家使用指南 |
+| `tools/` | 打包器 `build.ps1`、组件清单 `components.json`、包布局声明 `layout.json`、产物校验器 `verify-package.js`、源检查 `check-sources.ps1`、文档校验器 `check-docs.js`、vendored 依赖清单（`tools/omoslim-runtime/`、`tools/quota-runtime/`） |
 | `build/` | 组装产物（`qdip-generic-<version>/` 目录 + zip），git 忽略 |
 | `tools/cache/` | 离线组件缓存（便携 Node zip、opencode 离线包、Windows Terminal、chrome-devtools-mcp），git 忽略 |
 | `spt-edition/` | 预留 SPT 专业版目录（当前为空占位） |
@@ -19,10 +19,11 @@
 1. **更新组件**：把新版本组件放入 `tools/cache/`（便携 Node 官方 zip 解压、opencode 用 `npm install --prefix` 后提取真实二进制），或更新 `components.json` 中的来源路径。OMOslim 升级时同步检查 `tools/omoslim-runtime/package.json` 依赖并刷新缓存（在 `tools/cache/omoslim-runtime` 下 `npm ci`）
 2. **组装**：`powershell -ExecutionPolicy Bypass -File tools\build.ps1`（从仓库根运行）
 3. **验证**：
+   - 自动化：`node --test "tools/*.test.js"`（产物校验器 + 启动器环境模块 + 文档/地图层校验器单测；该 glob 已包含 `check-docs.test.js`）+ `node --test "templates/setup/*.test.js"`（服务商契约、配置写入器与引导服务单测）。`build.ps1` 的 [4/5] 阶段先由 `check-sources.ps1` 做存在性校验、再做版本校验（各打印一行 `[OK]`），随后由 `verify-package.js` 做产物校验；版本不符时按输出的 `[HINT]` 处理（换对应版本制品，或更新 `components.json` 的 `version`）。
    - `build\qdip-generic-<version>\启动.bat --check`（自检 node/opencode + OMOslim 插件加载 + Windows Terminal 存在性）
    - 首次引导冒烟（起 guide-server → .guide-url → 引导页 200）
-   - 端到端：解压 zip 到全新目录走首次配置（见 docs/ 验证方案）
-4. **发布**：把 `build/qdip-generic-<version>.zip` 放入 release/ 归档
+   - 端到端：解压 zip 到全新目录走首次配置
+4. **发布**：先逐条过 `docs/发布前检查清单.md`，再把 `build/qdip-generic-<version>.zip` 放入 release/ 归档
 
 ## 组件来源清单
 

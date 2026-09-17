@@ -6,6 +6,24 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
+// 本地 loopback 请求助手：Windows 上新 spawn 的 node 子进程偶尔在首次 accept 前
+// 有瞬时延迟，表现为 TypeError: fetch failed。网络层失败时短暂等待后重试，
+// 断言本身不变——重试只针对「连不上」，不针对「连上了但内容不符」。
+// 重试安全：这些请求都是幂等的（重复 configure 写出相同内容）；HTTP 非 2xx 是
+// 断言要检查的正常响应，不重试，原样返回。
+async function request(url, opts) {
+  const attempts = 3;
+  for (let i = 1; ; i++) {
+    try {
+      return await fetch(url, opts);
+    } catch (err) {
+      const transient = err instanceof TypeError || /fetch failed/i.test(String(err && err.message));
+      if (!transient || i >= attempts) throw err;
+      await new Promise(r => setTimeout(r, 150 * i));
+    }
+  }
+}
+
 function boot(root) {
   const portFile = path.join(root, 'data', '.guide-url');
   const proc = spawn(process.execPath, [path.join(__dirname, 'guide-server.js'), root], { stdio: 'ignore' });
@@ -41,7 +59,7 @@ test('server writes .guide-url and answers /api/status with providers', async ()
   const root = makeRoot();
   const { proc, url } = await boot(root);
   try {
-    const res = await fetch(url.replace('/setup/first-run.html', '/api/status'));
+    const res = await request(url.replace('/setup/first-run.html', '/api/status'));
     assert.strictEqual(res.status, 200);
     const body = await res.json();
     assert.strictEqual(body.ok, true);
@@ -56,7 +74,7 @@ test('POST /api/test with fake key returns ok:false structure', async () => {
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/test', {
+    const res = await request(base + '/api/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ provider: 'deepseek', apiKey: 'sk-invalid-dummy-key-123' }),
@@ -70,13 +88,29 @@ test('POST /api/test with fake key returns ok:false structure', async () => {
   }
 });
 
+test('GET /setup/contract.js serves the shared contract as javascript', async () => {
+  const root = makeRoot();
+  fs.mkdirSync(path.join(root, 'setup'), { recursive: true });
+  fs.copyFileSync(path.join(__dirname, 'contract.js'), path.join(root, 'setup', 'contract.js'));
+  const { proc, url } = await boot(root);
+  try {
+    const base = url.replace('/setup/first-run.html', '');
+    const res = await request(base + '/setup/contract.js');
+    assert.strictEqual(res.status, 200);
+    assert.match(res.headers.get('content-type'), /javascript/);
+    assert.match(await res.text(), /QDIPContract/);
+  } finally {
+    proc.kill();
+  }
+});
+
 test('path traversal does not leak files outside setup', async () => {
   const root = makeRoot();
   fs.writeFileSync(path.join(root, 'data', '.configured'), 'secret', 'utf8');
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/setup/../data/.configured');
+    const res = await request(base + '/setup/../data/.configured');
     assert.notStrictEqual(res.status, 200);
   } finally {
     proc.kill();
@@ -89,13 +123,15 @@ test('GET /api/status includes models list for the UI', async () => {
   const root = makeRoot();
   const { proc, url } = await boot(root);
   try {
-    const res = await fetch(url.replace('/setup/first-run.html', '/api/status'));
+    const res = await request(url.replace('/setup/first-run.html', '/api/status'));
     const body = await res.json();
     assert.ok(body.models);
     assert.ok(Array.isArray(body.models.deepseek));
-    assert.ok(Array.isArray(body.models.moonshot));
+    assert.ok(Array.isArray(body.models.kimi));
     assert.ok(Array.isArray(body.models.openai));
     assert.ok(body.models.deepseek.includes('deepseek-v4-flash'));
+    // 键名错位已消除：models 与 providers 的键完全一致
+    assert.deepStrictEqual(Object.keys(body.models).sort(), Object.keys(body.providers).sort());
   } finally {
     proc.kill();
   }
@@ -106,7 +142,7 @@ test('POST /api/configure with persona and agentModels writes persona and agent 
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/configure', {
+    const res = await request(base + '/api/configure', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -122,7 +158,7 @@ test('POST /api/configure with persona and agentModels writes persona and agent 
     const personaPath = path.join(root, 'opencode', 'config', 'opencode', 'instructions', 'persona.md');
     assert.ok(fs.existsSync(personaPath));
     const cfg = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'opencode.json'), 'utf8'));
-    assert.ok(cfg.instructions.includes('opencode/config/opencode/instructions/persona.md'));
+    assert.ok(cfg.instructions.includes('{env:QDIP_PERSONA}'));
     const slim = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'oh-my-opencode-slim.json'), 'utf8'));
     assert.strictEqual(slim.presets['matt-bridge'].orchestrator.model, 'deepseek/deepseek-v4-flash');
     assert.strictEqual(slim.council.presets.default.beta.model, 'openai/gpt-4o');
@@ -155,7 +191,7 @@ test('POST /api/test with custom baseUrl and no key hits stub /models without Au
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/test', {
+    const res = await request(base + '/api/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // 带尾斜杠 baseUrl：应 trim 后再拼 /models
@@ -183,7 +219,7 @@ test('POST /api/test with custom baseUrl sends Bearer key and maps stub 401 to o
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/test', {
+    const res = await request(base + '/api/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ provider: 'myproxy', apiKey: 'sk-abc', baseUrl: stub.base + '/v1' }),
@@ -204,7 +240,7 @@ test('POST /api/configure with two custom providers writes auth.json and opencod
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/configure', {
+    const res = await request(base + '/api/configure', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -246,7 +282,7 @@ test('POST /api/test with custom baseUrl returns detected OpenAI model ids in mo
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/test', {
+    const res = await request(base + '/api/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ provider: 'bigmodel', baseUrl: stub.base + '/v1' }),
@@ -270,7 +306,7 @@ test('POST /api/test with custom baseUrl returns empty models when endpoint retu
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/test', {
+    const res = await request(base + '/api/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ provider: 'bigmodel', baseUrl: stub.base }),
@@ -289,7 +325,7 @@ test('POST /api/configure with workspace writes data/workspace.txt end to end', 
   const { proc, url } = await boot(root);
   try {
     const base = url.replace('/setup/first-run.html', '');
-    const res = await fetch(base + '/api/configure', {
+    const res = await request(base + '/api/configure', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ providers: { deepseek: { apiKey: 'sk-ws' } }, workspace: 'C:\\code\\my-proj' }),
