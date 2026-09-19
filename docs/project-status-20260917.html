@@ -1,0 +1,1257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>项目状态报告 — SamMeow QDIP（0.5.0）</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: "base",
+    securityLevel: "loose",
+    fontFamily: "'IBM Plex Mono','Cascadia Mono',Consolas,'Microsoft YaHei',monospace",
+    themeVariables: {
+      primaryColor: "#ffffff",
+      primaryTextColor: "#191817",
+      primaryBorderColor: "#cfc8bd",
+      lineColor: "#9a9187",
+      fontSize: "12.5px"
+    },
+    flowchart: { curve: "basis", htmlLabels: true, padding: 10, nodeSpacing: 28, rankSpacing: 34 }
+  });
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f7f5f1; --card:#ffffff; --line:#e2ddd5; --line-soft:#eeeae4;
+    --ink:#191817; --muted:#6b6560;
+    --accent:#166534; --accent-soft:#ecfdf5;
+    --amber:#b45309; --amber-soft:#fffbeb;
+    --red:#b91c1c; --red-soft:#fef2f2;
+    --slate:#475569; --slate-soft:#f1f5f9;
+    --term:#0e1311; --term-fg:#86e0aa; --term-dim:#4d6b5b;
+  }
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'IBM Plex Sans','PingFang SC','Microsoft YaHei',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:'Noto Serif SC','Songti SC',Georgia,serif}
+  .mono{font-family:'IBM Plex Mono','Cascadia Mono',Consolas,monospace}
+  .lbl{font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#9a9187}
+  .term-panel{background:var(--term);color:var(--term-fg);font-family:'IBM Plex Mono',Consolas,monospace}
+  .term-panel .dim{color:var(--term-dim)}
+
+  .badge{display:inline-flex;align-items:center;gap:.4rem;border-radius:9999px;padding:.14rem .62rem;font-size:11px;font-weight:600;border:1px solid;line-height:1.5}
+  .badge .op{font-family:'IBM Plex Mono',Consolas,monospace;font-weight:400;font-size:10px;opacity:.7}
+  .badge-strong{background:var(--accent-soft);border-color:#a7f3d0;color:#065f46}
+  .badge-explore{background:var(--amber-soft);border-color:#fde68a;color:#92400e}
+  .badge-spec{background:var(--slate-soft);border-color:#cbd5e1;color:#475569}
+  .tag{display:inline-flex;align-items:center;gap:.35rem;border-radius:4px;padding:.14rem .5rem;font-size:10.5px;font-family:'IBM Plex Mono',Consolas,monospace;background:#f5f3ef;border:1px solid var(--line);color:#6b6560}
+
+  .dot{width:9px;height:9px;border-radius:9999px;display:inline-block;flex:none}
+  .dot-ok{background:#059669} .dot-warn{background:#d97706} .dot-fail{background:#dc2626}
+
+  .filechip{font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px;background:#f8f7f4;border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:#4b5563;display:inline-block;word-break:break-all}
+
+  /* before / after */
+  .ba{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:.65rem;overflow:hidden;background:#fff}
+  .ba>div{padding:14px 16px;min-height:230px;display:flex;flex-direction:column}
+  .ba>div:first-child{border-right:1px solid var(--line);background:#fbfaf7}
+  .ba-h{display:flex;align-items:center;gap:.5rem;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
+  .ba-h .pill{border-radius:3px;padding:1px 5px;border:1px solid}
+  .ba-before .ba-h{color:#9a9187} .ba-before .ba-h .pill{border-color:#e2ddd5;background:#f3f1ec}
+  .ba-after .ba-h{color:#166534} .ba-after .ba-h .pill{border-color:#a7f3d0;background:#ecfdf5}
+  .ba-body{flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px}
+
+  .node{border:1px solid #d6d0c7;background:#fff;border-radius:5px;padding:4px 7px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;line-height:1.45;color:#3f3a35}
+  .node-dim{background:#f4f2ee;color:#7a736c;border-color:#e5e0d8}
+  .node-bad{background:var(--red-soft);border-color:#fca5a5;color:#7f1d1d}
+  .node-warn{background:var(--amber-soft);border-color:#fcd34d;color:#78350f}
+  .node-ok{background:var(--accent-soft);border-color:#86efac;color:#14532d}
+  .node-deep{background:var(--term);border-color:var(--term);color:var(--term-fg)}
+  .node-thin{border-style:dashed;background:#fff}
+
+  .vline{width:1px;height:12px;background:#cfc8bd;margin:0 auto}
+  .tri-d{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #cfc8bd;margin:0 auto}
+  .tri-d.bad{border-top-color:#dc2626} .tri-d.ok{border-top-color:#16a34a}
+  .hline{height:1px;background:#cfc8bd;flex:1}
+  .tri-r{width:0;height:0;border-top:4px solid transparent;border-bottom:4px solid transparent;border-left:6px solid #cfc8bd}
+
+  .stack{display:flex;flex-direction:column;gap:5px}
+  .row{display:flex;align-items:center;gap:6px}
+  .mini{font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;color:#9a9187;letter-spacing:.06em}
+  .note{font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;color:#8a8279}
+  .note-red{color:#b91c1c} .note-green{color:#15803d}
+
+  .wins li{position:relative;padding-left:14px;font-size:12.5px;color:#3f3a35;line-height:1.75}
+  .wins li:before{content:"";position:absolute;left:0;top:.68em;width:5px;height:5px;background:#16a34a;border-radius:9999px}
+
+  table.t{width:100%;border-collapse:collapse;font-size:12.5px}
+  table.t th{text-align:left;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#9a9187;font-weight:500;padding:8px 10px;border-bottom:1px solid var(--line)}
+  table.t td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  table.t tr:last-child td{border-bottom:0}
+  table.t tbody tr:hover{background:#fbfaf7}
+
+  .mermaid-wrap{background:#fff;border:1px solid var(--line);border-radius:.65rem;padding:16px;overflow-x:auto}
+  .mermaid-slot{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .mermaid{display:flex;justify-content:center}
+
+  .nav-pill{display:inline-block;padding:3px 9px;border-radius:9999px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px;color:#6b6560;border:1px solid transparent;white-space:nowrap}
+  .nav-pill:hover{background:#fff;border-color:var(--line);color:#166534}
+  .cand-nav{display:inline-block;padding:3px 8px;border-radius:4px;font-family:'IBM Plex Mono',Consolas,monospace;font-size:10.5px;color:#6b6560;border:1px solid var(--line);background:#fff}
+  .cand-nav:hover{border-color:#86efac;color:#166534}
+  .grp-nav{font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;color:#b0a89f;letter-spacing:.14em;padding:0 4px}
+  ::selection{background:#bbf7d0}
+
+  /* 增补（取自同族 project-status-20260917.html）：已交付徽章 / 终端标签 / 证据行 */
+  .badge-done{background:var(--accent);border-color:var(--accent);color:#ecfdf5}
+  .badge-done .op{color:#a7f3d0}
+  .badge-done-soft{background:var(--accent-soft);border-color:#6ee7b7;color:#065f46}
+  .tag-term{background:var(--term);border-color:var(--term);color:var(--term-fg)}
+  .filechip-ok{background:var(--accent-soft);border-color:#a7f3d0;color:#14532d}
+  .evid{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .evid .k{font-family:'IBM Plex Mono',Consolas,monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#9a9187;white-space:nowrap}
+
+  @media (max-width:720px){
+    .ba{grid-template-columns:1fr}
+    .ba>div:first-child{border-right:0;border-bottom:1px solid var(--line)}
+  }
+</style>
+</head>
+<body id="top">
+
+<!-- ============ HEADER ============ -->
+<header class="term-panel">
+  <div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="flex items-center justify-between text-[10.5px] tracking-widest dim border-b border-[#1d2a23] pb-3">
+      <span>ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL &nbsp;/&nbsp; PROJECT STATUS</span>
+      <span>SERIAL VTC-2077-OC-4111</span>
+    </div>
+
+    <div class="mt-7 flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <div class="text-[11px] tracking-[0.25em] dim">STATUS REPORT &nbsp;·&nbsp; 0.5.0 已交付 · 13 项交付 · 9 个缺陷修复</div>
+        <h1 class="serif text-4xl md:text-5xl text-[#e8f5ec] mt-3 leading-tight">SamMeow QDIP</h1>
+        <p class="mt-3 text-[13px] dim max-w-3xl leading-relaxed">
+          开箱即用的 AI 编程环境整合包 &nbsp;·&nbsp; opencode CLI + 便携 Node 运行时 + 插件全家桶 + 首次配置引导
+        </p>
+        <p class="mt-2 text-[12px] max-w-3xl leading-relaxed">
+          <span class="dim">对外分发件：</span><span class="tag-term">Samuel·Opencode·自用开发环境快速部署包-0.5.0.zip</span>
+        </p>
+      </div>
+      <div class="text-right text-[11px] leading-6 dim">
+        <div>DATE &nbsp;<span class="text-[#c9e8d5]">2026-09-17</span></div>
+        <div>STATUS &nbsp;<span class="text-[#c9e8d5]">0.5.0 已交付</span></div>
+        <div>ARTIFACT &nbsp;<span class="text-[#c9e8d5]">zip 157.6 MB · 产物 587.9 MB</span></div>
+      </div>
+    </div>
+
+    <div class="mt-7 flex flex-wrap items-center gap-x-7 gap-y-2 text-[10.5px] dim border-t border-[#1d2a23] pt-4">
+      <span class="tracking-widest">LEGEND</span>
+      <span class="flex items-center gap-2"><span class="inline-block h-3 w-6 rounded-[3px] border border-[#3c5348] bg-[#152019]"></span>深色块 = 交付后收敛核心</span>
+      <span class="flex items-center gap-2"><span class="inline-block h-3 w-6 rounded-[3px] border border-[#86efac] bg-[#ecfdf5]"></span>绿色块 = 已交付态</span>
+      <span class="flex items-center gap-2"><span class="inline-block h-3 w-6 rounded-[3px] border border-[#fca5a5] bg-[#fef2f2]"></span>红/黄块 = 交付前问题态（before 侧）</span>
+      <span class="flex items-center gap-2"><span class="inline-block h-3 w-6 rounded-[3px] border border-dashed border-[#e2ddd5] bg-white"></span>虚线 = 接缝（已闭合）</span>
+    </div>
+  </div>
+</header>
+
+<!-- ============ NAV ============ -->
+<nav class="sticky top-0 z-40 border-b border-[var(--line)] bg-[#f7f5f1]/92 backdrop-blur">
+  <div class="max-w-6xl mx-auto px-6 py-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+    <a href="#structure" class="nav-pill">&gt; §1 定位与结构</a>
+    <span class="text-[var(--line)]">|</span>
+    <a href="#ledger" class="nav-pill">&gt; §2 交付台账</a>
+    <span class="grp-nav">0.5.0</span>
+    <a href="#c1" class="cand-nav">C1</a><a href="#c2" class="cand-nav">C2</a><a href="#c3" class="cand-nav">C3</a><a href="#c4" class="cand-nav">C4</a><a href="#c5" class="cand-nav">C5</a><a href="#c6" class="cand-nav">C6</a><a href="#c7" class="cand-nav">C7</a><a href="#c8" class="cand-nav">C8</a><a href="#c9" class="cand-nav">C9</a><a href="#c10" class="cand-nav">C10</a><a href="#c11" class="cand-nav">C11</a><a href="#c12" class="cand-nav">C12</a><a href="#c13" class="cand-nav">C13</a>
+    <span class="text-[var(--line)]">|</span>
+    <a href="#gates" class="nav-pill">&gt; §3 质量门</a>
+    <a href="#roadmap" class="nav-pill">&gt; §4 路线图</a>
+    <a href="#followups" class="nav-pill">&gt; §5 记录项</a>
+    <a href="#env" class="nav-pill">&gt; §6 环境</a>
+  </div>
+</nav>
+
+<main class="max-w-6xl mx-auto px-6 py-12 space-y-16">
+
+<!-- ============ §1 ============ -->
+<section id="structure" class="scroll-mt-20 space-y-8">
+  <div class="flex items-baseline gap-4 border-b border-[var(--line)] pb-3">
+    <span class="mono text-[11px] text-[#b0a89f]">§1</span>
+    <h2 class="serif text-2xl">定位与结构</h2>
+    <span class="mono text-[11px] text-[#9a9187]">这个包是什么 · 里面装了什么 · 怎么用</span>
+  </div>
+
+  <!-- 一句话身份 -->
+  <p class="text-[15px] leading-8 text-[#332f2b] border-l-2 border-[#166534] pl-5 max-w-4xl">
+    SamMeow QDIP 是一份开箱即用的 AI 编程环境整合包——把 opencode CLI、便携 Node 运行时、插件全家桶与首次配置引导服务组装成一个 zip；玩家解压、双击一个 bat、在浏览器里填一次 API key，就能开始用中文指挥 AI 写代码，全程不需要安装 Node / git / 任何运行时。
+  </p>
+
+  <!-- 分发事实 -->
+  <div class="grid md:grid-cols-2 gap-5">
+    <div class="rounded-xl overflow-hidden border border-[#0e1311] term-panel">
+      <div class="px-5 py-5">
+        <div class="text-[10.5px] tracking-[0.25em] dim">对外分发件 &nbsp;/&nbsp; release/</div>
+        <div class="mono text-[13px] text-[#e8f5ec] mt-3 leading-relaxed" style="word-break:break-all">Samuel·Opencode·自用开发环境快速部署包-0.5.0.zip</div>
+        <div class="mt-3 flex items-baseline gap-2">
+          <span class="serif text-4xl text-[#e8f5ec]">157.6</span>
+          <span class="text-[12.5px] dim">MB</span>
+        </div>
+      </div>
+    </div>
+    <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+      <div class="lbl mb-3">产物目录 &nbsp;/&nbsp; 构建输出</div>
+      <div class="mono text-[13px] text-[#332f2b] leading-relaxed" style="word-break:break-all">build/qdip-generic-0.5.0/</div>
+      <div class="mt-3 flex items-baseline gap-2">
+        <span class="serif text-4xl text-[#166534]">587.9</span>
+        <span class="text-[12.5px] text-[#5b554f]">MB</span>
+      </div>
+      <p class="note mt-3">&gt; zip 是产物目录的压缩分发形态；玩家拿到的是 zip，维护者构建出的是产物目录。</p>
+    </div>
+  </div>
+
+  <!-- 组件地图 -->
+  <div>
+    <div class="lbl mb-3">组件地图 &nbsp;/&nbsp; flowchart TB · 这个包里有什么</div>
+    <div class="mermaid-wrap">
+<pre class="mermaid">
+flowchart TB
+  A["启动层 — 启动.bat · env.bat · 进入环境.bat · 更新组件.bat"]
+  B["运行时 — runtime/node v24.14.1 · runtime/terminal 1.24.11911.0"]
+  C["工作台 — opencode CLI 1.18.30"]
+  D["插件 — oh-my-opencode-slim 2.2.18+patch-kit · opencode-quota 3.8.3"]
+  E["技能库 — 48 个 · OMO 9 + Matt 39"]
+  F["首次配置 — setup/ 5 文件 · 浏览器引导填 API key"]
+  G["MCP — chrome-devtools-mcp 1.8.0"]
+  H["配置 — opencode.json · preferences.md · local/ 玩家修改区"]
+  A --> B
+  A --> F
+  B --> C
+  C --> D
+  C --> G
+  C --> H
+  D --> E
+  classDef deep fill:#0e1311,stroke:#0e1311,color:#86e0aa;
+  classDef ok fill:#ecfdf5,stroke:#16a34a,color:#14532d;
+  class A,B,C deep
+  class D,E,F,G,H ok
+</pre>
+    </div>
+    <p class="note mt-2">&gt; 深色块 = 玩家入口主链（启动层 &rarr; 运行时 &rarr; 工作台）；绿色块 = 挂在工作台上的能力面。全部组件在包内，不依赖宿主系统。</p>
+  </div>
+
+  <!-- 组件表 -->
+  <div>
+    <div class="lbl mb-3">组件表 &nbsp;/&nbsp; 层 · 内容 · 关键事实</div>
+    <div class="rounded-xl border border-[var(--line)] bg-white overflow-hidden overflow-x-auto">
+      <table class="t">
+        <thead><tr><th style="width:110px">层</th><th style="width:300px">内容</th><th>关键事实</th></tr></thead>
+        <tbody>
+          <tr><td class="font-medium">启动层</td><td class="mono text-[11.5px]">启动.bat、env.bat、进入环境.bat、更新组件.bat</td><td class="text-[#5b554f]">便携环境的唯一定义处是 <span class="mono text-[11.5px]">env.bat</span>（10 个环境变量），两个启动器只 <span class="mono text-[11.5px]">call</span> 它</td></tr>
+          <tr><td class="font-medium">运行时</td><td class="mono text-[11.5px]">runtime/node（Node v24.14.1）、runtime/terminal（Windows Terminal 1.24.11911.0）</td><td class="text-[#5b554f]">全部在包内，不依赖宿主系统</td></tr>
+          <tr><td class="font-medium">工作台</td><td class="mono text-[11.5px]">opencode/bin（opencode CLI 1.18.30）</td><td class="text-[#5b554f]">构建期有版本闸门保护（<span class="mono text-[11.5px]">node.exe --version</span> / <span class="mono text-[11.5px]">opencode.exe --version</span>）</td></tr>
+          <tr><td class="font-medium">插件</td><td class="mono text-[11.5px]">plugins/oh-my-opencode-slim（2.2.18+patch-kit）、plugins/opencode-quota（3.8.3）</td><td class="text-[#5b554f]">各自带 <span class="mono text-[11.5px]">node_modules</span>；OMOslim 侧另有 <span class="mono text-[11.5px]">custom/</span> 本地追加区</td></tr>
+          <tr><td class="font-medium">技能库</td><td class="mono text-[11.5px]">opencode/config/opencode/skills</td><td class="text-[#5b554f]">48 个，由 OMO 技能（9）与 Matt 技能（39）两个来源合并</td></tr>
+          <tr><td class="font-medium">首次配置</td><td class="mono text-[11.5px]">setup/（5 个文件）</td><td class="text-[#5b554f]"><span class="mono text-[11.5px]">contract.js</span>（服务商契约，浏览器与服务端共用）＋ <span class="mono text-[11.5px]">config-writer.js</span> ＋ <span class="mono text-[11.5px]">guide-server.js</span> ＋ <span class="mono text-[11.5px]">first-run.html</span> ＋ <span class="mono text-[11.5px]">wt-profile.ps1</span></td></tr>
+          <tr><td class="font-medium">MCP</td><td class="mono text-[11.5px]">mcp/chrome-devtools-mcp（1.8.0）</td><td class="text-[#5b554f]">浏览器自动化，由 <span class="mono text-[11.5px]">{env:QDIP_MCP_CHROME}</span> 注入路径</td></tr>
+          <tr><td class="font-medium">配置</td><td class="mono text-[11.5px]">opencode/config/opencode/</td><td class="text-[#5b554f]"><span class="mono text-[11.5px]">opencode.json</span>、<span class="mono text-[11.5px]">oh-my-opencode-slim.json</span>、<span class="mono text-[11.5px]">tui.json</span>、<span class="mono text-[11.5px]">preferences.md</span>、<span class="mono text-[11.5px]">local/</span>（玩家本地修改区）、<span class="mono text-[11.5px]">skills/</span></td></tr>
+          <tr><td class="font-medium">构建与校验</td><td class="mono text-[11.5px]">tools/（10 个文件）</td><td class="text-[#5b554f]"><span class="mono text-[11.5px]">components.json</span>（11 组件）、<span class="mono text-[11.5px]">layout.json</span>（15 条部署声明）、<span class="mono text-[11.5px]">build.ps1</span>、<span class="mono text-[11.5px]">check-sources.ps1</span>、<span class="mono text-[11.5px]">verify-package.js</span>、<span class="mono text-[11.5px]">check-docs.js</span> ＋ 三份测试</td></tr>
+          <tr><td class="font-medium">文档</td><td class="text-[#5b554f]">4 份 codemap、<span class="mono text-[11.5px]">CONTEXT.md</span>（20 术语）、2 份 ADR、维护者说明书、发布前检查清单、玩家使用指南、README、CHANGELOG</td><td class="text-[#5b554f]">面向玩家与面向维护者分开</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 玩家使用路径 -->
+  <div>
+    <div class="lbl mb-3">玩家使用路径 &nbsp;/&nbsp; 解压到进工作台</div>
+    <div class="rounded-xl border border-[var(--line)] bg-white p-6">
+      <div class="stack max-w-xl mx-auto">
+        <div class="node text-center py-2">解压 zip<div class="text-[9px] opacity-70 mt-0.5">Samuel·Opencode·自用开发环境快速部署包-0.5.0.zip</div></div>
+        <div class="tri-d"></div>
+        <div class="node text-center py-2">双击 启动.bat</div>
+        <div class="tri-d"></div>
+        <div class="node node-deep text-center py-2">浏览器自动打开「QDIP 首次配置」<div class="text-[9.5px] opacity-80 mt-0.5">setup/ 引导服务 · 仅首次需要</div></div>
+        <div class="tri-d"></div>
+        <div class="row" style="flex-wrap:wrap;justify-content:center">
+          <span class="node node-thin text-center">勾选服务商<div class="text-[9px] opacity-70">DeepSeek / Kimi / Kimi For Coding / OpenAI<br>或自定义 OpenAI 兼容端点</div></span>
+          <span class="mono text-[11px] text-[#9a9187]">&rarr;</span>
+          <span class="node node-thin text-center">粘贴 API key</span>
+          <span class="mono text-[11px] text-[#9a9187]">&rarr;</span>
+          <span class="node node-thin text-center">测试连接</span>
+          <span class="mono text-[11px] text-[#9a9187]">&rarr;</span>
+          <span class="node node-thin text-center">保存</span>
+        </div>
+        <div class="tri-d"></div>
+        <div class="node text-center py-2">重新双击 启动.bat</div>
+        <div class="tri-d ok"></div>
+        <div class="node node-ok text-center py-2">进入工作台<div class="text-[9px] opacity-70 mt-0.5">开始用中文指挥 AI 写代码</div></div>
+      </div>
+      <p class="note mt-4 text-center">&gt; 全程不需要安装 Node / git / 任何运行时。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §2 ============ -->
+<section id="ledger" class="scroll-mt-20 space-y-10">
+  <div class="flex items-baseline gap-4 border-b border-[var(--line)] pb-3">
+    <span class="mono text-[11px] text-[#b0a89f]">§2</span>
+    <h2 class="serif text-2xl">交付台账</h2>
+    <span class="mono text-[11px] text-[#9a9187]">13 项 · 全部已交付 · 均为 0.5.0 阶段</span>
+  </div>
+
+  <!-- 缺陷面板 -->
+  <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+    <div class="lbl mb-3">本批修掉的真实缺陷 &nbsp;/&nbsp; 9 项 · 箭头指向对应交付卡片</div>
+    <div class="grid md:grid-cols-3 gap-x-6 gap-y-2.5">
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">01</span><span>构建阻断 —— 技能数断言写死 47，而本机并集已是 48，[4/5] 必 throw <a href="#c3" class="mono text-[10px] text-[#166534]">&rarr; C3</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">02</span><span>玩家功能断裂 —— persona 指令用裸相对路径，一设工作目录就静默失效（根因入 ADR-0001）<a href="#c10" class="mono text-[10px] text-[#166534]">&rarr; C10</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">03</span><span>文档误导 —— 「双击 启动.bat --workspace」（Windows 双击不传参，不可能生效）<a href="#c11" class="mono text-[10px] text-[#166534]">&rarr; C11</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">04</span><span>文档误导 —— 「引导页打不开 = 端口被占用」（引导服务用 server.listen(0) 随机空闲端口）<a href="#c11" class="mono text-[10px] text-[#166534]">&rarr; C11</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">05</span><span>内容损坏 —— templates/setup/codemap.md 双重编码乱码，人机均不可读 <a href="#c6" class="mono text-[10px] text-[#166534]">&rarr; C6</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">06</span><span>死引用 —— 引用不存在的「安装到系统.bat」与「docs/ 验证方案」<a href="#c6" class="mono text-[10px] text-[#166534]">&rarr; C6</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">07</span><span>测试偶发 —— 引导服务测试的本地 loopback 请求约 4 次失败 1 次 <a href="#c13" class="mono text-[10px] text-[#166534]">&rarr; C13</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">08</span><span>代码页陷阱 —— 启动.bat --check 在 UTF-8 控制台下误报 launcher 文件缺失 <a href="#c9" class="mono text-[10px] text-[#166534]">&rarr; C9</a></span></div>
+      <div class="flex items-start gap-2 text-[12px] leading-6 text-[#4a443e]"><span class="mono text-[10px] text-[#b91c1c] mt-1">09</span><span>陈旧缓存 —— 685.7 MB 一次性中间产物与废弃制品 <a href="#c12" class="mono text-[10px] text-[#166534]">&rarr; C12</a></span></div>
+    </div>
+  </div>
+
+  <div class="space-y-6">
+
+  <!-- C1 -->
+  <article id="c1" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C1</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">包布局单一声明 + 产物校验深 module</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · layout 15 条 deploy + 校验 9 条规则</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip filechip-ok">tools/layout.json</span>
+        <span class="filechip filechip-ok">tools/verify-package.js</span>
+        <span class="filechip">tools/verify-package.test.js</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>布局无单一声明</span></div>
+          <div class="ba-body">
+            <div class="stack">
+              <div class="node node-dim text-center">布局事实散落：构建脚本手工拼装产物</div>
+              <div class="tri-d bad"></div>
+              <div class="node node-warn text-center">产物对不对靠人工抽查 · 无系统校验</div>
+              <div class="tri-d bad"></div>
+              <div class="node node-bad text-center">事实没有机器可读出处，断言只能写死<div class="text-[9px] opacity-80 mt-0.5">缺陷 01 的土壤：技能数断言写死 47</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>单一声明 + 深 module 校验</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">tools/layout.json<div class="text-[9.5px] opacity-80 mt-0.5">15 条 deploy 声明 · 唯一布局事实</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center py-2">tools/verify-package.js<div class="text-[9px] opacity-70 mt-0.5">9 条规则对产物实测</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center">回归锁 verify-package.test.js</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">COMMIT</span><span class="filechip filechip-ok">f4dddad</span>
+        <span class="k">DEPLOY</span><span class="filechip">layout.json 15 条</span>
+        <span class="k">RULES</span><span class="filechip">verify-package.js 9 条</span>
+        <span class="k">TEST</span><span class="filechip filechip-ok">回归锁 tools/verify-package.test.js</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C2 -->
+  <article id="c2" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C2</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">便携环境收敛到 env.bat，两个启动器去重</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · 启动.bat 95&rarr;79 行 · 进入环境.bat 31&rarr;10 行</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip filechip-ok">templates/env.bat</span>
+        <span class="filechip">启动.bat</span>
+        <span class="filechip">进入环境.bat</span>
+        <span class="filechip">tools/launcher.test.js</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>环境定义双份漂移</span></div>
+          <div class="ba-body">
+            <div class="grid grid-cols-2 gap-2">
+              <div class="node node-warn text-center">启动.bat · 95 行<div class="text-[9px] opacity-80 mt-0.5">内联一份环境变量</div></div>
+              <div class="node node-warn text-center">进入环境.bat · 31 行<div class="text-[9px] opacity-80 mt-0.5">再写一份环境变量</div></div>
+            </div>
+            <div class="row justify-center pt-1"><span class="mono text-[10px] text-[#b91c1c]">新增一个变量要改两处 · 漏一处即漂移</span></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>唯一定义处 + call</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">templates/env.bat<div class="text-[9.5px] opacity-80 mt-0.5">便携环境唯一定义处 · 10 个环境变量</div></div>
+            <div class="tri-d ok"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="node node-ok text-center py-2">启动.bat<div class="text-[9px] opacity-70">95 &rarr; 79 行 · 只 call</div></div>
+              <div class="node node-ok text-center py-2">进入环境.bat<div class="text-[9px] opacity-70">31 &rarr; 10 行 · 只 call</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">FILE</span><span class="filechip filechip-ok">templates/env.bat</span>
+        <span class="k">LINES</span><span class="filechip filechip-ok">启动.bat 95&rarr;79 · 进入环境.bat 31&rarr;10</span>
+        <span class="k">TEST</span><span class="filechip filechip-ok">tools/launcher.test.js</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C3 -->
+  <article id="c3" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C3</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">技能库断言从魔数改为集合比对</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · 产物 skills=48 · 修复缺陷 01</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip">tools/verify-package.js</span>
+        <span class="filechip">opencode/config/opencode/skills</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>缺陷 01 · 构建阻断</span></div>
+          <div class="ba-body">
+            <div class="node node-bad text-center py-2">技能数断言写死 47</div>
+            <div class="tri-d bad"></div>
+            <div class="node node-warn text-center">本机并集已是 48</div>
+            <div class="tri-d bad"></div>
+            <div class="node node-bad text-center py-2">构建 [4/5] 必 throw<div class="text-[9px] opacity-80 mt-0.5">每次技能数变动都要手工改魔数</div></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>集合比对 · 被 C1 吸收</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">声明集合 vs 产物集合<div class="text-[9.5px] opacity-80 mt-0.5">被 C1 的校验器吸收 · 不再断言具体数字</div></div>
+            <div class="tri-d ok"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="node node-ok text-center py-2">skills/missing</div>
+              <div class="node node-ok text-center py-2">skills/collision</div>
+            </div>
+            <div class="node node-ok text-center">产物实测 skills=48</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">RULES</span><span class="filechip filechip-ok">skills/missing · skills/collision</span>
+        <span class="k">COUNT</span><span class="filechip filechip-ok">产物 skills=48</span>
+        <span class="k">ABSORBED</span><span class="filechip">被 C1 的校验器吸收</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C4 -->
+  <article id="c4" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C4</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">服务商契约单一来源</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · contract.js 13 项导出 · /api/status 键一致</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip filechip-ok">templates/setup/contract.js</span>
+        <span class="filechip">templates/setup/guide-server.js</span>
+        <span class="filechip">templates/setup/first-run.html</span>
+        <span class="filechip">tools/setup/*.test.js</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>双份清单漂移</span></div>
+          <div class="ba-body">
+            <div class="grid grid-cols-2 gap-2">
+              <div class="node node-warn text-center">浏览器端<div class="text-[9px] opacity-80 mt-0.5">first-run.html 自带服务商清单</div></div>
+              <div class="node node-warn text-center">服务端<div class="text-[9px] opacity-80 mt-0.5">guide-server.js 另维护一份</div></div>
+            </div>
+            <div class="node node-bad text-center">/api/status 的 models 键与 providers 键不一致<div class="text-[9px] opacity-80 mt-0.5">前端画出的表单与服务端认知漂移</div></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>契约单一来源</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">templates/setup/contract.js<div class="text-[9.5px] opacity-80 mt-0.5">服务商契约 · 13 项导出 · 浏览器与服务端共用</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center py-2">/api/status<div class="text-[9px] opacity-70 mt-0.5">models 键与 providers 键已一致</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">EXPORTS</span><span class="filechip filechip-ok">contract.js 13 项导出</span>
+        <span class="k">TEST</span><span class="filechip filechip-ok">tools/setup/*.test.js 48 例</span>
+        <span class="k">API</span><span class="filechip filechip-ok">/api/status models 键 = providers 键</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C5 -->
+  <article id="c5" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C5</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">输入侧升级为版本闸门</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · verifyVersion 覆盖 2/11 组件</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip">tools/components.json</span>
+        <span class="filechip filechip-ok">tools/check-sources.ps1</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>只查存在 · 不查版本</span></div>
+          <div class="ba-body">
+            <div class="node node-dim text-center py-2">check-sources.ps1 · 15 行<div class="text-[9px] opacity-70 mt-0.5">只查「文件在不在」</div></div>
+            <div class="tri-d bad"></div>
+            <div class="node node-bad text-center py-2">组件版本被掉包 / 陈旧时<div class="text-[9px] opacity-80 mt-0.5">构建照样放行 · 版本对错靠人肉</div></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>声明式版本闸门</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">components.json · verifyVersion<div class="text-[9.5px] opacity-80 mt-0.5">2/11 组件声明可校验版本</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center">构建期实测比对<div class="text-[9px] opacity-70 mt-0.5">node.exe --version / opencode.exe --version</div></div>
+            <div class="node node-ok text-center">check-sources.ps1 15&rarr;51 行</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">COVERAGE</span><span class="filechip filechip-ok">verifyVersion 2/11 组件</span>
+        <span class="k">LINES</span><span class="filechip">check-sources.ps1 15&rarr;51 行</span>
+        <span class="k">LIVE</span><span class="filechip filechip-ok">[OK] version check passed: 2 component(s)</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C6 -->
+  <article id="c6" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C6</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">文档/地图层校验器</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · 3 条规则 · 产物路径 76/76 实检 · 修复缺陷 05/06</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip filechip-ok">tools/check-docs.js</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>缺陷 05/06 · 无人抓</span></div>
+          <div class="ba-body">
+            <div class="node node-bad text-center">缺陷 05 · templates/setup/codemap.md 双重编码乱码<div class="text-[9px] opacity-80 mt-0.5">人机均不可读</div></div>
+            <div class="node node-bad text-center">缺陷 06 · 引用不存在的「安装到系统.bat」与「docs/ 验证方案」</div>
+            <div class="row justify-center pt-1"><span class="mono text-[10px] text-[#b91c1c]">历史两次死引用事故 · 文档层没有任何校验</span></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>3 条规则常驻</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">tools/check-docs.js<div class="text-[9.5px] opacity-80 mt-0.5">文档/地图层校验器 · 3 条规则</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center py-2">[OK] docs verified<div class="text-[9px] opacity-70 mt-0.5">产物路径 76/76 实检 · 跳过 0 · exit 0</div></div>
+            <div class="node node-ok text-center">能力探针可抓住历史两次死引用事故</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">RULES</span><span class="filechip filechip-ok">check-docs.js 3 条</span>
+        <span class="k">LIVE</span><span class="filechip filechip-ok">[OK] docs verified</span>
+        <span class="k">PATHS</span><span class="filechip filechip-ok">产物路径 76/76 实检 · 跳过 0</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C7 -->
+  <article id="c7" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C7</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">产物 setup/ 不再分发测试与内部地图</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · 产物 setup/ = 5 个文件</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip">tools/layout.json</span>
+        <span class="filechip">tools/verify-package.js</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>整目录拷贝</span></div>
+          <div class="ba-body">
+            <div class="node node-warn text-center py-2">setup/ 目录整目录拷贝进产物</div>
+            <div class="tri-d bad"></div>
+            <div class="node node-bad text-center py-2">测试文件与内部地图随包分发给玩家<div class="text-[9px] opacity-80 mt-0.5">玩家看到不该看的维护者材料</div></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>exclude 声明 + 规则</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">layout.json · exclude<div class="text-[9.5px] opacity-80 mt-0.5">声明哪些文件不进产物</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center py-2">规则 layout/excluded-present<div class="text-[9px] opacity-70 mt-0.5">被排除文件出现在产物即报错</div></div>
+            <div class="node node-ok text-center">产物 setup/ = 5 个文件</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">DECL</span><span class="filechip filechip-ok">layout.json exclude</span>
+        <span class="k">RULE</span><span class="filechip filechip-ok">layout/excluded-present</span>
+        <span class="k">COUNT</span><span class="filechip filechip-ok">产物 setup/ = 5 个文件</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C8 -->
+  <article id="c8" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C8</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">验证清单改造为发布前检查清单</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · deploy 16&rarr;15 · 89 行 / 23 个勾选项</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip">templates/验证清单.md（删除）</span>
+        <span class="filechip filechip-ok">docs/发布前检查清单.md</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>维护者清单发给玩家</span></div>
+          <div class="ba-body">
+            <div class="node node-warn text-center py-2">templates/验证清单.md<div class="text-[9px] opacity-80 mt-0.5">面向构建者的验证清单 · 随包分发给玩家</div></div>
+            <div class="tri-d bad"></div>
+            <div class="node node-dim text-center">deploy 16 条 · 含不属于玩家的文件</div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>玩家 / 维护者分开</span></div>
+          <div class="ba-body">
+            <div class="node node-ok text-center py-2">玩家侧：验证清单从模板移除<div class="text-[9px] opacity-70 mt-0.5">deploy 16 &rarr; 15</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-deep text-center py-2">docs/发布前检查清单.md<div class="text-[9.5px] opacity-80 mt-0.5">维护者侧 · 89 行 / 23 个勾选项</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">DELETE</span><span class="filechip">templates/验证清单.md</span>
+        <span class="k">CREATE</span><span class="filechip filechip-ok">docs/发布前检查清单.md · 89 行 / 23 个勾选项</span>
+        <span class="k">DEPLOY</span><span class="filechip filechip-ok">16&rarr;15</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C9 -->
+  <article id="c9" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C9</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">代码页陷阱消除</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · chcp 936 / 65001 自检均 [FAIL]=0 · 修复缺陷 08</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip">启动.bat</span>
+        <span class="filechip">tools/layout.json</span>
+        <span class="filechip">tools/build.ps1</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>缺陷 08 · 代码页陷阱</span></div>
+          <div class="ba-body">
+            <div class="node node-dim text-center">cmd 按当前控制台代码页解释批处理字节</div>
+            <div class="tri-d bad"></div>
+            <div class="node node-bad text-center py-2">启动.bat --check 含中文文件名的存在性断言<div class="text-[9px] opacity-80 mt-0.5">在 UTF-8 控制台（chcp 65001）下误报 launcher 文件缺失</div></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>运行期删除 + 构建期兜底</span></div>
+          <div class="ba-body">
+            <div class="node node-ok text-center py-2">运行期<div class="text-[9px] opacity-70 mt-0.5">启动.bat 删除含中文文件名的存在性断言</div></div>
+            <div class="node node-deep text-center py-2">构建期兜底<div class="text-[9.5px] opacity-80 mt-0.5">layout.json 去掉 optional ＋ build.ps1 源存在性断言</div></div>
+            <div class="node node-ok text-center">chcp 936 与 65001 下自检均 [FAIL]=0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">LIVE</span><span class="filechip filechip-ok">chcp 936 · [FAIL]=0</span>
+        <span class="k">LIVE</span><span class="filechip filechip-ok">chcp 65001 · [FAIL]=0</span>
+        <span class="k">MOVE</span><span class="filechip">launcher 完整性移到构建期</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C10 -->
+  <article id="c10" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C10</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">领域文档补齐</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · CONTEXT.md 20 术语 + ADR ×2 + 说明书</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip filechip-ok">CONTEXT.md</span>
+        <span class="filechip filechip-ok">docs/adr/0001</span>
+        <span class="filechip filechip-ok">docs/adr/0002</span>
+        <span class="filechip filechip-ok">docs/整合包说明书.md</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>领域知识只在会话记忆里</span></div>
+          <div class="ba-body">
+            <div class="node node-warn text-center py-2">术语与决策理由无归档处</div>
+            <div class="tri-d bad"></div>
+            <div class="node node-bad text-center py-2">缺陷 02 这类根因无处安放<div class="text-[9px] opacity-80 mt-0.5">persona 指令裸相对路径 · 一设工作目录就静默失效</div></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>术语 + 决策 + 说明书</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">CONTEXT.md<div class="text-[9.5px] opacity-80 mt-0.5">20 术语 / 4 分组</div></div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="node node-ok text-center py-2">docs/adr/0001 · 0002<div class="text-[9px] opacity-70">缺陷 02 根因入 ADR-0001</div></div>
+              <div class="node node-ok text-center py-2">docs/整合包说明书.md<div class="text-[9px] opacity-70">维护者说明书</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">TERMS</span><span class="filechip filechip-ok">CONTEXT.md · 20 术语 / 4 分组</span>
+        <span class="k">ADR</span><span class="filechip filechip-ok">docs/adr/0001 · 0002</span>
+        <span class="k">DOC</span><span class="filechip filechip-ok">docs/整合包说明书.md</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C11 -->
+  <article id="c11" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C11</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">玩家说明书扩写</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · 98&rarr;297 行 · 8 节 · 修复缺陷 03/04</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip filechip-ok">templates/玩家使用指南.md</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>缺陷 03/04 · 误导</span></div>
+          <div class="ba-body">
+            <div class="node node-dim text-center">旧说明书 98 行</div>
+            <div class="node node-bad text-center">缺陷 03 · 「双击 启动.bat --workspace」<div class="text-[9px] opacity-80 mt-0.5">Windows 双击不传参 · 不可能生效</div></div>
+            <div class="node node-bad text-center">缺陷 04 · 「引导页打不开 = 端口被占用」<div class="text-[9px] opacity-80 mt-0.5">引导服务用 server.listen(0) 随机空闲端口</div></div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>297 行 / 8 节</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-3">templates/玩家使用指南.md<div class="text-[9.5px] opacity-80 mt-1">98 &rarr; 297 行 · 8 节</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center py-2">误导条目改写<div class="text-[9px] opacity-70 mt-0.5">与 0.5.0 实际行为一致</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">LINES</span><span class="filechip filechip-ok">98&rarr;297 行</span>
+        <span class="k">SECTIONS</span><span class="filechip filechip-ok">8 节</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C12 -->
+  <article id="c12" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C12</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">缓存清理</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · 回收 685.7 MB · 修复缺陷 09</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip">tools/cache</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>缺陷 09 · 陈旧缓存</span></div>
+          <div class="ba-body">
+            <div class="node node-bad text-center py-2">685.7 MB 一次性中间产物与废弃制品</div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="node node-warn text-center">opencode-1.18.27<div class="text-[9px] opacity-80 mt-0.5">171.3 MB</div></div>
+              <div class="node node-warn text-center">opencode-install<div class="text-[9px] opacity-80 mt-0.5">514.4 MB</div></div>
+            </div>
+            <div class="node node-dim text-center">tools/cache 1,067.5 MB</div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>一次性回收</span></div>
+          <div class="ba-body">
+            <div class="node node-ok text-center py-2">回收 685.7 MB</div>
+            <div class="tri-d ok"></div>
+            <div class="node node-deep text-center py-3">tools/cache<div class="text-[9.5px] opacity-80 mt-1">1,067.5 &rarr; 381.8 MB</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">RECLAIM</span><span class="filechip filechip-ok">685.7 MB（171.3 ＋ 514.4）</span>
+        <span class="k">CACHE</span><span class="filechip filechip-ok">tools/cache 1,067.5 &rarr; 381.8 MB</span>
+      </div>
+    </footer>
+  </article>
+
+  <!-- C13 -->
+  <article id="c13" class="scroll-mt-20 rounded-xl border border-[var(--line)] bg-white overflow-hidden">
+    <header class="flex items-start gap-4 px-5 py-4 border-b border-[var(--line-soft)]">
+      <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md term-panel text-[11px]">C13</div>
+      <div class="flex-1">
+        <h4 class="serif text-[19px] leading-snug">启动器偶发失败修复</h4>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="badge badge-done">已交付 <span class="op">Delivered</span></span>
+          <span class="tag">阶段 · 0.5.0</span>
+          <span class="tag">outcome · 连跑 8 次 8/8 全绿 · 修复缺陷 07</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="px-5 pt-4">
+      <div class="lbl mb-2">Files</div>
+      <div class="flex flex-wrap gap-1.5">
+        <span class="filechip filechip-ok">templates/setup/guide-server.test.js</span>
+      </div>
+    </div>
+
+    <div class="px-5 py-4">
+      <div class="ba">
+        <div class="ba-before">
+          <div class="ba-h"><span class="pill">BEFORE</span><span>缺陷 07 · 测试偶发</span></div>
+          <div class="ba-body">
+            <div class="node node-bad text-center py-2">引导服务测试的本地 loopback 请求<div class="text-[9px] opacity-80 mt-0.5">约 4 次失败 1 次</div></div>
+            <div class="tri-d bad"></div>
+            <div class="node node-warn text-center">偶发失败侵蚀测试信号 · 真假失败难以分辨</div>
+          </div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-h"><span class="pill">AFTER</span><span>窄口径重试</span></div>
+          <div class="ba-body">
+            <div class="node node-deep text-center py-2">guide-server.test.js<div class="text-[9.5px] opacity-80 mt-0.5">加入仅针对网络层异常的重试</div></div>
+            <div class="tri-d ok"></div>
+            <div class="node node-ok text-center py-2">连跑 8 次 8/8 全绿</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="px-5 py-3 bg-[#fbfaf7] border-t border-[var(--line-soft)]">
+      <div class="lbl mb-1.5">交付证据</div>
+      <div class="evid">
+        <span class="k">FILE</span><span class="filechip filechip-ok">guide-server.test.js · 仅网络层异常重试</span>
+        <span class="k">LIVE</span><span class="filechip filechip-ok">连跑 8 次 8/8 全绿</span>
+      </div>
+    </footer>
+  </article>
+
+  </div>
+</section>
+
+<!-- ============ §3 ============ -->
+<section id="gates" class="scroll-mt-20 space-y-8">
+  <div class="flex items-baseline gap-4 border-b border-[var(--line)] pb-3">
+    <span class="mono text-[11px] text-[#b0a89f]">§3</span>
+    <h2 class="serif text-2xl">质量门与验证</h2>
+    <span class="mono text-[11px] text-[#9a9187]">8 道门 · 本次实测全过</span>
+  </div>
+
+  <div class="rounded-xl border border-[var(--line)] bg-white overflow-hidden overflow-x-auto">
+    <table class="t">
+      <thead><tr><th style="width:170px">门</th><th style="width:250px">命令</th><th>本次实测</th></tr></thead>
+      <tbody>
+        <tr><td class="font-medium">输入校验（存在性）</td><td class="mono text-[11.5px]">tools\check-sources.ps1</td><td class="text-[#5b554f]"><span class="mono text-[11.5px] text-[#15803d]">[OK] all 11 component sources exist</span>，exit 0</td></tr>
+        <tr><td class="font-medium">输入校验（版本）</td><td class="mono text-[11.5px]">同上</td><td class="text-[#5b554f]"><span class="mono text-[11.5px] text-[#15803d]">[OK] version check passed: 2 component(s)</span></td></tr>
+        <tr><td class="font-medium">产物校验</td><td class="mono text-[11.5px]">tools\verify-package.js</td><td class="text-[#5b554f]"><span class="mono text-[11.5px] text-[#15803d]">[OK] package verified</span>，9 条规则，exit 0</td></tr>
+        <tr><td class="font-medium">文档校验</td><td class="mono text-[11.5px]">tools\check-docs.js</td><td class="text-[#5b554f]"><span class="mono text-[11.5px] text-[#15803d]">[OK] docs verified</span>；产物路径 76/76 实检、跳过 0；exit 0</td></tr>
+        <tr><td class="font-medium">单元测试（构建侧）</td><td class="mono text-[11.5px]">node --test "tools/*.test.js"</td><td class="text-[#5b554f]">42 例 / pass 42 / fail 0</td></tr>
+        <tr><td class="font-medium">单元测试（引导侧）</td><td class="mono text-[11.5px]">node --test "templates/setup/*.test.js"</td><td class="text-[#5b554f]">48 例 / pass 48 / fail 0</td></tr>
+        <tr><td class="font-medium">产物自检</td><td class="mono text-[11.5px]">启动.bat --check</td><td class="text-[#5b554f]">node v24.14.1 ＋ 插件已加载 ＋ Windows Terminal 已发现 ＋ workspace=默认包根；<span class="mono text-[11.5px] text-[#15803d]">[FAIL]=0</span></td></tr>
+        <tr><td class="font-medium">编码约定</td><td class="mono text-[11.5px]">54 个自有文本文件</td><td class="text-[#5b554f]">违规 0（<span class="mono text-[11.5px]">.bat</span>=GBK、<span class="mono text-[11.5px]">.ps1</span>=UTF-8 with BOM、其余=UTF-8 且无 BOM）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-[13.5px] leading-7 text-[#332f2b] border-l-2 border-[#166534] pl-5">
+    测试合计 <span class="mono font-semibold">90 例</span>（42 ＋ 48）。
+  </p>
+
+  <!-- 产物实测 -->
+  <div>
+    <div class="lbl mb-3">产物实测 &nbsp;/&nbsp; build/qdip-generic-0.5.0/</div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+      <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+        <div class="lbl mb-2">技能库</div>
+        <div class="flex items-baseline gap-2"><span class="serif text-4xl text-[#166534]">48</span><span class="text-[12px] text-[#5b554f]">skills</span></div>
+      </div>
+      <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+        <div class="lbl mb-2">setup/</div>
+        <div class="flex items-baseline gap-2"><span class="serif text-4xl text-[#166534]">5</span><span class="text-[12px] text-[#5b554f]">文件</span></div>
+      </div>
+      <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+        <div class="lbl mb-2">产物</div>
+        <div class="flex items-baseline gap-2"><span class="serif text-4xl text-[#166534]">587.9</span><span class="text-[12px] text-[#5b554f]">MB</span></div>
+      </div>
+      <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+        <div class="lbl mb-2">zip</div>
+        <div class="flex items-baseline gap-2"><span class="serif text-4xl text-[#166534]">157.6</span><span class="text-[12px] text-[#5b554f]">MB</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ §4 ============ -->
+<section id="roadmap" class="scroll-mt-20 space-y-8">
+  <div class="flex items-baseline gap-4 border-b border-[var(--line)] pb-3">
+    <span class="mono text-[11px] text-[#b0a89f]">§4</span>
+    <h2 class="serif text-2xl">路线图状态</h2>
+    <span class="mono text-[11px] text-[#9a9187]">0.3.3 &rarr; 0.5.0</span>
+  </div>
+
+  <div class="rounded-xl border border-[var(--line)] bg-white overflow-hidden overflow-x-auto">
+    <table class="t">
+      <thead><tr><th style="width:130px">版本</th><th style="width:170px">日期</th><th style="width:150px">状态</th><th>内容要点</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono text-[12px]">0.3.3 / 0.3.4</td>
+          <td class="mono text-[11.5px]">2026-09-05 / 09-08</td>
+          <td><span class="badge badge-done-soft">已发布 <span class="op">Released</span></span></td>
+          <td class="text-[#5b554f]">preferences.md v2、Matt 技能扩到 34、工作流重构</td>
+        </tr>
+        <tr>
+          <td class="mono text-[12px]">0.4.0</td>
+          <td class="mono text-[11.5px]">2026-09-11</td>
+          <td><span class="badge badge-done-soft">已发布 <span class="op">Released</span></span></td>
+          <td class="text-[#5b554f]">移除 superpowers、默认预设切 <span class="mono text-[11.5px]">matt-bridge</span>、opencode 升 1.18.30、技能 47</td>
+        </tr>
+        <tr>
+          <td class="mono text-[12px] font-semibold">0.5.0</td>
+          <td class="mono text-[11.5px]">2026-09-17</td>
+          <td><span class="badge badge-done">已交付 <span class="op">Delivered</span></span></td>
+          <td class="text-[#5b554f]">6 个架构候选全部落地（13 项交付）、9 个缺陷修复、缓存回收 685.7 MB、两份说明书</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- commit chain -->
+  <div>
+    <div class="lbl mb-3">提交链 &nbsp;/&nbsp; mono · git log（新 &rarr; 旧）</div>
+    <div class="rounded-xl border border-[var(--line)] bg-white p-5 overflow-x-auto">
+      <pre class="mono text-[12px] leading-7 text-[#3f3a35]">3131c72  6
+0899861  刷新release
+63b6b7c  修正0.5.0
+f4dddad  新版本0.5.0
+91bb208  更新0.4.0
+64314e2  fix(qdip): deepseek v4 model names + kimi-for-coding notice
+7b74973  fix(qdip): model assignment default dependency notice
+6557b68  feat(qdip): guide page persona + per-agent model assignment UI</pre>
+      <p class="note mt-3">&gt; 哈希与提交消息逐字照 git log 实测。</p>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2 text-[13px] text-[#332f2b]">
+    <span class="dot dot-ok"></span>
+    <span>工作区状态：<span class="mono text-[12px] font-semibold">干净</span>（<span class="mono text-[12px]">git status --short</span> 无输出）。</span>
+  </div>
+</section>
+
+<!-- ============ §5 ============ -->
+<section id="followups" class="scroll-mt-20 space-y-8">
+  <div class="flex items-baseline gap-4 border-b border-[var(--line)] pb-3">
+    <span class="mono text-[11px] text-[#b0a89f]">§5</span>
+    <h2 class="serif text-2xl">记录项与后续</h2>
+    <span class="mono text-[11px] text-[#9a9187]">5 项 · 不阻塞当前状态</span>
+  </div>
+
+  <div class="rounded-xl border border-[var(--line)] bg-white overflow-hidden overflow-x-auto">
+    <table class="t">
+      <thead><tr><th style="width:280px">项</th><th>触发条件 / 说明</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="font-medium">发布前检查清单第 6、7 步尚未执行</td>
+          <td class="text-[#5b554f]">首次引导冒烟（起 guide-server &rarr; <span class="mono text-[11.5px]">.guide-url</span> &rarr; 引导页 200）与端到端解压配置，属需人工/联网的环节；发布前需跑</td>
+        </tr>
+        <tr>
+          <td class="font-medium">文档层校验器的已知盲区</td>
+          <td class="text-[#5b554f]">含 <span class="mono text-[11.5px]">*</span> <span class="mono text-[11.5px]">?</span> <span class="mono text-[11.5px]">...</span> <span class="mono text-[11.5px]">&lt;...&gt;</span> 的 glob/占位片段不检查；<span class="mono text-[11.5px]">CHANGELOG.md</span> 只查编码不查路径；历史规划文档（<span class="mono text-[11.5px]">docs/00-01-02</span> 等）不在范围；无构建产物时产物路径整类跳过（有计数与 <span class="mono text-[11.5px]">[WARN]</span>）</td>
+        </tr>
+        <tr>
+          <td class="font-medium"><span class="mono text-[11.5px]">build/</span> 有 2.6 GB 陈旧产物</td>
+          <td class="text-[#5b554f]">0.3.3 / 0.3.4 / 0.4.0 的目录与 zip、两个中文名 zip、<span class="mono text-[11.5px]">mock-launcher-test</span>；git 忽略，可选清理</td>
+        </tr>
+        <tr>
+          <td class="font-medium">版本闸门只覆盖 2/11 组件</td>
+          <td class="text-[#5b554f]">其余组件的版本串非机器可读（<span class="mono text-[11.5px]">latest</span>、<span class="mono text-[11.5px]">2.2.18+patch-kit</span>、日期戳等）；新增可校验组件只需加 <span class="mono text-[11.5px]">verifyVersion</span> 声明</td>
+        </tr>
+        <tr>
+          <td class="font-medium"><span class="mono text-[11.5px]">components.json</span> 含 5 个本机绝对路径</td>
+          <td class="text-[#5b554f]">移植到另一台构建机必须同步修改（<span class="mono text-[11.5px]">omoslim</span>、<span class="mono text-[11.5px]">omoslim-append</span>、<span class="mono text-[11.5px]">omo-skills</span>、<span class="mono text-[11.5px]">matt-skills</span>、<span class="mono text-[11.5px]">opencode-quota</span>）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ §6 ============ -->
+<section id="env" class="scroll-mt-20 space-y-8">
+  <div class="flex items-baseline gap-4 border-b border-[var(--line)] pb-3">
+    <span class="mono text-[11px] text-[#b0a89f]">§6</span>
+    <h2 class="serif text-2xl">环境</h2>
+  </div>
+
+  <div class="rounded-xl border border-[var(--line)] bg-white overflow-hidden overflow-x-auto">
+    <table class="t">
+      <thead><tr><th style="width:220px">项</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td class="font-medium">平台</td><td class="text-[#5b554f]">Windows（全流程假定：PowerShell、<span class="mono text-[11.5px]">\</span> 路径、<span class="mono text-[11.5px]">node.exe</span> / <span class="mono text-[11.5px]">opencode.exe</span>）</td></tr>
+        <tr><td class="font-medium">PowerShell</td><td class="mono text-[12px]">5.1.19041.6456</td></tr>
+        <tr><td class="font-medium">Node（构建机）</td><td class="mono text-[12px]">v24.14.1</td></tr>
+        <tr><td class="font-medium">Node（便携，产物内）</td><td class="mono text-[12px]">v24.14.1</td></tr>
+        <tr><td class="font-medium">opencode CLI</td><td class="mono text-[12px]">1.18.30</td></tr>
+        <tr><td class="font-medium">便携 Windows Terminal</td><td class="mono text-[12px]">1.24.11911.0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 编码约定三态 -->
+  <div>
+    <div class="lbl mb-3">编码约定 &nbsp;/&nbsp; 三态 · 已由 check-docs.js 断言</div>
+    <div class="grid md:grid-cols-3 gap-5">
+      <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+        <div class="node-deep text-center mono text-[11px] py-1.5 rounded">.bat &rarr; GBK（代码页 936）+ CRLF</div>
+        <p class="text-[12px] leading-6 text-[#4a443e] mt-3">cmd 按当前控制台代码页解释批处理字节，故批处理里不得出现含中文的文件名字面量</p>
+      </div>
+      <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+        <div class="node-deep text-center mono text-[11px] py-1.5 rounded">仓库自有 .ps1 &rarr; UTF-8 with BOM</div>
+        <p class="text-[12px] leading-6 text-[#4a443e] mt-3">PowerShell 5.1 会把无 BOM 脚本按 ANSI/GBK 解析，加第一个中文字符即变成语法错误</p>
+      </div>
+      <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+        <div class="node-deep text-center mono text-[11px] py-1.5 rounded">其余 &rarr; UTF-8 且无 BOM</div>
+        <p class="text-[12px] leading-6 text-[#4a443e] mt-3"><span class="mono text-[11px]">.md</span> / <span class="mono text-[11px]">.js</span> / <span class="mono text-[11px]">.json</span> / <span class="mono text-[11px]">.txt</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 已知环境事件 -->
+  <div>
+    <div class="lbl mb-3">已知环境事件 &nbsp;/&nbsp; 4 条</div>
+    <div class="rounded-xl border border-[var(--line)] bg-white p-5">
+      <ul class="space-y-2.5 text-[12.5px] leading-6 text-[#4a443e]">
+        <li class="flex gap-2"><span class="dot dot-ok mt-1.5"></span><span><span class="font-medium">代码页陷阱</span>（已修）：<span class="mono text-[11.5px]">chcp 65001</span> 下 <span class="mono text-[11.5px]">启动.bat --check</span> 曾误报 <span class="mono text-[11.5px]">进入环境.bat missing</span></span></li>
+        <li class="flex gap-2"><span class="dot dot-ok mt-1.5"></span><span><span class="font-medium">产物目录选择陷阱</span>（已修）：<span class="mono text-[11.5px]">check-docs</span> 曾按 mtime 选中陈旧的 <span class="mono text-[11.5px]">build/qdip-generic-0.3.4</span>（其目录 mtime 比刚构建的 0.5.0 还新），报出 36 条假违规；现按 <span class="mono text-[11.5px]">components.json</span> 声明的版本选择</span></li>
+        <li class="flex gap-2"><span class="dot dot-warn mt-1.5"></span><span><span class="font-medium"><span class="mono text-[11.5px]">node --test &lt;目录&gt;</span> 在本机不可用</span>：目录被当作模块入口报 <span class="mono text-[11.5px]">Cannot find module</span>；必须用 glob 形式</span></li>
+        <li class="flex gap-2"><span class="dot dot-warn mt-1.5"></span><span><span class="font-medium">MAX_PATH 风险</span>：产物含多层 <span class="mono text-[11.5px]">node_modules</span>，建议放在靠近盘符根的浅目录（如 <span class="mono text-[11.5px]">D:\qdip</span>）</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="border-t border-[var(--line)] bg-[#f2efe9]">
+  <div class="max-w-6xl mx-auto px-6 py-6 flex flex-wrap items-center justify-between gap-3">
+    <span class="mono text-[10.5px] text-[#9a9187]">PROJECT STATUS · SamMeow QDIP · 2026-09-17</span>
+    <span class="mono text-[10.5px] text-[#9a9187]">&gt; 0.5.0 已交付 / 13 项交付 · 9 缺陷修复 / 测试合计 90 例 &nbsp;·&nbsp; Vault-Tec -- Preparing for the Future!</span>
+  </div>
+</footer>
+
+</body>
+</html>
