@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 4 课 · 主流程：从追问到验收 | 独立驾驭 OpenCode 体系</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">LESSON 04</p>
+    <h1>主流程：从追问到验收</h1>
+    <p class="lesson-meta">
+      预计 15 分钟 <span class="sep">|</span>
+      难度：进阶 <span class="sep">|</span>
+      前置：<a href="0001-任务入口判定.html">第 1 课</a> · <a href="0002-会话边界.html">第 2 课</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <span class="tag">主流程</span>
+    </p>
+    <p class="lead">
+      第 1 课说"单窗口任务走 grill → implement"；
+      这一课把这条链拆开，逐站看：发生什么、产出什么、你要做什么。
+      看完你会明白：为什么这套流程敢让你"只描述需求"。
+    </p>
+  </header>
+
+  <!-- ==================== 4.1 ==================== -->
+  <h2><span class="secno">4.1</span>完整链路</h2>
+  <p>多窗口任务的完整主链路——注意每一站的箭头都对应一个<b>落盘产出</b>：</p>
+
+  <div class="terminal">
+    <div class="terminal-title">主链路 -- 多窗口任务</div>
+    <pre><code><span class="o">grill-with-docs</span>  <span class="c">→ 追问钉清；边问边写 GLOSSARY.md / ADR</span>
+      <span class="o">↓</span>
+<span class="o">to-spec</span>          <span class="c">→ 综合成规格文档（不再追问）</span>
+      <span class="o">↓</span>
+<span class="o">to-tickets</span>       <span class="c">→ 拆成垂直切片工单（每张可独立演示）</span>
+      <span class="o">↓</span>
+<span class="o">implement ×N</span>     <span class="c">→ 每张工单：内驱 tdd，收尾 code-review</span></code></pre>
+  </div>
+
+  <p>
+    单窗口任务就是这条链的<b>折叠版</b>：<code>grill → implement</code>
+    （tdd 与 code-review 在 implement 内部自动跑完）。
+    流程不是仪式——按任务重量裁剪，这正是第 1 课分拣站的意义。
+  </p>
+
+  <!-- ==================== 4.2 ==================== -->
+  <h2><span class="secno">4.2</span>逐站拆解：产出物与你的动作</h2>
+
+  <div class="table-scroll">
+    <table>
+      <caption>表 4-1 · 每一站：它在做什么、留下什么、你做什么</caption>
+      <thead>
+        <tr><th>站点</th><th>它在做什么</th><th>产出物（落盘）</th><th>你的动作</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>grill-with-docs</b></td>
+          <td>追问钉清目标与关键决策</td>
+          <td>GLOSSARY.md、ADR（决定记录）</td>
+          <td>回答追问、拍板</td>
+        </tr>
+        <tr>
+          <td><b>to-spec</b></td>
+          <td>把对话综合成规格</td>
+          <td>spec 文档</td>
+          <td>过目确认：有没有漏掉你的意思</td>
+        </tr>
+        <tr>
+          <td><b>to-tickets</b></td>
+          <td>拆成垂直切片工单</td>
+          <td>工单列表（每张可独立演示）</td>
+          <td>检查粒度：每张是不是完整的小功能</td>
+        </tr>
+        <tr>
+          <td><b>implement</b></td>
+          <td>按工单实现（内驱 tdd）</td>
+          <td>代码、测试、提交</td>
+          <td>在工单边界开新会话（第 2 课）</td>
+        </tr>
+        <tr>
+          <td><b>code-review</b></td>
+          <td>双轴审查：仓库标准 + 原始规格</td>
+          <td>并排审查报告</td>
+          <td>看报告，决定放行还是返工</td>
+        </tr>
+        <tr>
+          <td><b>复盘</b>（retro / reflect）</td>
+          <td>回顾这次工作，提炼改进</td>
+          <td>改进建议、可复用资产</td>
+          <td>一句话触发，翻一翻建议</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="callout callout-tip">
+    <p class="box-label">为什么是"双轴"审查</p>
+    <p>
+      一条轴对照<b>仓库标准</b>（代码风格、既有约定），一条轴对照<b>原始规格</b>
+      （是不是真做了当初要的东西）。两轴并行审、分开报告——不会互相掩盖问题。
+    </p>
+  </aside>
+
+  <!-- ==================== 4.3 ==================== -->
+  <h2><span class="secno">4.3</span>三个关键原则</h2>
+  <ol>
+    <li>
+      <b>一次问清胜过十次返工</b>：grill 环节不许跳。
+      目标模糊时先追问，是这套流程最值钱的习惯（第 1 课的心法一）。
+    </li>
+    <li>
+      <b>落盘是流程的载体</b>：GLOSSARY.md、spec、工单——每一步的成果都是<b>文件</b>。
+      所以换会话不可怕（第 2 课），流程接得上。
+    </li>
+    <li>
+      <b>每站都有"完成信号"</b>：能说清"这一步完了"再往前走——
+      spec 确认了、工单检查过了、审查报告看了。含糊过关，后面会加倍偿还。
+    </li>
+  </ol>
+
+  <!-- ==================== 4.4 ==================== -->
+  <h2><span class="secno">4.4</span>复盘：让系统变聪明</h2>
+  <p>
+    收尾不是"做完就散"——两个复盘技能让这套系统从每次工作里学习：
+  </p>
+  <ul>
+    <li><code>retro</code>：回顾这次会话，按类别提改进建议（流程、检查、标准……）；</li>
+    <li><code>reflect</code>：发现重复出现的劳动，建议把它沉淀成可复用的资产（技能、配置、模板）。</li>
+  </ul>
+  <p>
+    你的动作只有一句话：<b>"复盘一下"</b>。建议由它出，采不采纳你说了算。
+    你正在读的这门课、你的学习档案，就是同一思路的产物——<b>把经验变成文件</b>。
+  </p>
+
+  <!-- ==================== 4.5 ==================== -->
+  <h2><span class="secno">4.5</span>随堂小测</h2>
+  <p>七道题，覆盖每一站。点击作答，立即判分。</p>
+  <div class="quiz" data-quiz="QUIZ_DATA"></div>
+
+  <!-- ==================== 4.6 ==================== -->
+  <h2><span class="secno">4.6</span>立即动手</h2>
+  <section class="try-it">
+    <p class="box-label">立即动手 · TRY IT NOW</p>
+    <ol class="compact">
+      <li>拿一个真实的小需求走一遍完整流程（单窗口折叠版即可）；</li>
+      <li>记录每一站的产出物：它给了你什么？问了你什么？</li>
+      <li>做完让它"复盘一下"，看看建议里有没有能落进配置或习惯的东西。</li>
+    </ol>
+  </section>
+
+  <!-- ==================== 4.7 ==================== -->
+  <h2><span class="secno">4.7</span>小结</h2>
+  <p>
+    三句话记住这一课：主链五站，每站都有落盘产出和你的动作；
+    小任务走折叠版，流程按任务重量裁剪；
+    收尾复盘让系统越用越聪明——你的活只有一句"复盘一下"。
+  </p>
+
+  <section class="primary-source">
+    <p class="box-label">一手资料 PRIMARY SOURCE</p>
+    <p>
+      主流程的原始设计来自 Matt Pocock 的技能系列，从
+      <a href="https://www.aihero.dev/skills-grill-with-docs">/grill-with-docs</a>
+      开始读，顺着读
+      <a href="https://www.aihero.dev/skills-to-spec">/to-spec</a> 与
+      <a href="https://www.aihero.dev/skills-to-tickets">/to-tickets</a>。
+    </p>
+  </section>
+
+  <ol class="sources">
+    <li>[1] AI Hero · Matt Pocock 技能系列：grill-with-docs / to-spec / to-tickets / TDD（链接见上方）。</li>
+    <li>[2] 你的系统宪法：<code>C:\Users\Winde\.config\opencode\preferences.md</code>（任务入口判定一节的流程列）。</li>
+    <li>[3] 本机技能库：<code>C:\Users\Winde\.agents\skills\</code>（各站技能的原始定义）。</li>
+    <li>[4] 本课配套速查表：<a href="../reference/04-主流程速查表.html">主流程速查表</a>（打印友好）。</li>
+  </ol>
+
+  <aside class="ask-teacher">
+    <p class="box-label">卡住了？问老师</p>
+    <p>
+      任何一站拿不准"这一步算不算完成"，把当前产出物发我，我帮你把关。
+    </p>
+  </aside>
+
+  <nav class="lesson-nav">
+    <a class="prev" href="0003-委派策略.html">
+      <span class="nav-dir">上一课</span><br>
+      <span class="nav-title">第 3 课 · 委派策略</span>
+    </a>
+    <a class="next" href="0005-体系地图.html">
+      <span class="nav-dir">下一课</span><br>
+      <span class="nav-title">第 5 课 · 体系地图</span>
+    </a>
+  </nav>
+
+</main>
+
+<!-- ==================== 测验数据 ====================
+     七道题覆盖主链每一站；correctIndex 从 0 开始数 -->
+<script>
+var QUIZ_DATA = [
+  {
+    question: "grill-with-docs 这一站，你的活是什么？",
+    options: [
+      "检查代码风格",
+      "回答追问、拍板决定",
+      "写测试用例",
+      "盯着编译输出"
+    ],
+    correctIndex: 1,
+    explanation: "grill 是追问环节——事实由它去查，决策留给你。你回答得越清楚，后面返工越少。"
+  },
+  {
+    question: "to-spec 这一站的产出物是什么？",
+    options: [
+      "一份规格文档",
+      "一堆代码文件",
+      "一份测试报告",
+      "一段会话摘要"
+    ],
+    correctIndex: 0,
+    explanation: "spec 把对话综合成规格——它不再追问，直接整理成文档。你的动作是过目确认。"
+  },
+  {
+    question: "to-tickets 拆出来的工单，应该长什么样？",
+    options: [
+      "按文件数量平均拆",
+      "越细碎越好",
+      "每张能端到端独立演示",
+      "随机分组就行"
+    ],
+    correctIndex: 2,
+    explanation: "垂直切片——每张工单是一个能独立演示的完整小功能，而不是“改完三个文件的一半”。"
+  },
+  {
+    question: "implement 内部会自动驱动哪两件事？",
+    options: [
+      "部署与监控",
+      "设计评审与文案",
+      "数据备份与迁移",
+      "tdd 与 code-review"
+    ],
+    correctIndex: 3,
+    explanation: "实现按工单走：先红绿循环写测试（tdd），收尾自动做双轴审查（code-review）。"
+  },
+  {
+    question: "code-review 的“双轴”指的是什么？",
+    options: [
+      "性能与安全",
+      "仓库标准与原始规格",
+      "速度与成本",
+      "命名与注释"
+    ],
+    correctIndex: 1,
+    explanation: "一条轴对照仓库既有标准，一条轴对照最初的需求——两条并行审、分开报告。"
+  },
+  {
+    question: "每张工单的 implement，应该在哪里跑？",
+    options: [
+      "新会话（独立上下文）",
+      "同一个会话从头跑到尾",
+      "压缩之后的会话",
+      "换一个更贵的模型跑"
+    ],
+    correctIndex: 0,
+    explanation: "每张工单独立上下文——带着工单文档开新会话，台面干净（第 2 课的铁律二）。"
+  },
+  {
+    question: "收尾复盘（retro / reflect）的意义是什么？",
+    options: [
+      "检查有没有摸鱼",
+      "自动生成周报",
+      "让系统从每次工作里变聪明",
+      "删除临时文件"
+    ],
+    correctIndex: 2,
+    explanation: "复盘把经验变成可复用资产——重复劳动沉淀成技能、习惯固化进配置。越用越顺的秘密就在这里。"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

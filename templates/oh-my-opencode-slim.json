@@ -2,52 +2,212 @@
   "$schema": "https://unpkg.com/oh-my-opencode-slim@latest/oh-my-opencode-slim.schema.json",
   "preset": "matt-bridge",
   "disabled_agents": [],
-  "showStartupToast": false,
   "council": {
     "presets": {
       "default": {
         "alpha": { "model": "deepseek/deepseek-v4-pro" },
-        "beta":  { "model": "deepseek/deepseek-v4-flash" },
-        "gamma": { "model": "kimi-for-coding/k3" }
+        "beta":  { "model": "deepseek/deepseek-flash" },
+        "gamma": { "model": "kimi-code-plan-cn/k3" }
       },
       "synthesizer": {
         "alpha": { "model": "deepseek/deepseek-v4-pro" },
-        "beta":  { "model": "deepseek/deepseek-v4-flash" },
-        "gamma": { "model": "kimi-for-coding/k3" }
+        "beta":  { "model": "deepseek/deepseek-flash" },
+        "gamma": { "model": "kimi-code-plan-cn/k3" }
       }
     },
     "default_preset": "synthesizer",
     "councillor_execution_mode": "parallel",
-    "councillor_retries": 2
+    "councillor_retries": 3
   },
+  "showStartupToast": false,
   "presets": {
-    "matt-bridge": {
+    "DeepSeek-Only": {
       "orchestrator": {
-        "model": "deepseek/deepseek-v4-flash",
+        "model": "deepseek/deepseek-flash",
         "variant": "max",
         "skills": ["*"],
         "mcps": ["*", "!context7"]
       },
       "orchestrator-beta": {
-        "model": "kimi-for-coding/k3",
-        "variant": "high",
-        "skills": ["*"],
-        "mcps": ["*", "!context7"]
-      },
-      "orchestrator-gamma": {
-        "model": "deepseek/deepseek-v4-flash-vision-exp",
-        "variant": "max",
-        "skills": ["*"],
-        "mcps": ["*", "!context7"]
-      },
-      "orchestrator-delta": {
-        "model": "kimi-for-coding/kimi-for-coding-highspeed",
+        "model": "deepseek/deepseek-v4-pro",
         "variant": "high",
         "skills": ["*"],
         "mcps": ["*", "!context7"]
       },
       "oracle": {
-        "model": "kimi-for-coding/k3",
+        "model": "deepseek/deepseek-v4-pro",
+        "variant": "max",
+        "skills": [
+          "simplify",
+          "codebase-design",
+          "domain-modeling",
+          "diagnosing-bugs"
+        ],
+        "mcps": []
+      },
+      "fixer": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "high",
+        "skills": [
+          "tdd",
+          "diagnosing-bugs",
+          "migrate-to-shoehorn",
+          "prototype",
+          "codebase-design",
+          "simplify"
+        ],
+        "mcps": []
+      },
+      "designer": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "high",
+        "skills": [
+          "agent-browser",
+          "tdd",
+          "prototype",
+          "diagnosing-bugs",
+          "codebase-design"
+        ],
+        "mcps": []
+      },
+      "explorer": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "medium",
+        "skills": [],
+        "mcps": []
+      },
+      "librarian": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "medium",
+        "skills": [],
+        "mcps": ["websearch", "context7", "gh_grep"]
+      },
+      "observer": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "high",
+        "skills": [],
+        "mcps": []
+      },
+      "council": {
+        "model": "deepseek/deepseek-v4-pro",
+        "variant": "max",
+        "skills": [],
+        "mcps": []
+      }
+    },
+    "matt-bridge": {
+      "orchestrator": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "max",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-beta": {
+        "model": "kimi-code-plan-cn/k3",
+        "variant": "high",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-gamma": {
+        "model": "deepseek/deepseek-v4-pro",
+        "variant": "max",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-delta": {
+        "model": "kimi-code-plan-cn/kimi-for-coding",
+        "variant": "high",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "oracle": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "max",
+        "skills": [
+          "simplify",
+          "codebase-design",
+          "domain-modeling",
+          "diagnosing-bugs"
+        ],
+        "mcps": []
+      },
+      "fixer": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "medium",
+        "skills": [
+          "tdd",
+          "diagnosing-bugs",
+          "migrate-to-shoehorn",
+          "prototype",
+          "codebase-design",
+          "simplify"
+        ],
+        "mcps": []
+      },
+      "designer": {
+        "model": "kimi-code-plan-cn/k3",
+        "variant": "max",
+        "skills": [
+          "agent-browser",
+          "tdd",
+          "prototype",
+          "diagnosing-bugs",
+          "codebase-design"
+        ],
+        "mcps": []
+      },
+      "explorer": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "medium",
+        "skills": [],
+        "mcps": []
+      },
+      "librarian": {
+        "model": "kimi-code-plan-cn/kimi-for-coding-highspeed",
+        "variant": "medium",
+        "skills": [],
+        "mcps": ["websearch", "context7", "gh_grep"]
+      },
+      "observer": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "medium",
+        "skills": [],
+        "mcps": []
+      },
+      "council": {
+        "model": "kimi-code-plan-cn/k3",
+        "variant": "max",
+        "skills": [],
+        "mcps": []
+      }
+    },
+    "superpowers-bridge": {
+      "orchestrator": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "max",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-beta": {
+        "model": "kimi-code-plan-cn/k3",
+        "variant": "high",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-gamma": {
+        "model": "deepseek/deepseek-flash",
+        "variant": "max",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "orchestrator-delta": {
+        "model": "kimi-code-plan-cn/kimi-for-coding-highspeed",
+        "variant": "high",
+        "skills": ["*"],
+        "mcps": ["*", "!context7"]
+      },
+      "oracle": {
+        "model": "kimi-code-plan-cn/k3",
         "variant": "high",
         "skills": [
           "simplify",
@@ -58,13 +218,12 @@
         "mcps": []
       },
       "fixer": {
-        "model": "deepseek/deepseek-v4-flash-vision-exp",
+        "model": "deepseek/deepseek-flash",
         "variant": "high",
         "skills": [
           "tdd",
           "diagnosing-bugs",
           "migrate-to-shoehorn",
-          "resolving-merge-conflicts",
           "prototype",
           "codebase-design",
           "simplify"
@@ -72,7 +231,7 @@
         "mcps": []
       },
       "designer": {
-        "model": "kimi-for-coding/k3",
+        "model": "kimi-code-plan-cn/k3",
         "variant": "medium",
         "skills": [
           "agent-browser",
@@ -84,25 +243,25 @@
         "mcps": []
       },
       "explorer": {
-        "model": "kimi-for-coding/kimi-for-coding-highspeed",
+        "model": "kimi-code-plan-cn/kimi-for-coding-highspeed",
         "variant": "high",
         "skills": [],
         "mcps": []
       },
       "librarian": {
-        "model": "kimi-for-coding/kimi-for-coding-highspeed",
+        "model": "kimi-code-plan-cn/kimi-for-coding-highspeed",
         "variant": "high",
         "skills": [],
         "mcps": ["websearch", "context7", "gh_grep"]
       },
       "observer": {
-        "model": "kimi-for-coding/kimi-for-coding-highspeed",
+        "model": "kimi-code-plan-cn/kimi-for-coding-highspeed",
         "variant": "high",
         "skills": [],
         "mcps": []
       },
       "council": {
-        "model": "kimi-for-coding/k3",
+        "model": "kimi-code-plan-cn/k3",
         "variant": "max",
         "skills": [],
         "mcps": []

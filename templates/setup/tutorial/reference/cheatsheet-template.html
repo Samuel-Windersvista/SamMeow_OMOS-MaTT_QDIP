@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenCode 终端速查表 · VT-OS 参考文档</title>
+<!-- 参考文档 = body 加 reference 类：更密、更宽、打印优先。
+     速查表建议横向放在打印机上，或浏览器打印时选"横向"。 -->
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body class="reference">
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">REFERENCE SHEET</p>
+    <h1>OpenCode 终端速查表 <span class="muted">v1.0</span></h1>
+    <p class="lesson-meta">
+      打印版 · 建议 A4 横向 <span class="sep">|</span>
+      与课程第 1-4 课配套 <span class="sep">|</span>
+      更新于 2026-09
+      <button class="no-print tag" style="cursor:pointer"
+              onclick="window.print()">打印本页</button>
+    </p>
+  </header>
+
+  <!-- two-col：屏幕窄时自动折回单栏；打印时稳定双栏 -->
+  <div class="two-col">
+
+    <section>
+      <h2><span class="secno">A</span>会话命令</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>命令</th><th>作用</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>opencode</code></td><td>启动交互式 AI 会话</td></tr>
+          <tr><td><code>opencode "一句话任务"</code></td><td>带初始任务直接启动</td></tr>
+          <tr><td><code>exit</code> / <code>quit</code></td><td>退出会话</td></tr>
+          <tr><td><code>/clear</code></td><td>清空当前对话上下文</td></tr>
+          <tr><td><code>/model</code></td><td>查看或切换当前模型</td></tr>
+          <tr><td><code>/help</code></td><td>查看全部内置命令</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2><span class="secno">B</span>快捷键</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>按键</th><th>作用</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><kbd>Ctrl</kbd> + <kbd>`</kbd></td><td>呼出 / 收起终端</td></tr>
+          <tr><td><kbd>Ctrl</kbd> + <kbd>C</kbd></td><td>中断当前任务（不是复制）</td></tr>
+          <tr><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd></td><td>复制选中内容</td></tr>
+          <tr><td><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></td><td>粘贴</td></tr>
+          <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>翻阅历史命令</td></tr>
+          <tr><td><kbd>Tab</kbd></td><td>补全路径与文件名</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2><span class="secno">C</span>最小配置示例</h2>
+      <div class="terminal">
+        <div class="terminal-title">opencode.json -- 最小可用配置</div>
+        <pre><code><span class="p">&gt;</span> <span class="c"># 复制以下内容保存为 ~/.config/opencode.json</span>
+<span class="o">{</span>
+  <span class="o">"model": "kimi-code-plan-cn/k3",</span>
+  <span class="o">"theme": "vt-os-phosphor",</span>
+  <span class="o">"language": "zh-CN"</span>
+<span class="o">}</span></code></pre>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="secno">D</span>对话技巧</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>说法</th><th>效果</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>"先别改，只读目录"</td><td>让 AI 进入只读勘察模式</td></tr>
+          <tr><td>"分三步做，每步告诉我"</td><td>把大任务拆成小步，便于检查</td></tr>
+          <tr><td>"撤销刚才的修改"</td><td>回滚最近一次写入</td></tr>
+          <tr><td>"用中文注释"</td><td>生成的代码注释改为中文</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2><span class="secno">E</span>故障排查</h2>
+      <aside class="callout callout-warning">
+        <p class="box-label">症状速查</p>
+        <ul>
+          <li><b>提示符消失</b>：任务还在跑，先等 10 秒，再按
+            <kbd>Ctrl</kbd> + <kbd>C</kbd>。</li>
+          <li><b>中文变乱码</b>：检查配置文件里
+            <code>"language": "zh-CN"</code> 是否生效。</li>
+          <li><b>AI 不回应</b>：网络问题居多，
+            <code>/clear</code> 后重试，再不行重启会话。</li>
+        </ul>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">提示</p>
+        <p>纸质速查表解决"忘了怎么敲"；在线课程解决"不知道为什么"。两者搭配效率最高。</p>
+      </aside>
+    </section>
+
+  </div><!-- /two-col -->
+
+  <p class="source">
+    <span class="box-label">SOURCE</span>
+    本速查表由课程第 1-4 课整理而来，命令以 OpenCode 官方文档
+    <a href="https://opencode.ai/docs/">opencode.ai/docs</a> 为准。
+    <span class="muted">发现过时内容请报告老师，Vault-Tec 将签发修订令。</span>
+  </p>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>委派速查表 · 独立驾驭 OpenCode 体系</title>
+<!-- 参考文档 = body 加 reference 类：更密、更宽、打印优先。
+     建议 A4 横向打印，或浏览器打印时选“横向”。 -->
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body class="reference">
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">REFERENCE 03</p>
+    <h1>委派速查表 <span class="muted">v1.0</span></h1>
+    <p class="lesson-meta">
+      打印版 · 建议 A4 横向 <span class="sep">|</span>
+      配套课程：<a href="../lessons/0003-委派策略.html">第 3 课 · 委派策略</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <button class="no-print tag" style="cursor:pointer"
+              onclick="window.print()">打印本页</button>
+    </p>
+  </header>
+
+  <!-- ==================== A. 代理名册（全宽） ==================== -->
+  <section>
+    <h2><span class="secno">A</span>代理名册全表</h2>
+    <p class="small muted">你平时对话的对象是 <b>orchestrator（工头）</b>；点名前缀即 @ 加名字，如 <code>@oracle</code>。</p>
+    <div class="table-scroll">
+      <table class="dense">
+        <thead>
+          <tr><th>代理</th><th>角色</th><th>点名场景</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>orchestrator</b></td>
+            <td>工头：拆任务、派活、盯进度、验收</td>
+            <td>默认——你直接说话就是跟它说</td>
+          </tr>
+          <tr>
+            <td><b>@explorer</b></td>
+            <td>侦察兵（只读）：跨文件搜索、定位代码与模式</td>
+            <td>需要“先摸清情况”的并行搜索</td>
+          </tr>
+          <tr>
+            <td><b>@librarian</b></td>
+            <td>资料员：查官方文档、GitHub 示例、库的内部机制</td>
+            <td>不熟悉的库/API、需要最新文档时</td>
+          </tr>
+          <tr>
+            <td><b>@oracle</b></td>
+            <td>顾问：架构决策、复杂调试、代码审查</td>
+            <td>高风险取舍、修了两次还没好的 bug</td>
+          </tr>
+          <tr>
+            <td><b>@fixer</b></td>
+            <td>施工队：边界清晰的实现与修改</td>
+            <td>需求明确、三句话能说清做什么</td>
+          </tr>
+          <tr>
+            <td><b>@designer</b></td>
+            <td>设计师：UI/UX 的设计与实现</td>
+            <td>用户可见的界面、样式、交互</td>
+          </tr>
+          <tr>
+            <td><b>@observer</b></td>
+            <td>看图员：截图 / PDF / 图表 → 结构化观察</td>
+            <td>需要“看”的分析（图片、截图）</td>
+          </tr>
+          <tr>
+            <td><b>@council</b></td>
+            <td>议会：多模型独立表态 + 综合报告</td>
+            <td>值得多双眼睛的高风险决策</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="callout callout-tip">
+      <p class="box-label">模型是别人的事</p>
+      <p>每个代理背后配什么模型，由预设配置决定，原则是：<b>搜索和重复劳动用快模型，决策和创造用强模型</b>。你不用记——第 5 课会带你看配置；第 6 课会教你配额出问题时怎么换。</p>
+    </aside>
+  </section>
+
+  <div class="two-col">
+
+    <!-- ==================== B. 三条委派规则 ==================== -->
+    <section>
+      <h2><span class="secno">B</span>三条委派规则</h2>
+      <aside class="callout callout-tip">
+        <p class="box-label">1. 代价判断</p>
+        <p>解释成本 &gt; 自己做成本时，不委派，直接做。说不清的活派出去，沟通成本比干活还贵。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">2. 独立可并行 → 同时派出</p>
+        <p>多路搜索、互不打架的修改，一起派出去，别排队。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">3. 简单活工头自己干</p>
+        <p>不是每件事都要动用团队。单窗口内顺手能做完的，不值得走一遍委派流程。</p>
+      </aside>
+      <p class="small muted">心法：你不需要微观管理。点名的价值在于“知道有什么牌”——大多数时候工头自己会打好；关键时刻，你能加牌。</p>
+    </section>
+
+    <!-- ==================== C. 后台任务四步 ==================== -->
+    <section>
+      <h2><span class="secno">C</span>后台任务：派发后不等待</h2>
+      <div class="terminal">
+        <div class="terminal-title">后台任务生命周期 -- 四步</div>
+        <pre><code><span class="o">1 派发</span>      <span class="c"># 任务包：目标 / 验收标准 / 相关文件 / 约束</span>
+<span class="o">2 后台跑</span>    <span class="c"># 代理在自己的工作台干活，主会话继续陪你</span>
+<span class="o">3 自动通知</span>  <span class="c"># 干完了系统自动汇报，不用你盯着</span>
+<span class="o">4 回收核对</span>  <span class="c"># 工头检查结果、整合进项目；可质疑重来</span></code></pre>
+      </div>
+      <aside class="callout callout-warning">
+        <p class="box-label">三条纪律</p>
+        <p><b>不等</b>（后台的意义就是解放你）、<b>不重复派</b>（同一个活派一个就够）、<b>不无限等</b>（迟迟没动静按第 6 课处理）。</p>
+      </aside>
+    </section>
+
+    <!-- ==================== D. 议会 ==================== -->
+    <section>
+      <h2><span class="secno">D</span>议会：多双眼睛的场合</h2>
+      <p>重大决策可把问题同时交给<b>多个不同模型的议员</b>：各自独立作答，议长综合成一份报告，连同“谁说了什么”一起交给你。</p>
+      <div class="terminal">
+        <div class="terminal-title">点法</div>
+        <pre><code><span class="p">&gt;</span> 直接点名 <span class="o">@council</span>
+<span class="p">&gt;</span> 或说一句：开个议会讨论这个方案</code></pre>
+      </div>
+      <aside class="callout callout-warning">
+        <p class="box-label">别滥用</p>
+        <p>用在真正的高风险取舍上；日常小事不值得动用议会。</p>
+      </aside>
+    </section>
+
+  </div><!-- /two-col -->
+
+  <p class="source">
+    <span class="box-label">SOURCE</span>
+    本速查表整理自第 3 课《委派策略》与 <code>preferences.md</code>（委派规则一节）；
+    代理团队设计见 OMOslim 官方仓库 <a href="https://github.com/alvinunreal/oh-my-opencode-slim">alvinunreal/oh-my-opencode-slim</a>。
+    <span class="muted">发现过时内容请报告导师，Vault-Tec 将签发修订令。</span>
+  </p>
+
+</main>
+</body>
+</html>

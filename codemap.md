@@ -10,8 +10,8 @@
 
 - `tools/build.ps1`：构建编排主入口（5 阶段流水线：清理 → 复制组件 → 按 layout.json 部署模板 → 输入校验（存在性+版本闸门）+ 产物校验 → 打包）
 - `tools/components.json`：组件清单（版本号、source→target 映射、required 标志；node/opencode 另带 verifyVersion）
-- `tools/layout.json`：包布局声明（15 条 deploy：file/dir/emptydir + optional，dir 可带 exclude，驱动模板部署与产物核对）
-- `tools/verify-package.js`：产物校验入口（CLI + 可导出纯函数，九条规则）
+- `tools/layout.json`：包布局声明（16 条 deploy：file/dir/emptydir + optional，dir 可带 exclude，驱动模板部署与产物核对）
+- `tools/verify-package.js`：产物校验入口（CLI + 可导出纯函数，十条规则）
 - `tools/check-docs.js`：文档/地图层校验入口（CLI + 可导出纯函数，三条规则：路径引用 / 编码 / BOM；独立于构建流水线）
 - `templates/启动.bat`：玩家侧主入口（便携环境注入 + 首次引导调度 + opencode 启动）
 - `templates/setup/guide-server.js`：首次引导 HTTP 服务入口（被 启动.bat spawn）
@@ -22,7 +22,7 @@
 | Directory | Responsibility Summary | Detailed Map |
 |-----------|------------------------|--------------|
 | `tools/` | Build Orchestration 与 Packaging Pipeline：按清单（components.json）与布局声明（layout.json）把模板、离线制品、外部插件组装为分发目录与 zip，含源完整性校验（check-sources.ps1）与产物校验（verify-package.js）双闸门。 | [View Map](tools/codemap.md) |
-| `templates/` | 分发模板源：便携环境模块（env.bat）、启动器/更新脚本、opencode 配置模板、引导服务源码、玩家本地修改区说明（local/）与数据目录占位（data/）、终端用户文档的源头。 | [View Map](templates/codemap.md) |
+| `templates/` | 分发模板源：便携环境模块（env.bat）、启动器/更新脚本、opencode 配置模板、引导服务源码（含教学站点 `setup/tutorial/`）、玩家本地修改区说明（local/）与数据目录占位（data/）、终端用户文档的源头。 | [View Map](templates/codemap.md) |
 | `templates/setup/` | 首次运行引导服务（Controller/Service/View 三层）：浏览器配置 API key，写入 opencode 便携配置目录并验证连通性。 | [View Map](templates/setup/codemap.md) |
 | `docs/` | 项目文档：需求说明书、通用版 spec、实施计划（不参与构建）。 | - |
 | `build/` | 组装产物（分发目录 + zip），git 忽略。 | - |
@@ -34,13 +34,13 @@
 ```
 维护者: 更新 tools/cache/ 制品 → tools/build.ps1
         → [1/5] 清理 → [2/5] 复制 11 组件(runtime/opencode/plugins/skills)
-        → [3/5] 读 tools/layout.json 驱动部署 templates/(启动.bat、env.bat、setup/、配置模板、local/、data/、文档)
+        → [3/5] 读 tools/layout.json 驱动部署 templates/(启动.bat、env.bat、setup/（含 tutorial/ 教学站点）、配置模板（含 cli.json）、local/、data/、文档)
         → [4/5] check-sources.ps1(存在性+版本) + verify-package.js(产物)
         → [5/5] Compress-Archive → build/qdip-generic-<version>.zip
 
 玩家: 解压 zip → 双击 启动.bat
         → 注入 PATH/XDG_* 便携环境 → 检测 data\.configured 哨兵
-        → 未配置: spawn guide-server.js → 打开引导页(first-run.html)
+        → 未配置: spawn guide-server.js → 打开引导页(first-run.html，含使用教程入口 #sec-tutorial → /setup/tutorial/index.html)
           → POST /api/test 验证 key → POST /api/configure 落盘
           → 写 .configured 哨兵
         → 已配置: 直接执行 opencode %* → 工作台
@@ -50,4 +50,4 @@
 
 - Windows 平台假设（PowerShell、`\` 路径、`node.exe`/`opencode.exe`）
 - `tools/components.json` 含多个本机开发环境绝对路径（omoslim、omoslim-append、omo-skills、matt-skills、opencode-quota），移植构建机需同步修改
-- 组件版本固定：便携 Node v24.14.1、opencode CLI 1.18.30（离线缓存）
+- 组件版本固定：便携 Node v24.14.1、opencode CLI 1.18.33（离线缓存）、opencode-quota 4.10.2、matt-skills 2026-09-30

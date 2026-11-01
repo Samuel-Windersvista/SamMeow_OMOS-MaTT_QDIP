@@ -41,7 +41,7 @@ const AGENT_MODEL_PATHS = {
 // council 席位额外写入 synthesizer 预设
 const COUNCIL_SEATS = { 'council-alpha': 'alpha', 'council-beta': 'beta', 'council-gamma': 'gamma' };
 
-// instructions 的相对路径以 CWD（process.cwd()）为基准并向上 globUp（opencode 1.18.30
+// instructions 的相对路径以 CWD（process.cwd()）为基准并向上 globUp（opencode 1.18.x
 // src/session/instruction.ts → systemPaths）。启动器在设置 workspace 时会 cd 到玩家项目目录，
 // 裸相对路径会静默失效。改用启动器注入的环境变量：{env:X} 在配置加载时（src/config/variable.ts
 // → substitute，早于 JSON 解析）被替换为绝对路径，既脱离 CWD 又随 %~dp0 重新推导而耐搬运。

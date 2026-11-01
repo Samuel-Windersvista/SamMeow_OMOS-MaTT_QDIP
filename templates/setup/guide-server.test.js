@@ -163,7 +163,7 @@ test('POST /api/configure with persona and agentModels writes persona and agent 
     assert.strictEqual(slim.presets['matt-bridge'].orchestrator.model, 'deepseek/deepseek-v4-flash');
     assert.strictEqual(slim.council.presets.default.beta.model, 'openai/gpt-4o');
     assert.strictEqual(slim.council.presets.synthesizer.beta.model, 'openai/gpt-4o');
-    assert.strictEqual(slim.presets['matt-bridge'].fixer.model, 'deepseek/deepseek-v4-flash-vision-exp');
+    assert.strictEqual(slim.presets['matt-bridge'].fixer.model, 'deepseek/deepseek-flash');
   } finally {
     proc.kill();
   }
@@ -335,6 +335,105 @@ test('POST /api/configure with workspace writes data/workspace.txt end to end', 
     assert.strictEqual(body.ok, true);
     const ws = fs.readFileSync(path.join(root, 'data', 'workspace.txt'), 'utf8');
     assert.strictEqual(ws, 'C:\\code\\my-proj');
+  } finally {
+    proc.kill();
+  }
+});
+
+// ---- v0.6: setup 子目录树托管（教学站点） ----
+
+// 建一棵 setup/tutorial 子目录树，模拟入包的教学站点静态资源
+function makeTutorialRoot() {
+  const root = makeRoot();
+  fs.mkdirSync(path.join(root, 'setup', 'tutorial', 'assets'), { recursive: true });
+  fs.writeFileSync(path.join(root, 'setup', 'tutorial', 'index.html'), '<!doctype html><h1>tutorial</h1>', 'utf8');
+  fs.writeFileSync(path.join(root, 'setup', 'tutorial', 'assets', 'lesson.css'), 'body { color: #0f0; }', 'utf8');
+  fs.writeFileSync(path.join(root, 'setup', 'tutorial', 'assets', 'quiz.js'), 'window.QUIZ = true;', 'utf8');
+  fs.writeFileSync(path.join(root, 'setup', 'tutorial', 'MISSION.md'), '# Mission', 'utf8');
+  fs.writeFileSync(path.join(root, 'setup', 'tutorial', '第一章.md'), '# 第一章', 'utf8');
+  return root;
+}
+
+test('GET nested setup files are served with correct mime types', async () => {
+  const root = makeTutorialRoot();
+  const { proc, url } = await boot(root);
+  try {
+    const base = url.replace('/setup/first-run.html', '');
+    const html = await request(base + '/setup/tutorial/index.html');
+    assert.strictEqual(html.status, 200);
+    assert.strictEqual(html.headers.get('content-type'), 'text/html; charset=utf-8');
+    assert.match(await html.text(), /tutorial/);
+
+    const css = await request(base + '/setup/tutorial/assets/lesson.css');
+    assert.strictEqual(css.status, 200);
+    assert.strictEqual(css.headers.get('content-type'), 'text/css; charset=utf-8');
+
+    const js = await request(base + '/setup/tutorial/assets/quiz.js');
+    assert.strictEqual(js.status, 200);
+    assert.strictEqual(js.headers.get('content-type'), 'text/javascript; charset=utf-8');
+  } finally {
+    proc.kill();
+  }
+});
+
+test('GET markdown is served as text/plain and percent-encoded chinese filename resolves', async () => {
+  const root = makeTutorialRoot();
+  const { proc, url } = await boot(root);
+  try {
+    const base = url.replace('/setup/first-run.html', '');
+    const md = await request(base + '/setup/tutorial/MISSION.md');
+    assert.strictEqual(md.status, 200);
+    assert.strictEqual(md.headers.get('content-type'), 'text/plain; charset=utf-8');
+    assert.match(await md.text(), /Mission/);
+
+    // 中文文件名由浏览器 percent-encode 后发送
+    const cn = await request(base + '/setup/tutorial/' + encodeURIComponent('第一章.md'));
+    assert.strictEqual(cn.status, 200);
+    assert.match(await cn.text(), /第一章/);
+  } finally {
+    proc.kill();
+  }
+});
+
+test('percent-encoded path traversal variants never reach files outside setup', async () => {
+  const root = makeTutorialRoot();
+  fs.writeFileSync(path.join(root, 'data', '.configured'), 'secret', 'utf8');
+  const { proc, url } = await boot(root);
+  try {
+    const base = url.replace('/setup/first-run.html', '');
+    // WHATWG URL 会在发送前规范化裸 `..` 与 `%2e%2e` 段，但 `%5c`（反斜杠）等
+    // 编码变体会原样到达服务器，必须在 decode+resolve 后被前缀包含检查拦下。
+    const variants = [
+      '/setup/%2e%2e/%2e%2e/data/.configured',
+      '/setup/tutorial/%2e%2e/%2e%2e/data/.configured',
+      '/setup/%2e%2e%5c%2e%2e%5cdata%5c.configured',
+      '/setup/tutorial/%5c..%5c..%5cdata%5c.configured',
+      '/setup/tutorial%2f..%2f..%2fdata/.configured',
+    ];
+    for (const v of variants) {
+      const res = await request(base + v);
+      assert.notStrictEqual(res.status, 200, `${v} must not be served`);
+    }
+  } finally {
+    proc.kill();
+  }
+});
+
+test('existing single-level setup files keep working after subtree support', async () => {
+  const root = makeTutorialRoot();
+  fs.copyFileSync(path.join(__dirname, 'contract.js'), path.join(root, 'setup', 'contract.js'));
+  fs.writeFileSync(path.join(root, 'setup', 'first-run.html'), '<h1>first run</h1>', 'utf8');
+  const { proc, url } = await boot(root);
+  try {
+    const base = url.replace('/setup/first-run.html', '');
+    const contract = await request(base + '/setup/contract.js');
+    assert.strictEqual(contract.status, 200);
+    assert.match(contract.headers.get('content-type'), /javascript/);
+    const firstRun = await request(base + '/setup/first-run.html');
+    assert.strictEqual(firstRun.status, 200);
+    assert.strictEqual(firstRun.headers.get('content-type'), 'text/html; charset=utf-8');
+    const missing = await request(base + '/setup/tutorial/nope.html');
+    assert.strictEqual(missing.status, 404);
   } finally {
     proc.kill();
   }

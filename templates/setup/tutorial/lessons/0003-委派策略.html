@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 3 课 · 委派策略：指挥你的代理团队 | 独立驾驭 OpenCode 体系</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">LESSON 03</p>
+    <h1>委派策略：指挥你的代理团队</h1>
+    <p class="lesson-meta">
+      预计 15 分钟 <span class="sep">|</span>
+      难度：进阶 <span class="sep">|</span>
+      前置：<a href="0001-任务入口判定.html">第 1 课</a> · <a href="0002-会话边界.html">第 2 课</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <span class="tag">委派</span>
+    </p>
+    <p class="lead">
+      你面前不是"一个 AI"，是一支有分工的团队。
+      你只需要认识名册、知道什么时候点谁的名——剩下的调度，
+      工头（orchestrator）会替你做。
+    </p>
+  </header>
+
+  <!-- ==================== 3.1 ==================== -->
+  <h2><span class="secno">3.1</span>为什么是"团队"而不是"一个 AI"</h2>
+  <p>
+    让一个 AI 单线程干活：搜索是它、写代码是它、做决策还是它——慢，
+    而且所有杂事都堆在同一张工作台上。委派把工作拆给专职代理，同时解决三件事：
+  </p>
+  <ul>
+    <li><b>并行提速</b>：互不依赖的活同时干，而不是排队；</li>
+    <li><b>上下文隔离</b>：每个代理一张干净工作台——第 2 课讲的"换台"在后台自动发生；</li>
+    <li><b>模型按需分配</b>：搜索类的活用快模型，决策类的活用强模型，费用和质量两头兼顾。</li>
+  </ul>
+
+  <aside class="callout callout-why">
+    <p class="box-label">为什么重要</p>
+    <p>
+      这是你点名的第三个盲区：<b>看懂并主动指挥委派</b>。
+      学会点名之后，你就从"看 AI 干活"升级成"指挥团队干活"——
+      这才是"独立驾驭"里"驾驭"二字的真正含义。
+    </p>
+  </aside>
+
+  <!-- ==================== 3.2 ==================== -->
+  <h2><span class="secno">3.2</span>名册</h2>
+  <p>
+    你平时对话的对象叫 <b>orchestrator（工头）</b>——它负责拆任务、派活、盯进度、验收。
+    下面这张名册是它手下的兵。先混个眼熟，3.6 节的小测会带你练到记住。
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <caption>表 3-1 · 代理名册（点名前缀即 @ 加名字，如 @oracle）</caption>
+      <thead>
+        <tr><th>代理</th><th>角色</th><th>什么时候点名它</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>orchestrator</b></td>
+          <td>工头：拆任务、派活、盯进度、验收</td>
+          <td>默认——你直接说话就是跟它说</td>
+        </tr>
+        <tr>
+          <td><b>@explorer</b></td>
+          <td>侦察兵（只读）：跨文件搜索、定位代码与模式</td>
+          <td>需要"先摸清情况"的并行搜索</td>
+        </tr>
+        <tr>
+          <td><b>@librarian</b></td>
+          <td>资料员：查官方文档、GitHub 示例、库的内部机制</td>
+          <td>不熟悉的库/API、需要最新文档时</td>
+        </tr>
+        <tr>
+          <td><b>@oracle</b></td>
+          <td>顾问：架构决策、复杂调试、代码审查</td>
+          <td>高风险取舍、修了两次还没好的 bug</td>
+        </tr>
+        <tr>
+          <td><b>@fixer</b></td>
+          <td>施工队：边界清晰的实现与修改</td>
+          <td>需求明确、三句话能说清做什么</td>
+        </tr>
+        <tr>
+          <td><b>@designer</b></td>
+          <td>设计师：UI/UX 的设计与实现</td>
+          <td>用户可见的界面、样式、交互</td>
+        </tr>
+        <tr>
+          <td><b>@observer</b></td>
+          <td>看图员：截图 / PDF / 图表 → 结构化观察</td>
+          <td>需要"看"的分析（图片、截图）</td>
+        </tr>
+        <tr>
+          <td><b>@council</b></td>
+          <td>议会：多模型独立表态 + 综合报告</td>
+          <td>值得多双眼睛的高风险决策</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="callout callout-tip">
+    <p class="box-label">模型是别人的事</p>
+    <p>
+      每个代理背后配什么模型，由预设配置决定，原则是：
+      <b>搜索和重复劳动用快模型，决策和创造用强模型</b>。
+      你不用记——第 5 课会带你看配置；第 6 课会教你配额出问题时怎么换。
+    </p>
+  </aside>
+
+  <!-- ==================== 3.3 ==================== -->
+  <h2><span class="secno">3.3</span>三条委派规则</h2>
+  <ol>
+    <li>
+      <b>代价判断</b>：解释成本 &gt; 自己做成本时，不委派，直接做。
+      说不清的活派出去，沟通成本比干活还贵。
+    </li>
+    <li>
+      <b>独立可并行 → 同时派出</b>：多路搜索、互不打架的修改，一起派出去。
+    </li>
+    <li>
+      <b>简单活工头自己干</b>：不是每件事都要动用团队。
+      单窗口内顺手能做完的，不值得走一遍委派流程。
+    </li>
+  </ol>
+  <p>
+    心法：<b>你不需要微观管理</b>。点名的价值在于"知道有什么牌"——
+    大多数时候工头自己会打好；关键时刻，你能加牌。
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-title">VT-OS // 点名示例 -- 关键升级时刻</div>
+    <pre><code><span class="p">&gt;</span> 这个 bug 修了两次还没好
+<span class="o">[工头] 升级处理：派 @oracle 深挖根因（后台任务已派出）</span>
+<span class="c"># 工头继续陪你处理其他事，不阻塞</span>
+<span class="p">&gt;</span> 顺便把下期视频的封面文案改三版
+<span class="o">[工头] 收到——这个不派外援，我自己来</span>
+<span class="o">@oracle 的结论回来我会立刻汇报</span></code></pre>
+  </div>
+
+  <!-- ==================== 3.4 ==================== -->
+  <h2><span class="secno">3.4</span>后台任务：派发后不等待</h2>
+  <p>
+    委派出去的活大多在<b>后台</b>跑，就像派人出差——你该干嘛干嘛，他回来了再开会。
+    完整生命周期四步：
+  </p>
+  <ul>
+    <li><b>派发</b>：工头把任务包（目标、验收标准、相关文件、约束）交给某个代理；</li>
+    <li><b>后台跑</b>：代理在自己的工作台上干活，主会话继续陪你；</li>
+    <li><b>自动通知</b>：干完了系统自动汇报，不用你盯着；</li>
+    <li><b>回收核对</b>：工头检查结果、整合进你的项目——有疑问你也可以质疑重来。</li>
+  </ul>
+
+  <aside class="callout callout-warning">
+    <p class="box-label">注意</p>
+    <p>
+      三条纪律：<b>不等</b>（后台的意义就是解放你）、
+      <b>不重复派</b>（同一个活派一个就够）、
+      <b>不无限等</b>（如果迟迟没动静，第 6 课教你怎么处理卡死的任务）。
+    </p>
+  </aside>
+
+  <!-- ==================== 3.5 ==================== -->
+  <h2><span class="secno">3.5</span>议会：多双眼睛的场合</h2>
+  <p>
+    遇到重大决策，可以把问题同时交给<b>多个不同模型的议员</b>——
+    他们各自独立作答，最后由议长综合成一份报告，连同"谁说了什么"一起交给你。
+    用在真正的高风险取舍上；日常小事不值得动用议会。
+  </p>
+  <p>
+    点法：直接点名 <code>@council</code>，或者说一句
+    "开个议会讨论这个方案"。
+  </p>
+
+  <!-- ==================== 3.6 ==================== -->
+  <h2><span class="secno">3.6</span>随堂小测</h2>
+  <p>七道题，全部是真实场景。点击作答，立即判分。</p>
+  <div class="quiz" data-quiz="QUIZ_DATA"></div>
+
+  <!-- ==================== 3.7 ==================== -->
+  <h2><span class="secno">3.7</span>立即动手</h2>
+  <section class="try-it">
+    <p class="box-label">立即动手 · TRY IT NOW</p>
+    <ol class="compact">
+      <li>下次任务里练习一次点名委派——例如："先派 <code>@explorer</code> 摸清情况"或"让 <code>@oracle</code> 评审这个方案"；</li>
+      <li>观察：它是怎么派出去的？后台跑的时候你和主会话在做什么？结果回来是什么样子？</li>
+      <li>把观察发给我，我们一起看看这次委派值不值。</li>
+    </ol>
+  </section>
+
+  <!-- ==================== 3.8 ==================== -->
+  <h2><span class="secno">3.8</span>小结</h2>
+  <p>
+    三句话记住这一课：你对话的对象是工头，手下一支分工明确的团队；
+    点名的价值是"知道有什么牌"——大多数时候不用管，关键时刻能加牌；
+    后台任务派发后不等待，结果回来核对就行。
+  </p>
+
+  <section class="primary-source">
+    <p class="box-label">一手资料 PRIMARY SOURCE</p>
+    <p>
+      委派规则原文见 <code>preferences.md</code> 的"委派规则"一节；
+      代理团队的设计见 OMOslim 官方仓库
+      <a href="https://github.com/alvinunreal/oh-my-opencode-slim">alvinunreal/oh-my-opencode-slim</a>。
+    </p>
+  </section>
+
+  <ol class="sources">
+    <li>[1] 你的系统宪法：<code>C:\Users\Winde\.config\opencode\preferences.md</code>（委派规则一节）。</li>
+    <li>[2] OMOslim 仓库：<a href="https://github.com/alvinunreal/oh-my-opencode-slim">github.com/alvinunreal/oh-my-opencode-slim</a>（代理团队、后台编排、议会）。</li>
+    <li>[3] 本机插件源码：<code>E:\云文件\GitHub\oh-my-opencode-slim\src\agents\</code>（各代理的角色定义）。</li>
+    <li>[4] 本课配套速查表：<a href="../reference/03-委派速查表.html">委派速查表</a>（打印友好）。</li>
+  </ol>
+
+  <aside class="ask-teacher">
+    <p class="box-label">卡住了？问老师</p>
+    <p>
+      拿不准"这个活该不该派人、该派谁"的时候，把任务描述发我：
+      <b>任务内容 + 你猜的点名人选 + 犹豫的点</b>。我当场给你派工单。
+    </p>
+  </aside>
+
+  <nav class="lesson-nav">
+    <a class="prev" href="0002-会话边界.html">
+      <span class="nav-dir">上一课</span><br>
+      <span class="nav-title">第 2 课 · 会话边界</span>
+    </a>
+    <a class="next" href="0004-主流程.html">
+      <span class="nav-dir">下一课</span><br>
+      <span class="nav-title">第 4 课 · 主流程</span>
+    </a>
+  </nav>
+
+</main>
+
+<!-- ==================== 测验数据 ====================
+     七道题对应名册与委派规则；correctIndex 从 0 开始数 -->
+<script>
+var QUIZ_DATA = [
+  {
+    question: "你要改一段边界清晰的小代码，三句话就能说清做什么。派谁？",
+    options: [
+      "@oracle 顾问",
+      "@fixer 施工队",
+      "@council 议会",
+      "@librarian 资料员"
+    ],
+    correctIndex: 1,
+    explanation: "明确边界的实现是 @fixer 的车道；这类活解释成本低、收益直接。"
+  },
+  {
+    question: "你在两个架构方案之间犹豫，各有取舍，想听深度分析。派谁？",
+    options: [
+      "@oracle 顾问",
+      "@explorer 侦察兵",
+      "@observer 看图员",
+      "@fixer 施工队"
+    ],
+    correctIndex: 0,
+    explanation: "架构决策、取舍判断是 @oracle 的专长——高风险思考交给强模型。"
+  },
+  {
+    question: "你要查一个库的最新 API 用法，文档可能已经变了。派谁？",
+    options: [
+      "@designer 设计师",
+      "@observer 看图员",
+      "@librarian 资料员",
+      "@fixer 施工队"
+    ],
+    correctIndex: 2,
+    explanation: "@librarian 专管外部文档与 GitHub 示例——不确定的库行为问它。"
+  },
+  {
+    question: "你有一张界面截图，想让 AI 分析里面的问题。派谁？",
+    options: [
+      "@explorer 侦察兵",
+      "@fixer 施工队",
+      "@oracle 顾问",
+      "@observer 看图员"
+    ],
+    correctIndex: 3,
+    explanation: "图片、截图、PDF 的分析走 @observer——它把画面消化成结构化文字，不占主会话的上下文。"
+  },
+  {
+    question: "什么情况下“不该”委派？",
+    options: [
+      "解释成本大于自己做的成本",
+      "任务需要并行搜索",
+      "需要独立审查意见",
+      "涉及多个文件夹的改动"
+    ],
+    correctIndex: 0,
+    explanation: "代价判断是第一条规则——说不清或解释比做还贵，就自己直接做。"
+  },
+  {
+    question: "后台任务的正确使用姿势是？",
+    options: [
+      "派发后继续干别的，等通知",
+      "派发后盯着它跑完",
+      "每分钟问一次进度",
+      "同时派两个一样的保险"
+    ],
+    correctIndex: 0,
+    explanation: "后台的意义就是解放你——完成时系统自动通知，结果回收后再整合。重复派发是浪费。"
+  },
+  {
+    question: "什么时候值得动用 @council（议会）？",
+    options: [
+      "简单的文件重命名",
+      "日常代码格式化",
+      "多模型表态的重大决策",
+      "查一个 API 参数"
+    ],
+    correctIndex: 2,
+    explanation: "议会是“多双眼睛”——留给高风险、值得听不同意见的决策，别浪费在日常小事上。"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

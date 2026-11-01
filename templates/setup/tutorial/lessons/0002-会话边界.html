@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 2 课 · 会话边界：什么时候该换一张工作台 | 独立驾驭 OpenCode 体系</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">LESSON 02</p>
+    <h1>会话边界：什么时候该换一张工作台</h1>
+    <p class="lesson-meta">
+      预计 15 分钟 <span class="sep">|</span>
+      难度：进阶 <span class="sep">|</span>
+      前置：<a href="0001-任务入口判定.html">第 1 课</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <span class="tag">上下文管理</span>
+    </p>
+    <p class="lead">
+      上一课解决"任务从哪条车道进来"；这一课解决"工作在哪张台面上做"。
+      AI 的记性不是无限的——工作台堆满了，它就开始又慢又糊涂。
+      好消息是：换台面本身是免费的，前提是你会挑时机。
+    </p>
+  </header>
+
+  <!-- ==================== 2.1 ==================== -->
+  <h2><span class="secno">2.1</span>为什么上下文会"变质"</h2>
+  <p>
+    一个<b>会话</b>就是一张工作台；<b>上下文</b>是台面上摊开的所有材料——
+    你的每句话、AI 的每次回答、读过的文件、跑过的命令。台面就那么大，
+    摊满之后开始出问题，症状固定是这三种：
+  </p>
+  <ul>
+    <li><b>健忘</b>：你早就说过的约定（"注释用中文""别动那个文件"）忽然不再被遵守；</li>
+    <li><b>跑偏</b>：干着干着，目标悄悄漂移，产出和你最初要的不是一回事；</li>
+    <li><b>变贵</b>：每一轮它都要重读全部历史，反应越来越慢，花的钱越来越多。</li>
+  </ul>
+  <p>
+    这套体系给单会话定的健康上限约 <b>150K token</b>——你的
+    <code>preferences.md</code> 把 <code>&lt;150K token</code> 直接写进了"单窗口任务"的定义；
+    <code>ask-matt</code> 技能里把它称为 smart zone 的边界。
+    到了这个量级，换台不是可选项，是必选项。
+  </p>
+
+  <aside class="callout callout-why">
+    <p class="box-label">为什么重要</p>
+    <p>
+      这不是某个模型的缺陷，是所有会话式工具的物理规律。应对办法不是"让 AI 更努力"，
+      而是<b>在正确的时机换台面</b>——把旧台面清掉，让新台面从干净状态开始。
+      这正是你点名的盲区：上下文管理。
+    </p>
+  </aside>
+
+  <!-- ==================== 2.2 ==================== -->
+  <h2><span class="secno">2.2</span>五种换台方式（决策梯）</h2>
+  <p>
+    你的 <code>preferences.md</code> 规定：会话到边界时，<b>按序选第一项合适的</b>。
+    先问"能不能继续"，再问"能不能干净重启"，然后才是搬迁、外包、压缩——
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <caption>表 2-1 · 会话边界的五种处理方式（按优先级排序，源自 preferences.md）</caption>
+      <thead>
+        <tr><th>方式</th><th>何时选它</th><th>代价与操作</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>1. continue</b></td>
+          <td>会话仍是第一手来源：阶段没结束、活没干完</td>
+          <td>无代价，什么都不用做</td>
+        </tr>
+        <tr>
+          <td><b>2. clear</b></td>
+          <td>到了阶段边界，且该落盘的都落盘了</td>
+          <td>丢掉未落盘的一切；<code>/new</code> 开新会话</td>
+        </tr>
+        <tr>
+          <td><b>3. handoff</b></td>
+          <td>仅"搬迁"场景：换 harness、换目录、交同事</td>
+          <td>要生成并阅读搬迁文档；<code>/handoff</code> 技能</td>
+        </tr>
+        <tr>
+          <td><b>4. subagent</b></td>
+          <td>范围足够紧、能 AFK 跑</td>
+          <td>需把任务包交代清楚；丢后台跑，回来收结果</td>
+        </tr>
+        <tr>
+          <td><b>5. compact</b></td>
+          <td>最后手段：不想丢链条又必须腾空间</td>
+          <td>信息有损；<code>/compact</code>（别名 <code>/summarize</code>）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-title">VT-OS // 边界决策梯 -- 按序选第一项合适的</div>
+    <pre><code><span class="p">&gt;</span> 到边界了，怎么换台？
+<span class="o">[1] continue  会话仍是第一手来源 → 继续，不动</span>
+<span class="o">[2] clear     该落盘的都落盘了 → /new 开新会话</span>
+<span class="o">[3] handoff   要搬迁（换目录 / 交同事）→ 生成 handoff 文档</span>
+<span class="o">[4] subagent  够紧、能 AFK → 丢给子代理后台跑</span>
+<span class="o">[5] compact   都不行 → 有损压缩（最后手段）</span></code></pre>
+  </div>
+
+  <aside class="callout callout-tip">
+    <p class="box-label">操作速记</p>
+    <p>
+      开新会话 <code>/new</code>（别名 <code>/clear</code>，快捷键 <kbd>ctrl</kbd>+<kbd>x</kbd> <kbd>n</kbd>）；
+      找回旧会话 <code>/sessions</code>（别名 <code>/resume</code>）；
+      压缩 <code>/compact</code>（快捷键 <kbd>ctrl</kbd>+<kbd>x</kbd> <kbd>c</kbd>）。
+      <b>干净重启不等于烧掉记录</b>——旧会话随时可以从 <code>/sessions</code> 里找回来。
+    </p>
+  </aside>
+
+  <!-- ==================== 2.3 ==================== -->
+  <h2><span class="secno">2.3</span>三条铁律</h2>
+
+  <h3>铁律一 · 落盘先于换台</h3>
+  <p>
+    <b>文件是耐久记忆，会话是可抛弃的。</b>spec、工单、笔记、决策记录——
+    这些东西写进磁盘之后，会话才允许死。没有落盘就换台，等于把工作台直接掀翻。
+    看看我们的教学档案：<code>MISSION.md</code>、<code>learning-records/</code>、<code>NOTES.md</code>，
+    就是为了让每次会话可以干净地结束，而学习不丢。
+  </p>
+
+  <h3>铁律二 · 边界只在阶段边缘</h3>
+  <p>
+    活干到一半别换台——会话仍是第一手来源，换台就是自断线索。
+    换台的时机是：<b>阶段结束、工单完成、决策拍板</b>。看一条标准的多窗口节奏：
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-title">多窗口任务的标准节奏 -- 边界画在工单之间</div>
+    <pre><code><span class="o">grill-with-docs → to-spec → to-tickets</span>   <span class="c"># 同一会话，不中断</span>
+<span class="c">──────── 边界：工单已落盘 ────────</span>
+<span class="o">implement 工单 1</span>                          <span class="c"># 新会话</span>
+<span class="c">──────── 边界 ────────</span>
+<span class="o">implement 工单 2</span>                          <span class="c"># 新会话</span></code></pre>
+  </div>
+
+  <p>
+    注意"同一会话，不中断"那行：追问、写 spec、拆工单共享同一份思考链条，
+    中途换台会丢链条。换台发生在<b>工单落盘之后</b>——每张工单开工时，新会话只读它的工单文档，
+    台面干净，注意力聚焦。
+  </p>
+
+  <h3>铁律三 · compact 是最后手段</h3>
+  <p>
+    想腾空间时，先问"能不能 clear"——干净重启没有信息损失；
+    只有既不能重启、又必须继续同一根链条时，才用 <code>/compact</code> 做有损压缩。
+  </p>
+
+  <aside class="callout callout-warning">
+    <p class="box-label">注意</p>
+    <p>
+      两个方向的误用都很常见：<b>该换不换</b>——台面堆到发臭还硬撑，
+      AI 开始健忘跑偏；<b>不该换乱换</b>——活干到一半开新会话，
+      又得从头讲一遍背景。判断标准只有一个：<b>现在是阶段边缘吗？东西落盘了吗？</b>
+    </p>
+  </aside>
+
+  <!-- ==================== 2.4 ==================== -->
+  <h2><span class="secno">2.4</span>随堂小测</h2>
+  <p>七道题，全部是真实场景。点击作答，立即判分。</p>
+  <div class="quiz" data-quiz="QUIZ_DATA"></div>
+
+  <!-- ==================== 2.5 ==================== -->
+  <h2><span class="secno">2.5</span>立即动手</h2>
+  <section class="try-it">
+    <p class="box-label">立即动手 · TRY IT NOW</p>
+    <ol class="compact">
+      <li><b>复盘</b>：回想你最近一次长会话——有没有阶段边界被错过？有没有该落盘的东西还留在"脑子里"？</li>
+      <li><b>下次开工时练一次</b>：在阶段边界处主动说一句——"到这里，开新会话，带上这份文档继续。"</li>
+      <li>练完把感受告诉我（哪怕只有一句），我们复盘这次换台值不值。</li>
+    </ol>
+  </section>
+
+  <!-- ==================== 2.6 ==================== -->
+  <h2><span class="secno">2.6</span>小结</h2>
+  <p>
+    三句话记住这一课：上下文会变质，换台是解药；
+    决策梯按序选——continue → clear → handoff → subagent → compact；
+    落盘先于换台——文件是耐久记忆，会话可以死。
+  </p>
+
+  <section class="primary-source">
+    <p class="box-label">一手资料 PRIMARY SOURCE</p>
+    <p>
+      判定规则原文见 <code>preferences.md</code> 的"会话边界"一节；
+      命令细节见 opencode 官方文档
+      <a href="https://opencode.ai/docs/tui">TUI 页面</a>（<code>/new</code>、<code>/sessions</code>、<code>/compact</code>）。
+    </p>
+  </section>
+
+  <ol class="sources">
+    <li>[1] 你的系统宪法：<code>C:\Users\Winde\.config\opencode\preferences.md</code>（会话边界一节）。</li>
+    <li>[2] opencode 官方文档 · TUI：<a href="https://opencode.ai/docs/tui">opencode.ai/docs/tui</a>（命令与快捷键，2026-09 核实）。</li>
+    <li>[3] <code>ask-matt</code> 技能（本机技能库）：smart zone 与"每张工单独立上下文"的设计说明。</li>
+    <li>[4] 本课配套速查表：<a href="../reference/02-会话边界速查表.html">会话边界速查表</a>（打印友好）。</li>
+  </ol>
+
+  <aside class="ask-teacher">
+    <p class="box-label">卡住了？问老师</p>
+    <p>
+      拿不准"现在算不算阶段边界"的时候，把当前进度发我：
+      <b>正在做什么 + 上一个完成的里程碑 + 有哪些东西已落盘</b>。
+      我帮你判断该 continue 还是 clear。
+    </p>
+  </aside>
+
+  <nav class="lesson-nav">
+    <a class="prev" href="0001-任务入口判定.html">
+      <span class="nav-dir">上一课</span><br>
+      <span class="nav-title">第 1 课 · 任务入口判定</span>
+    </a>
+    <a class="next" href="0003-委派策略.html">
+      <span class="nav-dir">下一课</span><br>
+      <span class="nav-title">第 3 课 · 委派策略</span>
+    </a>
+  </nav>
+
+</main>
+
+<!-- ==================== 测验数据 ====================
+     七道题对应五种方式 + 两条铁律；correctIndex 从 0 开始数 -->
+<script>
+var QUIZ_DATA = [
+  {
+    question: "你在做一个多窗口项目：grill 追问、写 spec、拆工单——这三步最该怎么做？",
+    options: [
+      "每步换一个新会话",
+      "同一个会话一口气完成",
+      "拆工单时压缩会话",
+      "只把 grill 单独放"
+    ],
+    correctIndex: 1,
+    explanation: "这三步共享同一份思考链条——中途换台会丢链条。换台时机在“工单落盘之后”，不是中途。"
+  },
+  {
+    question: "一张工单的 implement 做到一半，测试挂了，你正在修。此刻最该做什么？",
+    options: [
+      "立刻开新会话重来",
+      "现在先 compact",
+      "继续当前会话修完",
+      "生成 handoff 文档"
+    ],
+    correctIndex: 2,
+    explanation: "会话仍是第一手来源——活没干完、阶段没结束，换台就是自断线索。修完再考虑边界。"
+  },
+  {
+    question: "spec 和工单都已写好落盘，现在要开始第一张工单的实现。",
+    options: [
+      "带着工单开新会话",
+      "继续在 spec 会话里做",
+      "先 compact 再开工",
+      "先 handoff 再开工"
+    ],
+    correctIndex: 0,
+    explanation: "每张工单独立上下文——新会话只读工单文档，台面干净，注意力聚焦。"
+  },
+  {
+    question: "会话跑了很久，快到 150K 上限，但当前阶段还没干完。",
+    options: [
+      "立刻 compact 腾空间",
+      "立刻开新会话重来",
+      "把整段工作 handoff",
+      "撑到阶段边界再处理"
+    ],
+    correctIndex: 3,
+    explanation: "边界没到就换台 = 丢掉第一手上下文。撑到阶段结束，然后优先 clear（干净重启）；实在撑不住才 compact。"
+  },
+  {
+    question: "你要把这份工作交给同事的电脑继续做（换目录、换环境）。",
+    options: [
+      "直接压缩当前会话",
+      "生成 handoff 文档",
+      "开个新会话重讲",
+      "丢给 subagent 处理"
+    ],
+    correctIndex: 1,
+    explanation: "搬迁场景专用 handoff——它把会话压缩成可移植文档，新环境里读它就能接上。"
+  },
+  {
+    question: "有一块边界清晰、可以自己跑完的小任务（比如“替换三个文件里的旧 API 名并跑测试”）。",
+    options: [
+      "自己开新会话做",
+      "先 compact 再做",
+      "塞进当前会话顺手做",
+      "丢给 subagent 后台跑"
+    ],
+    correctIndex: 3,
+    explanation: "范围够紧、能 AFK——subagent 自带新台面，你在主会话继续干别的，结果回来再收。"
+  },
+  {
+    question: "换台（开新会话）之前，最重要的一件事是什么？",
+    options: [
+      "把对话全部背下来",
+      "把模型换成更贵的",
+      "把关键信息落盘成文件",
+      "先把旧会话删掉"
+    ],
+    correctIndex: 2,
+    explanation: "文件是耐久记忆，会话是可抛弃的。spec、工单、笔记写进磁盘，会话才允许死。"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

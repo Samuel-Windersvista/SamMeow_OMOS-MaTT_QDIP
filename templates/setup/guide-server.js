@@ -8,7 +8,7 @@ const root = path.resolve(process.argv[2] || '.');
 const dataDir = path.join(root, 'data');
 const setupDir = path.join(root, 'setup');
 
-const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.md': 'text/plain; charset=utf-8' };
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1');
@@ -37,11 +37,23 @@ const server = http.createServer(async (req, res) => {
       res.end(JSON.stringify(result));
       return;
     }
-    // 静态文件：仅允许 setup 目录内（path.basename 防御路径穿越）
-    const rel = url.pathname.replace(/^\/setup\//, '');
-    const file = path.join(setupDir, path.basename(rel));
-    if (fs.existsSync(file) && fs.statSync(file).isFile()) {
-      res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+    // 静态文件：setup 目录内的受控子目录树
+    // 先 decodeURIComponent（非法编码直接拒绝），再 resolve 后用前缀包含检查防御路径穿越；
+    // 保留 setup 单层文件（contract.js、first-run.html）与嵌套资源（tutorial/**）两种形态。
+    const rawRel = url.pathname.replace(/^\/setup\//, '');
+    let decoded;
+    try {
+      decoded = decodeURIComponent(rawRel);
+    } catch {
+      res.writeHead(400); res.end('bad request');
+      return;
+    }
+    const base = path.resolve(setupDir);
+    const file = path.resolve(base, decoded);
+    // 仅允许 base 本身或其子孙：file 要么等于 base（目录，后续 stat 会拒绝），
+    // 要么以 base + 分隔符开头；盘符根、绝对路径、`..`、反斜杠变体都会落到此检查外。
+    if ((file === base || file.startsWith(base + path.sep)) && fs.existsSync(file) && fs.statSync(file).isFile()) {
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream' });
       res.end(fs.readFileSync(file));
       return;
     }

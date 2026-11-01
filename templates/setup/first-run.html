@@ -227,6 +227,13 @@
     transition: color 0.15s, border-color 0.15s, background 0.15s;
   }
   .addcard:hover { color: var(--accent); border-color: var(--accent); background: rgba(102, 255, 102, 0.05); }
+  /* ===== 教程入口：链接复用 .addcard 虚线入口卡外观 ===== */
+  a.addcard { display: block; text-decoration: none; }
+  a.addcard:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(102, 255, 102, 0.35);
+  }
   .ccard { border-left-color: var(--warn); }
   .ccard .msg { margin-left: 0; }
   .chead { display: flex; align-items: center; gap: 10px; }
@@ -500,6 +507,12 @@
     <input id="workspace-input" class="key-input" type="text" placeholder="D:\my-project（留空则默认在包目录启动）" autocomplete="off" spellcheck="false">
   </div>
 
+  <div class="section" id="sec-tutorial">
+    <h2>使用教程</h2>
+    <p class="sub">教学站点讲这套环境背后的工作方式：任务怎么分类、各 AI 角色分别负责什么、出了问题去哪儿查；无需联网，和本页一样。建议首次使用前先花几分钟过一遍，再回来填写；暂时不看也不影响使用，以后随时可以打开。</p>
+    <a class="addcard" href="/setup/tutorial/index.html" target="_blank" rel="noopener">打开教学站点（新标签页）</a>
+  </div>
+
   <div class="actions">
     <button id="submit" disabled>保存配置</button>
     <span class="hint">至少有一个服务商测试通过后才能保存</span>
@@ -569,7 +582,7 @@ const AGENT_GROUPS = [
     ['designer', '美工：界面样式与视觉'],
     ['explorer', '侦察兵：在代码库里找东西'],
     ['librarian', '资料员：查文档、查资料'],
-    ['observer', '观察员：监督流程，提醒风险'],
+    ['observer', '看图员：截图 / PDF / 图表 → 结构化观察'],
   ]},
   { title: '议会', agents: [
     ['council-alpha', '议会席位一：重大决策时参与投票'],

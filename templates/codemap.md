@@ -7,8 +7,8 @@
 按职责分六组：
 
 - 启动/环境/更新脚本：`env.bat`（便携环境的唯一声明模块——`PATH`/`XDG_*`/`QDIP_*`/`ROOTS`/`WSDIR` 等 10 个变量的推导与导出，被两个启动器 `call`）、`启动.bat`（便携环境启动器 + 首次引导调度）、`更新组件.bat`（增量更新 opencode）
-- opencode 配置模板：`opencode.json`（opencode 主配置）、`oh-my-opencode-slim.json`（子代理角色/议会模型分配预设）、`tui.json`（TUI 插件注册表：OMOslim 侧边栏 tui2.js + opencode-quota 用量条，直接指向插件入口文件）、`preferences.md`（个人倾向/工作流指令，opencode.json 经 `{env:QDIP_PREFERENCES}` 引用，启动器注入该变量）
-- 首次引导服务源码：`setup/`（见 `templates/setup/codemap.md`，启动器与配置写入器的消费方）
+- opencode 配置模板：`opencode.json`（opencode 主配置，含 `autoupdate` 与 agent 禁用块）、`oh-my-opencode-slim.json`（子代理角色/议会模型分配预设，三套 preset）、`tui.json`（TUI 插件注册表：OMOslim 侧边栏 tui2.js + opencode-quota 用量条，直接指向插件入口文件）、`cli.json`（CLI 层配置模板：`$schema` v2、diff/session/animations，`plugins` 同样指向上述两个插件入口）、`preferences.md`（个人倾向/工作流指令，opencode.json 经 `{env:QDIP_PREFERENCES}` 引用，启动器注入该变量）
+- 首次引导服务源码：`setup/`（见 `templates/setup/codemap.md`，启动器与配置写入器的消费方）与内置教学站点 `setup/tutorial/`（19 文件静态站点，受控子目录托管）
 - 玩家本地修改区说明模板：`local/说明.txt`（部署到 `opencode\config\opencode\local\说明.txt`；原先内嵌在 `build.ps1` 里由脚本生成，现为真实模板文件）
 - 数据目录占位模板：`data/.gitkeep`（空文件，部署到产物 `data\.gitkeep`，标记 `data/` 目录存在）
 - 终端用户文档：`玩家使用指南.md`（新手 5 步上手与工作流建议）
@@ -44,7 +44,7 @@
 
 **增量更新**：`更新组件.bat` → `npm install --prefix %TEMP% opencode-ai@latest --no-save` → 校验 `bin\opencode.exe` 存在 → `copy /y` 覆盖 `opencode\bin\opencode.exe` → 清理临时目录。
 
-**构建部署（build.ps1 → templates/）**：不再硬编码复制，而是由 `tools/layout.json` 的 `deploy` 数组（15 条）驱动（`source` 相对仓库根，`target` 相对产物根）。`file` 条目复制到产物对应路径——`启动.bat`/`env.bat`/`进入环境.bat`/`更新组件.bat`/`玩家使用指南.md`/`README.md`（源 `templates\README.md`）落在 outDir 根，`CHANGELOG.md`（源在仓库根）也落在 outDir 根，`opencode.json`/`oh-my-opencode-slim.json`/`tui.json`/`preferences.md` 落在 `outDir\opencode\config\opencode\`（opencode 在 XDG_CONFIG_HOME 下自动追加 `opencode` 段，实际读取该目录），`local\说明.txt` 落在 `outDir\opencode\config\opencode\local\`，`data\.gitkeep` 落在 `outDir\data\`；`dir` 条目 `setup\*` 以内容合并语义复制到 `outDir\setup`，复制后按该条目的 `exclude`（`["*.test.js", "codemap.md"]`）递归删除 basename 命中的项（大小写不敏感），因此 `config-writer.test.js`/`guide-server.test.js`/`codemap.md` 不进产物，`setup/` 只留 `config-writer.js`、`contract.js`、`first-run.html`、`guide-server.js`、`wt-profile.ps1`；`emptydir` 条目创建 `outDir\opencode\auth\`；deploy 条目当前均非 optional，源缺失时在复制前抛错。
+**构建部署（build.ps1 → templates/）**：不再硬编码复制，而是由 `tools/layout.json` 的 `deploy` 数组（16 条）驱动（`source` 相对仓库根，`target` 相对产物根）。`file` 条目复制到产物对应路径——`启动.bat`/`env.bat`/`进入环境.bat`/`更新组件.bat`/`玩家使用指南.md`/`README.md`（源 `templates\README.md`）落在 outDir 根，`CHANGELOG.md`（源在仓库根）也落在 outDir 根，`opencode.json`/`oh-my-opencode-slim.json`/`tui.json`/`cli.json`/`preferences.md` 落在 `outDir\opencode\config\opencode\`（opencode 在 XDG_CONFIG_HOME 下自动追加 `opencode` 段，实际读取该目录），`local\说明.txt` 落在 `outDir\opencode\config\opencode\local\`，`data\.gitkeep` 落在 `outDir\data\`；`dir` 条目 `setup\*` 以内容合并语义复制到 `outDir\setup`（含 `setup\tutorial\` 整棵子树），复制后按该条目的 `exclude`（`["*.test.js", "codemap.md"]`）递归删除 basename 命中的项（大小写不敏感），因此 `config-writer.test.js`/`guide-server.test.js`/`codemap.md` 不进产物，`setup/` 顶层只留 `config-writer.js`、`contract.js`、`first-run.html`、`guide-server.js`、`wt-profile.ps1`，另加 `setup/tutorial/` 子树；`emptydir` 条目创建 `outDir\opencode\auth\`；deploy 条目当前均非 optional，源缺失时在复制前抛错。
 
 ## Integration
 

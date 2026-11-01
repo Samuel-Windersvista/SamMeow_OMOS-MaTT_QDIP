@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 1 课 · 开工第一动作：任务入口判定 | 独立驾驭 OpenCode 体系</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">LESSON 01</p>
+    <h1>开工第一动作：任务入口判定</h1>
+    <p class="lesson-meta">
+      预计 15 分钟 <span class="sep">|</span>
+      难度：入门 <span class="sep">|</span>
+      前置：无（第一课） <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <span class="tag">任务路由</span>
+    </p>
+    <p class="lead">
+      你已经在用这套体系干活。但从今天起，我们把镜头拉近到每次开工的第 0.5 秒——
+      任务到手，先送进哪条车道？这个动作，决定了后面所有事。
+    </p>
+  </header>
+
+  <!-- ==================== 1.1 ==================== -->
+  <h2><span class="secno">1.1</span>分拣站：为什么先分类再开工</h2>
+  <p>
+    每次你把任务丢给这套系统，它内部都会先做一次"分拣"：这个任务该走哪条车道？
+    分错了，两个方向都是浪费——
+  </p>
+  <ul>
+    <li><b>小事大做</b>：改一行字的活，却启动了完整的规格流水线，十分钟干成半小时；</li>
+    <li><b>大事小做</b>：要跨好几次会话的项目，硬塞进一轮对话，做到一半上下文爆掉，重来。</li>
+  </ul>
+  <p>
+    分拣不是仪式感，而是把<b>任务的重量</b>和<b>流程的重量</b>配对。
+    你的系统"宪法" <code>preferences.md</code> 把这条规则放在最前面：
+    开始任何任务时，先输出一行 <code>[入口]</code> 分类。
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-title">VT-OS // 开工示例 -- [入口] 行长什么样</div>
+    <pre><code><span class="p">&gt;</span> 帮我给整合包做个配置文件校验小工具
+<span class="o">[入口] 单窗口任务</span>
+<span class="c"># 目标一句话说清、单会话可完成 → grill-with-docs → implement</span>
+<span class="o">先钉清几个细节：校验哪些字段？失败时是报错还是自动修复？</span></code></pre>
+  </div>
+
+  <aside class="callout callout-why">
+    <p class="box-label">为什么重要</p>
+    <p>
+      分类不是 AI 的"内心戏"——它以 <code>[入口]</code> 开头写在每次回答的第一行，
+      你随时看得见、随时能纠正。分错了？直接说"这是多窗口任务"，它立刻换道。
+      看得见的流程，才是你能驾驭的流程。
+    </p>
+  </aside>
+
+  <!-- ==================== 1.2 ==================== -->
+  <h2><span class="secno">1.2</span>七条车道总表</h2>
+  <p>
+    这是整门课程的地图：七条车道，对应七种"任务重量"。
+    先不用背，混个眼熟——1.4 节的小测会带你练到记住。
+  </p>
+
+  <div class="table-scroll">
+    <table>
+      <caption>表 1-1 · 任务入口判定表（源自你的 preferences.md，可打印版见配套速查表）</caption>
+      <thead>
+        <tr><th>车道</th><th>判定信号</th><th>接下来发生什么</th><th>你的职责</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>单窗口任务</b></td>
+          <td>目标一句话说清、单会话内能完成</td>
+          <td><code>grill-with-docs</code> 追问钉清 → <code>implement</code>（内驱 <code>tdd</code> → <code>code-review</code>）</td>
+          <td>说清目标、回答追问、验收</td>
+        </tr>
+        <tr>
+          <td><b>多窗口任务</b></td>
+          <td>预计跨会话、文件多</td>
+          <td><code>grill</code> 钉清 → <code>to-spec</code> 写成规格 → <code>to-tickets</code> 拆工单 → 每张工单 <code>implement</code></td>
+          <td>同上，另加：在工单边界开新会话</td>
+        </tr>
+        <tr>
+          <td><b>超大规划</b></td>
+          <td>连"要造什么"都定不下来</td>
+          <td><code>wayfinder</code> 铺决策地图 → 逐票解决（grilling / prototype / research）→ 落到 <code>to-spec</code></td>
+          <td>对每张决策票拍板</td>
+        </tr>
+        <tr>
+          <td><b>修 bug</b></td>
+          <td>存在明确故障或报错</td>
+          <td><code>diagnosing-bugs</code> 诊断循环：先复现、再修复</td>
+          <td>给出可复现的现象、报错原文</td>
+        </tr>
+        <tr>
+          <td><b>查资料</b></td>
+          <td>纯研究，不改代码</td>
+          <td><code>research</code> 派后台代理查一手资料，产出带引用的笔记</td>
+          <td>把问题问具体</td>
+        </tr>
+        <tr>
+          <td><b>配置 OpenCode</b></td>
+          <td>修改 opencode 自身配置</td>
+          <td><code>customize-opencode</code>：改预设、代理、模型、规则文件</td>
+          <td>说清要改什么；改完重载生效</td>
+        </tr>
+        <tr>
+          <td><b>单一小改动</b></td>
+          <td>20 行以内、单文件</td>
+          <td>直接编辑 + 验证，不启动任何流程</td>
+          <td>直接说，完事看一眼</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== 1.3 ==================== -->
+  <h2><span class="secno">1.3</span>两条判定心法</h2>
+
+  <aside class="callout callout-tip">
+    <p class="box-label">心法一 · 先钉清，再动手</p>
+    <p>
+      只要存在一个需要人机对话的开放决策，就先用 <code>grill-with-docs</code> 钉清——
+      比事后返工便宜。拿不准任务大小的时候，宁可先追问一轮：
+      追问的代价永远小于返工。
+    </p>
+  </aside>
+
+  <aside class="callout callout-tip">
+    <p class="box-label">心法二 · 拿不准就问路由器</p>
+    <p>
+      不确定该走哪条车道？先问 <code>ask-matt</code>——它是整套体系的路由器，
+      会根据你的情境推荐路径，并提醒你哪些步骤必须在同一个上下文窗口里完成。
+    </p>
+  </aside>
+
+  <!-- ==================== 1.4 ==================== -->
+  <h2><span class="secno">1.4</span>随堂小测</h2>
+  <p>七道题，对应七条车道。点击作答，立即判分——别怕错，错题正是本课最值钱的部分。</p>
+  <div class="quiz" data-quiz="QUIZ_DATA"></div>
+
+  <!-- ==================== 1.5 ==================== -->
+  <h2><span class="secno">1.5</span>立即动手</h2>
+  <section class="try-it">
+    <p class="box-label">立即动手 · TRY IT NOW</p>
+    <p>把知识变成技能，只需要一次真实的分类练习：</p>
+    <ol class="compact">
+      <li>打开你的任务清单（视频、mod、文件处理都行），挑出 <b>3 件真实任务</b>；</li>
+      <li>给每件写下三样：一句话目标、入口分类、判定依据；</li>
+      <li>把结果发给导师核对——分错不要紧，这正是练习的意义。</li>
+    </ol>
+  </section>
+
+  <!-- ==================== 1.6 ==================== -->
+  <h2><span class="secno">1.6</span>小结</h2>
+  <p>
+    三句话记住这一课：分拣站是整条流水线的入口；七条车道的本质是"流程重量"的分级，
+    小任务走轻流程、大任务走重流程；<code>[入口]</code> 行是你的仪表盘——看得见，就能纠正。
+  </p>
+
+  <section class="primary-source">
+    <p class="box-label">一手资料 PRIMARY SOURCE</p>
+    <p>
+      本课的判定表直接来自你的系统"宪法" <code>~/.config/opencode/preferences.md</code>——
+      一切流程问题的最终裁决。grill 环节的原始设计，见 Matt Pocock 的
+      <a href="https://www.aihero.dev/skills-grill-with-docs">The /grill-with-docs Skill</a>。
+    </p>
+  </section>
+
+  <ol class="sources">
+    <li>[1] 你的系统宪法：<code>C:\Users\Winde\.config\opencode\preferences.md</code>（任务入口判定一节）。</li>
+    <li>[2] Matt Pocock, <i>The /grill-with-docs Skill</i>, AI Hero. <a href="https://www.aihero.dev/skills-grill-with-docs">aihero.dev/skills-grill-with-docs</a></li>
+    <li>[3] 本课配套速查表：<a href="../reference/01-任务路由速查表.html">任务路由速查表</a>（打印友好）。</li>
+  </ol>
+
+  <aside class="ask-teacher">
+    <p class="box-label">卡住了？问老师</p>
+    <p>
+      分类拿不准的任务，直接把原文发给我：<b>任务描述 + 你的判断 + 犹豫的点</b>。
+      我会当场给出分类和理由——这类练习比背表格有效十倍。
+      Vault-Tec 不推荐独自硬扛超过 20 分钟。
+    </p>
+  </aside>
+
+  <nav class="lesson-nav">
+    <span class="disabled"><span class="nav-dir">上一课</span><br>
+      <span class="nav-title">没有了——这是第一课</span></span>
+    <a class="next" href="0002-会话边界.html">
+      <span class="nav-dir">下一课</span><br>
+      <span class="nav-title">第 2 课 · 会话边界</span>
+    </a>
+  </nav>
+
+</main>
+
+<!-- ==================== 测验数据 ====================
+     七道题对应七条车道；correctIndex 从 0 开始数 -->
+<script>
+var QUIZ_DATA = [
+  {
+    question: "你想给整合包做一个自动校验配置文件的小工具。需求你心里大致有数，一个会话内能做完。",
+    options: [
+      "多窗口任务",
+      "单窗口任务",
+      "查资料任务",
+      "修 bug 任务"
+    ],
+    correctIndex: 1,
+    explanation: "目标一句话说得清、单会话可完成——走 grill-with-docs 钉清细节，然后 implement（内部自带 tdd 和 code-review）。"
+  },
+  {
+    question: "你要给 mod 加一套完整的任务系统：十几个文件、三个模块，肯定要跨好几次会话。",
+    options: [
+      "单窗口任务",
+      "超大规划任务",
+      "多窗口任务",
+      "单一小改动"
+    ],
+    correctIndex: 2,
+    explanation: "体量超过一个会话——先 grill 钉清、to-spec 写成规格、to-tickets 拆成工单，之后每张工单单独 implement。"
+  },
+  {
+    question: "下期视频做哪条线你都没定：知识库专题还是部署教程？连“要做什么”都想不清楚。",
+    options: [
+      "超大规划任务",
+      "单窗口任务",
+      "多窗口任务",
+      "查资料任务"
+    ],
+    correctIndex: 0,
+    explanation: "连要造什么都定不下来——先让 wayfinder 铺一张决策地图，逐张解决，最后再落到 spec。"
+  },
+  {
+    question: "上周 AI 帮你写的脚本今天报错了：IndexError: list index out of range。",
+    options: [
+      "查资料任务",
+      "单一小改动",
+      "单窗口任务",
+      "修 bug 任务"
+    ],
+    correctIndex: 3,
+    explanation: "存在明确故障——走 diagnosing-bugs：先建一个能稳定复现的循环，再动手修，修完留回归测试。"
+  },
+  {
+    question: "你想搞清楚 skill 到底是怎么被加载的——纯粹弄明白机制，暂时不打算改任何代码。",
+    options: [
+      "单窗口任务",
+      "查资料任务",
+      "配置任务",
+      "多窗口任务"
+    ],
+    correctIndex: 1,
+    explanation: "纯研究、不进开发流水线——research 派后台代理查一手资料，产出带引用的笔记。"
+  },
+  {
+    question: "你想把 preferences.md 里的语言规则改一改，再顺手把预设换成 DeepSeek-Only。",
+    options: [
+      "单一小改动",
+      "查资料任务",
+      "配置任务",
+      "单窗口任务"
+    ],
+    correctIndex: 2,
+    explanation: "改的是 opencode 系统目录（~/.config/opencode/）下的文件——走 customize-opencode 车道；改完需要重载才生效。"
+  },
+  {
+    question: "视频脚本的 md 里有个错别字，改掉它——就一行。",
+    options: [
+      "单窗口任务",
+      "配置任务",
+      "查资料任务",
+      "单一小改动"
+    ],
+    correctIndex: 3,
+    explanation: "20 行以内、单文件的项目文件——直接编辑加验证即可。注意区分：改项目文件算小改动；改 opencode 系统目录里的文件走配置车道。"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

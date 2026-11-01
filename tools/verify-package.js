@@ -26,10 +26,11 @@ const ENV_TOKEN_SOURCES = [
   'setup/config-writer.js',
 ];
 
-// 含 plugin 数组的产物配置文件（相对 outDir，正斜杠）。
+// 含插件路径数组（plugin / plugins 两键）的产物配置文件（相对 outDir，正斜杠）。
 const PLUGIN_CONFIG_FILES = [
   'opencode/config/opencode/opencode.json',
   'opencode/config/opencode/tui.json',
+  'opencode/config/opencode/cli.json',
 ];
 
 // 环境绑定的提供方：变量绑定已集中到 env.bat（启动器只负责 call 它），
@@ -244,7 +245,23 @@ function verifyPackage({ outDir, componentsFile, layoutFile = DEFAULT_LAYOUT }) 
     violations.push({
       rule: 'runtime/missing',
       path: 'opencode/bin/opencode.exe',
-      detail: 'opencode CLI 缺失：opencode/bin 下既无 opencode.exe 也无 opencode.cmd。请先 npm install opencode-ai@1.18.30 并部署到 tools/cache/opencode-1.18.30',
+      detail: 'opencode CLI 缺失：opencode/bin 下既无 opencode.exe 也无 opencode.cmd。请先 npm install opencode-ai@1.18.33 并部署到 tools/cache/opencode-1.18.33',
+    });
+  }
+
+  // --- tutorial/missing：教学站点入口文件与资源目录必须入包 ---
+  if (!isFile(path.join(outDir, 'setup/tutorial/index.html'))) {
+    violations.push({
+      rule: 'tutorial/missing',
+      path: 'setup/tutorial/index.html',
+      detail: '教学站点未入包：setup/tutorial/index.html 缺失。请把教学站点整树放到 templates/setup/tutorial/',
+    });
+  }
+  if (!isDir(path.join(outDir, 'setup/tutorial/assets'))) {
+    violations.push({
+      rule: 'tutorial/missing',
+      path: 'setup/tutorial/assets',
+      detail: '教学站点资源目录缺失：setup/tutorial/assets 不存在。请确认教学站点整树（含 assets/）已入包',
     });
   }
 
@@ -295,22 +312,25 @@ function verifyPackage({ outDir, componentsFile, layoutFile = DEFAULT_LAYOUT }) 
     }
   }
 
-  // --- plugin/unresolved：以 . 开头的 plugin 路径条目必须解析得到 ---
+  // --- plugin/unresolved：以 . 开头的插件路径条目必须解析得到 ---
+  // 同时读取 plugin（opencode.json / tui.json）与 plugins（cli.json）两个键。
   for (const relF of PLUGIN_CONFIG_FILES) {
     const abs = path.join(outDir, relF);
     if (!isFile(abs)) continue; // 缺文件由 layout/deploy-missing 报告
     const parsed = parseJsonSafe(abs);
     if (!parsed.ok) continue; // 语法错误由 config/unparseable 报告
-    const plugins = Array.isArray(parsed.value.plugin) ? parsed.value.plugin : [];
-    for (const entry of plugins) {
-      if (typeof entry !== 'string' || !entry.startsWith('.')) continue; // npm 包名等跳过
-      const resolved = path.resolve(path.dirname(abs), entry);
-      if (!fs.existsSync(resolved)) {
-        violations.push({
-          rule: 'plugin/unresolved',
-          path: relF,
-          detail: `插件路径条目 ${entry} 解析为 ${resolved}，不存在`,
-        });
+    for (const key of ['plugin', 'plugins']) {
+      const plugins = Array.isArray(parsed.value[key]) ? parsed.value[key] : [];
+      for (const entry of plugins) {
+        if (typeof entry !== 'string' || !entry.startsWith('.')) continue; // npm 包名等跳过
+        const resolved = path.resolve(path.dirname(abs), entry);
+        if (!fs.existsSync(resolved)) {
+          violations.push({
+            rule: 'plugin/unresolved',
+            path: relF,
+            detail: `插件路径条目 ${entry} 解析为 ${resolved}，不存在`,
+          });
+        }
       }
     }
   }

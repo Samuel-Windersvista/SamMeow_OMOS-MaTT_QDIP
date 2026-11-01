@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第 5 课 · 体系地图：五层结构与文件位置 | 独立驾驭 OpenCode 体系</title>
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body>
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">LESSON 05</p>
+    <h1>体系地图：五层结构与文件位置</h1>
+    <p class="lesson-meta">
+      预计 15 分钟 <span class="sep">|</span>
+      难度：进阶 <span class="sep">|</span>
+      前置：<a href="0002-会话边界.html">第 2 课</a> · <a href="0003-委派策略.html">第 3 课</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <span class="tag">体系结构</span>
+    </p>
+    <p class="lead">
+      前几课你学了"怎么决策"；这一课给整台机器画一张地图——
+      哪一层管什么、文件都在哪。出问题时，你就知道该敲哪扇门。
+    </p>
+  </header>
+
+  <!-- ==================== 5.1 ==================== -->
+  <h2><span class="secno">5.1</span>五层结构</h2>
+  <p>
+    从上到下，规则 → 技能 → 编排 → 本体 → 外援。上面定方向，下面干活：
+  </p>
+
+  <div class="terminal">
+    <div class="terminal-title">体系结构 -- 五层</div>
+    <pre><code><span class="o">[宪法层]</span>  preferences.md        <span class="c">← 规则：入口判定 / 会话边界 / 委派</span>
+<span class="o">[技能层]</span>  SKILL.md × 48         <span class="c">← 流程与工具（两处目录）</span>
+<span class="o">[编排层]</span>  OMOslim 插件          <span class="c">← 预设 / 代理 / 模型 / 后台任务</span>
+<span class="o">[本体层]</span>  opencode              <span class="c">← 终端 / 会话 / TUI 命令</span>
+<span class="o">[外援层]</span>  MCP                   <span class="c">← 外部工具（浏览器、Blender…）</span></code></pre>
+  </div>
+
+  <ul>
+    <li><b>宪法层</b>：你写的规则，最终裁决一切流程问题——第 1、2、3 课的判定表都出自这里；</li>
+    <li><b>技能层</b>：一叠说明书（grill、spec、fix……），AI 按需加载；</li>
+    <li><b>编排层</b>：工头与代理团队的家，也是模型和预设的配置处；</li>
+    <li><b>本体层</b>：真正跑在你电脑上的程序——终端界面、会话、命令；</li>
+    <li><b>外援层</b>：给 AI 接的外部工具（比如浏览器自动化、Blender 控制）。</li>
+  </ul>
+
+  <!-- ==================== 5.2 ==================== -->
+  <h2><span class="secno">5.2</span>文件地图：想改什么，去哪里</h2>
+
+  <div class="table-scroll">
+    <table>
+      <caption>表 5-1 · 文件地图（路径以本机为准）</caption>
+      <thead>
+        <tr><th>你想改什么</th><th>去哪个文件 / 目录</th><th>层级</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>规则：入口判定、会话边界、委派</td>
+          <td><code>~/.config/opencode/preferences.md</code></td>
+          <td>宪法层</td>
+        </tr>
+        <tr>
+          <td>预设、各代理的模型、议会席位</td>
+          <td><code>~/.config/opencode/oh-my-opencode-slim.json</code></td>
+          <td>编排层</td>
+        </tr>
+        <tr>
+          <td>插件加载、MCP 接入、指令注入</td>
+          <td><code>~/.config/opencode/opencode.json</code></td>
+          <td>本体层</td>
+        </tr>
+        <tr>
+          <td>技能（工程流 39 个 + OMO 内部 9 个）</td>
+          <td><code>~/.agents/skills/</code> 与 <code>~/.config/opencode/skills/</code></td>
+          <td>技能层</td>
+        </tr>
+        <tr>
+          <td>侧边栏：用量条与代理状态</td>
+          <td><code>~/.config/opencode/tui.json</code>（注册 quota 与 OMOslim）</td>
+          <td>本体层</td>
+        </tr>
+        <tr>
+          <td>找回历史会话</td>
+          <td><code>/sessions</code> 命令（会话存在 opencode 的存储目录）</td>
+          <td>本体层</td>
+        </tr>
+        <tr>
+          <td>出事后回滚配置</td>
+          <td>同目录的 <code>*.bak</code> 备份文件</td>
+          <td>宪法 / 编排层</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <aside class="callout callout-tip">
+    <p class="box-label">改配置的入口</p>
+    <p>
+      想改这些文件时，不用自己动手——在对话里说一句"帮我改一下配置"，
+      系统会走第 1 课的<b>配置车道</b>（<code>customize-opencode</code>），
+      自动备份、窄修改、提醒你重载生效。第 6 课还会细讲安全改配置的完整套路。
+    </p>
+  </aside>
+
+  <!-- ==================== 5.3 ==================== -->
+  <h2><span class="secno">5.3</span>预设与模型</h2>
+  <ul>
+    <li><b>预设（preset）</b>是一整套"代理 × 模型"的组合方案。你当前激活的是
+      <code>matt-bridge</code>（配你的 Matt 工程流技能）；配置里还存着
+      <code>DeepSeek-Only</code>、<code>superpowers-bridge</code> 两套备用方案。</li>
+    <li>切换预设：TUI 里用 <code>/preset</code>——但<b>重载后才生效</b>（这个规律第 6 课还会反复用到）。</li>
+    <li>每个代理的模型都在预设里逐一定义：搜索类配快模型、决策类配强模型（第 3 课）。</li>
+    <li>花销与余量：看侧边栏的<b>用量条</b>（<code>opencode-quota</code> 插件提供）——它按服务商显示剩余额度。</li>
+  </ul>
+
+  <!-- ==================== 5.4 ==================== -->
+  <h2><span class="secno">5.4</span>一句话任务的旅行</h2>
+  <p>把五层串起来看。你说一句"给整合包做个小工具"，接下来：</p>
+  <ol>
+    <li><b>宪法层</b>定路线：入口判定 → 单窗口任务；</li>
+    <li><b>技能层</b>加载对应说明书：grill → implement；</li>
+    <li><b>编排层</b>开始工作：工头拆活，需要时派代理（新会话 = 新工作台）；</li>
+    <li><b>本体层</b>执行：真的读写文件、跑命令、管理会话；</li>
+    <li><b>外援层</b>补短板：需要查文档、看截图时，调用对应工具。</li>
+  </ol>
+  <p>
+    每一层各司其职——所以出问题时，也是按层定位（第 6 课的分诊表就建立在这张地图上）。
+  </p>
+
+  <!-- ==================== 5.5 ==================== -->
+  <h2><span class="secno">5.5</span>随堂小测</h2>
+  <p>七道题，考"去哪儿找"。点击作答，立即判分。</p>
+  <div class="quiz" data-quiz="QUIZ_DATA"></div>
+
+  <!-- ==================== 5.6 ==================== -->
+  <h2><span class="secno">5.6</span>立即动手</h2>
+  <section class="try-it">
+    <p class="box-label">立即动手 · TRY IT NOW</p>
+    <p>寻宝练习——亲手把地图走一遍：</p>
+    <ol class="compact">
+      <li>打开 <code>~/.config/opencode/oh-my-opencode-slim.json</code>，找到 <b>designer 的模型</b>那一行（提示：搜 <code>kimi</code>）；</li>
+      <li>在同一个文件里找到当前预设的名字（<code>"preset"</code> 字段）；</li>
+      <li>打开 <code>preferences.md</code>，找到"委派规则"一节，认一认你记住的代理名。</li>
+    </ol>
+  </section>
+
+  <!-- ==================== 5.7 ==================== -->
+  <h2><span class="secno">5.7</span>小结</h2>
+  <p>
+    三句话记住这一课：五层结构从上到下——宪法 / 技能 / 编排 / 本体 / 外援；
+    想改什么先查文件地图，别乱翻；
+    改配置不用手写——走配置车道，它会帮你备份并提醒生效条件。
+  </p>
+
+  <section class="primary-source">
+    <p class="box-label">一手资料 PRIMARY SOURCE</p>
+    <p>
+      配置细节见 opencode 官方文档的
+      <a href="https://opencode.ai/docs/config">配置</a>、
+      <a href="https://opencode.ai/docs/skills">技能</a> 与
+      <a href="https://opencode.ai/docs/agents">代理</a> 三页；
+      编排层见 <a href="https://github.com/alvinunreal/oh-my-opencode-slim">OMOslim 仓库</a>。
+    </p>
+  </section>
+
+  <ol class="sources">
+    <li>[1] opencode 官方文档：config / skills / agents / mcp-servers（链接见上方）。</li>
+    <li>[2] 本机实测：配置文件与目录结构（2026-09-16 侦察核实）。</li>
+    <li>[3] OMOslim 仓库：预设与 TUI 集成说明。</li>
+    <li>[4] 本课配套速查表：<a href="../reference/05-体系地图速查表.html">体系地图速查表</a>（打印友好）。</li>
+  </ol>
+
+  <aside class="ask-teacher">
+    <p class="box-label">卡住了？问老师</p>
+    <p>
+      找不到某个文件、或不确定某项设置在哪一层，直接把问题发我——我帮你定位到具体路径。
+    </p>
+  </aside>
+
+  <nav class="lesson-nav">
+    <a class="prev" href="0004-主流程.html">
+      <span class="nav-dir">上一课</span><br>
+      <span class="nav-title">第 4 课 · 主流程</span>
+    </a>
+    <a class="next" href="0006-排障与维护.html">
+      <span class="nav-dir">下一课</span><br>
+      <span class="nav-title">第 6 课 · 排障与维护</span>
+    </a>
+  </nav>
+
+</main>
+
+<!-- ==================== 测验数据 ====================
+     七道题考"去哪儿找"；correctIndex 从 0 开始数 -->
+<script>
+var QUIZ_DATA = [
+  {
+    question: "任务入口判定、会话边界、委派规则的最终裁决在哪个文件？",
+    options: [
+      "preferences.md",
+      "oh-my-opencode-slim.json",
+      "opencode.json",
+      "README.md"
+    ],
+    correctIndex: 0,
+    explanation: "宪法层——preferences.md 被自动注入每个会话，是所有流程问题的最终裁决。"
+  },
+  {
+    question: "想换预设、改某个代理的模型，动哪个文件？",
+    options: [
+      "preferences.md",
+      "opencode.json",
+      "oh-my-opencode-slim.json",
+      "tui.json"
+    ],
+    correctIndex: 2,
+    explanation: "编排层的配置文件——预设、代理模型、议会席位都在这里面。"
+  },
+  {
+    question: "技能（skill）定义在哪里？",
+    options: [
+      "opencode.json 里",
+      "两处 skills 目录的 SKILL.md",
+      "会话历史里",
+      "MCP 服务器里"
+    ],
+    correctIndex: 1,
+    explanation: "工程流技能在 ~/.agents/skills/，OMO 内部技能在 ~/.config/opencode/skills/——每个技能是一个 SKILL.md。"
+  },
+  {
+    question: "插件加载、MCP 接入、指令注入这些“本体层”设置在哪？",
+    options: [
+      "preferences.md",
+      "tui.json",
+      "oh-my-opencode-slim.json",
+      "opencode.json"
+    ],
+    correctIndex: 3,
+    explanation: "opencode.json 管插件列表、MCP 服务器和指令文件注入——本体层的总开关。"
+  },
+  {
+    question: "每个代理背后用哪个模型，是谁决定的？",
+    options: [
+      "模型自己选",
+      "预设配置里逐一定义",
+      "每次对话随机分配",
+      "网络自动决定"
+    ],
+    correctIndex: 1,
+    explanation: "预设（preset）里每个代理一行模型配置——原则是搜索用快模型、决策用强模型。"
+  },
+  {
+    question: "侧边栏的用量条和代理状态，是谁提供的？",
+    options: [
+      "opencode 本体自带",
+      "浏览器插件",
+      "opencode-quota 与 OMOslim 的 TUI 集成",
+      "MCP 服务器"
+    ],
+    correctIndex: 2,
+    explanation: "tui.json 注册了两个 TUI 插件：用量条来自 opencode-quota，代理状态来自 OMOslim 侧边栏。"
+  },
+  {
+    question: "改了配置文件之后，什么时候生效？",
+    options: [
+      "立刻生效",
+      "新会话或重载后生效",
+      "第二天自动生效",
+      "永远不会生效"
+    ],
+    correctIndex: 1,
+    explanation: "记住这条规律：配置改动在新会话或重载时被读取——改完没反应，先别慌，开个新会话试试。"
+  }
+];
+</script>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

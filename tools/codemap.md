@@ -29,21 +29,21 @@ Build Orchestration（构建编排）与 Packaging Pipeline（打包流水线）
    - `omo-skills` → `opencode/config/opencode/skills`（OMO 自有技能）
    - `matt-skills` → `opencode/config/opencode/skills`（Matt 技能，与 omo-skills 合并到同一目录；必须落在 `$XDG_CONFIG_HOME/opencode/skills` 才能被自动发现）
    - `omoslim-runtime` → `plugins/oh-my-opencode-slim/node_modules`（含 TUI 依赖 @opentui/core、@opentui/solid、solid-js）
-   - `opencode-quota` → `plugins/opencode-quota`（自带 nested node_modules 的 @opentui 0.2.x）
-   - `quota-runtime` → `plugins/opencode-quota/node_modules`（合并补充 hoisted 依赖，须排在 opencode-quota 之后）
+   - `opencode-quota` → `plugins/opencode-quota`（quota 4.10.2 起无自带 nested node_modules，运行时依赖全部由 quota-runtime 提供）
+   - `quota-runtime` → `plugins/opencode-quota/node_modules`（4.10.2-deps：@opentui/core、@opentui/solid、@opentelemetry/api、jsonc-parser、@clack/prompts 等，须排在 opencode-quota 之后）
    - `chrome-devtools-mcp` → `mcp/chrome-devtools-mcp`
    - `windows-terminal` → `runtime/terminal`
-5. **[3/5] 部署模板**：读取 `$PSScriptRoot\layout.json`，遍历 `deploy` 数组按 `kind` 分派——`file` 先建父目录再 `Copy-Item -LiteralPath`；`dir` 建 target 后 `Copy-Item "$src\*"`（内容合并语义），复制后若有 `exclude` 则用 `Get-ChildItem -Recurse -Filter <pattern>` 找匹配 basename 的项（大小写不敏感，支持任意深度）并 `Remove-Item -Recurse -Force`，逐条打印 `  - <name>: 排除 <相对路径>`；`emptydir` 只建目录；未知 `kind` 抛错。非 `optional` 条目源缺失时在复制前抛出 `部署条目 <name> 的源缺失`；`optional: true` 且源缺失时打印 skip 并跳过（当前无 optional 条目）。15 条声明覆盖启动器、便携环境模块 `env.bat`、`setup/`（`exclude: ["*.test.js", "codemap.md"]`）、配置模板、`local/说明.txt`、`opencode\auth\` 空目录、文档与 `data\.gitkeep` 等。
+5. **[3/5] 部署模板**：读取 `$PSScriptRoot\layout.json`，遍历 `deploy` 数组按 `kind` 分派——`file` 先建父目录再 `Copy-Item -LiteralPath`；`dir` 建 target 后 `Copy-Item "$src\*"`（内容合并语义），复制后若有 `exclude` 则用 `Get-ChildItem -Recurse -Filter <pattern>` 找匹配 basename 的项（大小写不敏感，支持任意深度）并 `Remove-Item -Recurse -Force`，逐条打印 `  - <name>: 排除 <相对路径>`；`emptydir` 只建目录；未知 `kind` 抛错。非 `optional` 条目源缺失时在复制前抛出 `部署条目 <name> 的源缺失`；`optional: true` 且源缺失时打印 skip 并跳过（当前无 optional 条目）。16 条声明覆盖启动器、便携环境模块 `env.bat`、`setup/`（`exclude: ["*.test.js", "codemap.md"]`，内含教学站点子树 `setup/tutorial/`）、配置模板（`opencode.json`/`oh-my-opencode-slim.json`/`tui.json`/`cli.json`/`preferences.md`）、`local/说明.txt`、`opencode\auth\` 空目录、文档与 `data\.gitkeep` 等。
 6. **[4/5] 校验**：先调用 `& "$PSScriptRoot\check-sources.ps1" -ComponentsFile $ComponentsFile`（输入侧，先存在性后版本，成功时打印 `[OK] all N component sources exist` 与 `[OK] version check passed: N component(s)`；非零退出码即 throw）；再调用 `& "$outDir\runtime\node\node.exe" "$PSScriptRoot\verify-package.js" --out $outDir --components $ComponentsFile`（产物侧，用产物内的便携 Node 执行，构建机无需预装 node；非零退出码即 throw）。
 7. **[5/5] 打包**：除非 `-SkipZip`，用 `Compress-Archive -CompressionLevel Optimal` 将输出目录内容压缩为 `build\qdip-generic-<version>.zip`（先删旧 zip）。
 
 ### layout.json（包布局声明）
 
-产物布局的唯一真相：`deploy` 数组 15 条声明，字段复用 `components.json` 的 `name`/`source`/`target`，外加 `kind`（`file` | `dir` | `emptydir`）、`optional` 与 `dir` 专用的 `exclude`（字符串数组）。`source` 相对仓库根（可指向 `templates/` 或仓库根文件如 `CHANGELOG.md`），`target` 相对产物根。`optional: true` 的条目在源缺失时允许跳过；`exclude` 的模式匹配目标内 basename，命中项不留在产物里。`build.ps1` 的 [3/5] 只负责按声明执行，`verify-package.js` 的 `layout/deploy-missing` 与 `layout/excluded-present` 两条规则按同一份声明核对产物。
+产物布局的唯一真相：`deploy` 数组 16 条声明（含 `config-cli`），字段复用 `components.json` 的 `name`/`source`/`target`，外加 `kind`（`file` | `dir` | `emptydir`）、`optional` 与 `dir` 专用的 `exclude`（字符串数组）。`source` 相对仓库根（可指向 `templates/` 或仓库根文件如 `CHANGELOG.md`），`target` 相对产物根。`optional: true` 的条目在源缺失时允许跳过；`exclude` 的模式匹配目标内 basename，命中项不留在产物里。`build.ps1` 的 [3/5] 只负责按声明执行，`verify-package.js` 的 `layout/deploy-missing` 与 `layout/excluded-present` 两条规则按同一份声明核对产物。
 
 ### verify-package.js（产物校验器）
 
-零依赖（仅 `node:fs` / `node:path`）的产物校验器。导出纯函数 `verifyPackage({ outDir, componentsFile, layoutFile })`，返回 `Array<{ rule, path, detail }>` 违规列表（无 `severity` 字段），不打印/不抛异常/不写文件；直接运行本文件时作为 CLI（`--out` 必填、`--components`、`--layout`）。全绿打印 `[OK] package verified: <outDir>` 并 exit 0；有违规按 rule 分组打印 `[FAIL] <rule> (n)` 后 exit 1；参数缺失或清单读不到 exit 2。九条规则：`layout/component-missing`、`layout/deploy-missing`、`layout/excluded-present`、`runtime/missing`、`skills/missing`、`skills/collision`、`plugin/unresolved`、`config/unparseable`、`env/unbound`。其中 `layout/excluded-present` 递归遍历带 `exclude` 的条目 target，按 basename 做最小 glob（只支持 `*`）匹配，命中即报违规。合并到同一 target 的多源组件做集合比对（并集 ⊆ target + 跨源同名即 collision）。
+零依赖（仅 `node:fs` / `node:path`）的产物校验器。导出纯函数 `verifyPackage({ outDir, componentsFile, layoutFile })`，返回 `Array<{ rule, path, detail }>` 违规列表（无 `severity` 字段），不打印/不抛异常/不写文件；直接运行本文件时作为 CLI（`--out` 必填、`--components`、`--layout`）。全绿打印 `[OK] package verified: <outDir>` 并 exit 0；有违规按 rule 分组打印 `[FAIL] <rule> (n)` 后 exit 1；参数缺失或清单读不到 exit 2。十条规则：`layout/component-missing`、`layout/deploy-missing`、`layout/excluded-present`、`runtime/missing`、`tutorial/missing`、`skills/missing`、`skills/collision`、`plugin/unresolved`、`config/unparseable`、`env/unbound`。其中 `layout/excluded-present` 递归遍历带 `exclude` 的条目 target，按 basename 做最小 glob（只支持 `*`）匹配，命中即报违规；`tutorial/missing` 断言 `setup/tutorial/index.html` 为文件、`setup/tutorial/assets` 为目录；`plugin/unresolved` 同时读取 `plugin` 与 `plugins` 两个键，覆盖 `opencode.json`/`tui.json`/`cli.json`。合并到同一 target 的多源组件做集合比对（并集 ⊆ target + 跨源同名即 collision）。
 
 ### check-sources.ps1（源检查）
 
@@ -58,7 +58,7 @@ Build Orchestration（构建编排）与 Packaging Pipeline（打包流水线）
 
 零依赖（仅 `node:fs` / `node:path`）的文档校验器，**不参与构建流水线**，独立运行。导出纯函数 `checkDocs({ repoRoot })`（返回 `Array<{ rule, path, detail }>`，形状与 `verify-package.js` 一致，不打印/不抛异常/不写文件）与 `describeScope({ repoRoot })`（返回检查范围与跳过计数）；直接运行本文件时作为 CLI（`node tools/check-docs.js [--repo <repoRoot>]`，打印 `[SCOPE]` 后按 rule 分组打印违规，exit 0/1）。三条规则：
 
-- `docs/path-missing`：include 文档（`codemap.md`、`README.md`、`AGENTS.md`、`CONTEXT.md`、`docs/adr/*`、`docs/整合包说明书.md`、`docs/发布前检查清单.md`、`templates/README.md`、`templates/玩家使用指南.md` 等）里反引号包裹的路径候选必须能在某个基准上解析——仓库根（含去空格二次尝试）、最新构建产物 `build/qdip-generic-*`（首段属于 `opencode`/`plugins`/`runtime`/`mcp`/`setup`/`data`，无产物时整类跳过并计入 `skippedProductPaths`）、或仓库自有文件的 basename 索引（无 `/` 的裸文件名）。未命中再查窄化运行时白名单。
+- `docs/path-missing`：include 文档（`codemap.md`、`README.md`、`AGENTS.md`、`GLOSSARY.md`、`docs/adr/*`、`docs/整合包说明书.md`、`docs/发布前检查清单.md`、`templates/README.md`、`templates/玩家使用指南.md` 等）里反引号包裹的路径候选必须能在某个基准上解析——仓库根（含去空格二次尝试）、最新构建产物 `build/qdip-generic-*`（首段属于 `opencode`/`plugins`/`runtime`/`mcp`/`setup`/`data`，无产物时整类跳过并计入 `skippedProductPaths`）、或仓库自有文件的 basename 索引（无 `/` 的裸文件名）。未命中再查窄化运行时白名单。
 - `docs/encoding-broken`：仓库自有文本文件（`.md`/`.js`/`.json`/`.txt`/`.bat`/`.ps1`/`.cjs`/`.mjs`）必须能按声明编码解码（`.bat` 按 GBK，其余按 UTF-8），且不含 U+FFFD 或私用区字符。
 - `docs/bom-missing`：`.ps1` 必须带 UTF-8 BOM；其余受检扩展名必须不带 BOM。
 
@@ -74,8 +74,8 @@ Build Orchestration（构建编排）与 Packaging Pipeline（打包流水线）
 - **上游依赖（输入）**：
   - `components.json` — 组件清单（packageName、version、components[]，含 name/type/source/target/version/required；`node-runtime`/`opencode-cli` 另带 `verifyVersion`（exe/args/strip）供版本闸门探测）。
   - `layout.json` — 包布局声明（`deploy[]`，含 name/source/target/kind/optional，`dir` 条目可带 exclude），驱动 [3/5] 部署与 `layout/deploy-missing` / `layout/excluded-present` 校验。
-  - `templates/` — 自有静态模板：`启动.bat`、`env.bat`、`进入环境.bat`、`更新组件.bat`、`setup/*`、`opencode.json`、`oh-my-opencode-slim.json`、`tui.json`、`preferences.md`、`local/说明.txt`、`data/.gitkeep`、`玩家使用指南.md`。
-  - `tools/cache/` — 离线第三方制品：`node-v24.14.1-win-x64`、`opencode-1.18.30`（需按 Task 6 预先准备）。
+  - `templates/` — 自有静态模板：`启动.bat`、`env.bat`、`进入环境.bat`、`更新组件.bat`、`setup/*`（含教学站点 `setup/tutorial/*`）、`opencode.json`、`oh-my-opencode-slim.json`、`tui.json`、`cli.json`、`preferences.md`、`local/说明.txt`、`data/.gitkeep`、`玩家使用指南.md`。
+  - `tools/cache/` — 离线第三方制品：`node-v24.14.1-win-x64`、`opencode-1.18.33`（需按 Task 6 预先准备）。
   - 外部引用目录：`E:/云文件/GitHub/oh-my-opencode-slim/dist`（omoslim 构建产物）、`C:/Users/Winde/.config/opencode/oh-my-opencode-slim`（本地自定义）、`C:/Users/Winde/.config/opencode/skills`（OMO 技能）、`C:/Users/Winde/.agents/skills`（Matt 技能）、`C:/Users/Winde/.config/opencode/node_modules/@slkiser/opencode-quota`（用量插件）。上述均为**本机开发环境绝对路径**，移植构建机需同步修改 components.json。
 - **下游消费方（输出）**：
   - `build\qdip-generic-<version>\` — 组装完成的目录，可直接分发。

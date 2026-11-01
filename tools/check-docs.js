@@ -36,6 +36,9 @@ const path = require('node:path');
 // 同理，历史规划文档（docs/00-*、docs/01-*、docs/02-*、docs/matt-pocock-workflow-report.md、
 // docs/workflow-diff-and-recommendations.md、docs/agents/*）与 .superpowers/** 也明确排除在
 // 路径检查之外——它们的路径本就可能过时。排除只针对路径检查；编码检查对全仓自有文本照常生效。
+//
+// 条目以 `/*` 结尾表示「展开该目录下全部 .md（按名称排序后并入）」，目录缺失时跳过；
+// 其余条目按字面文件路径处理。例如 `docs/adr/*` 覆盖全部 ADR，新增 ADR 无需改本列表。
 const PATH_CHECK_DOCS = [
   'codemap.md',
   'tools/codemap.md',
@@ -43,14 +46,38 @@ const PATH_CHECK_DOCS = [
   'templates/setup/codemap.md',
   'README.md',
   'AGENTS.md',
-  'CONTEXT.md',
-  'docs/adr/0001-opencode-relative-path-resolution.md',
-  'docs/adr/0002-layout-json-stays-out-of-the-package.md',
+  'GLOSSARY.md',
+  'docs/adr/*',
   'docs/整合包说明书.md',
   'docs/发布前检查清单.md',
   'templates/README.md',
   'templates/玩家使用指南.md',
 ];
+
+// 展开 include 列表：`<dir>/*` → 该目录下全部 .md（按名称排序），目录缺失时跳过；
+// 其余条目原样保留。新增 ADR 等文档自动纳入，无需手工维护列表。
+function expandPathCheckDocs(repoRoot, entries = PATH_CHECK_DOCS) {
+  const out = [];
+  for (const entry of entries) {
+    if (!entry.endsWith('/*')) {
+      out.push(entry);
+      continue;
+    }
+    const dirRel = entry.slice(0, -2);
+    let dirents;
+    try {
+      dirents = fs.readdirSync(path.join(repoRoot, dirRel), { withFileTypes: true });
+    } catch {
+      continue; // 目录缺失：跳过（不存在性由别处负责）
+    }
+    const names = dirents
+      .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.md'))
+      .map((e) => e.name)
+      .sort();
+    for (const name of names) out.push(toPosix(path.join(dirRel, name)));
+  }
+  return out;
+}
 
 // 已知扩展名：候选以此结尾才当作「文件路径」（无 `/` 的裸文件名也靠它识别）。
 const KNOWN_EXTS = ['.md', '.js', '.json', '.bat', '.ps1', '.txt', '.exe', '.cmd', '.tsx', '.ts', '.cjs', '.mjs'];
@@ -403,7 +430,7 @@ function scanPathRefs(repoRoot) {
     basenameIndexSize: basenameIndex.size,
   };
   const violations = [];
-  for (const doc of PATH_CHECK_DOCS) {
+  for (const doc of expandPathCheckDocs(repoRoot)) {
     const text = readTextSafe(path.join(repoRoot, doc));
     if (text === null) continue; // 文档本身不存在时跳过（不存在性由别处负责）
     for (const cand of extractPathCandidates(text)) {

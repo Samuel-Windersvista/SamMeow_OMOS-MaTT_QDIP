@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>体系地图速查表 · 独立驾驭 OpenCode 体系</title>
+<!-- 参考文档 = body 加 reference 类：更密、更宽、打印优先。
+     建议 A4 横向打印，或浏览器打印时选“横向”。 -->
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body class="reference">
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">REFERENCE 05</p>
+    <h1>体系地图速查表 <span class="muted">v1.0</span></h1>
+    <p class="lesson-meta">
+      打印版 · 建议 A4 横向 <span class="sep">|</span>
+      配套课程：<a href="../lessons/0005-体系地图.html">第 5 课 · 体系地图</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <button class="no-print tag" style="cursor:pointer"
+              onclick="window.print()">打印本页</button>
+    </p>
+  </header>
+
+  <!-- ==================== A. 文件地图（全宽） ==================== -->
+  <section>
+    <h2><span class="secno">A</span>文件地图全表</h2>
+    <p class="small muted">想改什么，先去哪——路径以本机为准（<code>~</code> 即用户主目录）。</p>
+    <div class="table-scroll">
+      <table class="dense">
+        <thead>
+          <tr><th>你想改什么</th><th>去哪个文件 / 目录</th><th>层级</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>规则：入口判定、会话边界、委派</td>
+            <td><code>~/.config/opencode/preferences.md</code></td>
+            <td>宪法层</td>
+          </tr>
+          <tr>
+            <td>预设、各代理的模型、议会席位</td>
+            <td><code>~/.config/opencode/oh-my-opencode-slim.json</code></td>
+            <td>编排层</td>
+          </tr>
+          <tr>
+            <td>插件加载、MCP 接入、指令注入</td>
+            <td><code>~/.config/opencode/opencode.json</code></td>
+            <td>本体层</td>
+          </tr>
+          <tr>
+            <td>技能（工程流 39 个 + OMO 内部 9 个）</td>
+            <td><code>~/.agents/skills/</code> 与 <code>~/.config/opencode/skills/</code></td>
+            <td>技能层</td>
+          </tr>
+          <tr>
+            <td>侧边栏：用量条与代理状态</td>
+            <td><code>~/.config/opencode/tui.json</code>（注册 quota 与 OMOslim）</td>
+            <td>本体层</td>
+          </tr>
+          <tr>
+            <td>找回历史会话</td>
+            <td><code>/sessions</code> 命令（会话存在 opencode 的存储目录）</td>
+            <td>本体层</td>
+          </tr>
+          <tr>
+            <td>出事后回滚配置</td>
+            <td>同目录的 <code>*.bak</code> 备份文件</td>
+            <td>宪法 / 编排层</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <aside class="callout callout-tip">
+      <p class="box-label">改配置的入口</p>
+      <p>不用自己动手——在对话里说一句“帮我改一下配置”，系统会走第 1 课的<b>配置车道</b>（<code>customize-opencode</code>）：自动备份、窄修改、提醒你重载生效。</p>
+    </aside>
+  </section>
+
+  <div class="two-col">
+
+    <!-- ==================== B. 五层结构 ==================== -->
+    <section>
+      <h2><span class="secno">B</span>五层结构</h2>
+      <div class="terminal">
+        <div class="terminal-title">体系结构 -- 五层（上面定方向，下面干活）</div>
+        <pre><code><span class="o">[宪法层]</span>  preferences.md        <span class="c">← 规则：入口判定 / 会话边界 / 委派</span>
+<span class="o">[技能层]</span>  SKILL.md × 48         <span class="c">← 流程与工具（两处目录）</span>
+<span class="o">[编排层]</span>  OMOslim 插件          <span class="c">← 预设 / 代理 / 模型 / 后台任务</span>
+<span class="o">[本体层]</span>  opencode              <span class="c">← 终端 / 会话 / TUI 命令</span>
+<span class="o">[外援层]</span>  MCP                   <span class="c">← 外部工具（浏览器、Blender…）</span></code></pre>
+      </div>
+      <table class="dense">
+        <thead>
+          <tr><th>层</th><th>一句话</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>宪法层</b></td><td>你写的规则，最终裁决一切流程问题</td></tr>
+          <tr><td><b>技能层</b></td><td>一叠说明书（grill、spec、fix……），按需加载</td></tr>
+          <tr><td><b>编排层</b></td><td>工头与代理团队的家，模型与预设的配置处</td></tr>
+          <tr><td><b>本体层</b></td><td>真正跑在你电脑上的程序：终端、会话、命令</td></tr>
+          <tr><td><b>外援层</b></td><td>给 AI 接的外部工具（浏览器自动化、Blender 控制）</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ==================== C. 预设与模型 ==================== -->
+    <section>
+      <h2><span class="secno">C</span>预设与模型要点</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>要点</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>预设是什么</td>
+            <td>一整套“代理 × 模型”的组合方案</td>
+          </tr>
+          <tr>
+            <td>当前激活</td>
+            <td><code>matt-bridge</code>（配 Matt 工程流技能）</td>
+          </tr>
+          <tr>
+            <td>备用方案</td>
+            <td><code>DeepSeek-Only</code>、<code>superpowers-bridge</code></td>
+          </tr>
+          <tr>
+            <td>切换方式</td>
+            <td>TUI 里用 <code>/preset</code>——<b>重载后才生效</b></td>
+          </tr>
+          <tr>
+            <td>模型分配</td>
+            <td>预设里逐一定义：搜索类配快模型、决策类配强模型</td>
+          </tr>
+          <tr>
+            <td>花销与余量</td>
+            <td>看侧边栏<b>用量条</b>（<code>opencode-quota</code> 插件），按服务商显示剩余额度</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ==================== D. 一句话任务的旅行 ==================== -->
+    <section>
+      <h2><span class="secno">D</span>一句话任务的旅行</h2>
+      <p class="small muted">你说一句“给整合包做个小工具”，五层依次接手：</p>
+      <div class="terminal">
+        <div class="terminal-title">五步旅行</div>
+        <pre><code><span class="o">1 宪法层</span>  <span class="c"># 定路线：入口判定 → 单窗口任务</span>
+<span class="o">2 技能层</span>  <span class="c"># 加载说明书：grill → implement</span>
+<span class="o">3 编排层</span>  <span class="c"># 工头拆活，需要时派代理（新会话 = 新工作台）</span>
+<span class="o">4 本体层</span>  <span class="c"># 真的读写文件、跑命令、管理会话</span>
+<span class="o">5 外援层</span>  <span class="c"># 需要查文档、看截图时，调用对应工具</span></code></pre>
+      </div>
+      <p class="small muted">每一层各司其职——所以出问题时，也是按层定位（第 6 课的分诊表就建立在这张地图上）。</p>
+    </section>
+
+  </div><!-- /two-col -->
+
+  <p class="source">
+    <span class="box-label">SOURCE</span>
+    本速查表整理自第 5 课《体系地图》与 <code>preferences.md</code>；
+    配置细节以 opencode 官方文档（<a href="https://opencode.ai/docs/config">config</a> / <a href="https://opencode.ai/docs/skills">skills</a> / <a href="https://opencode.ai/docs/agents">agents</a>）与 <a href="https://github.com/alvinunreal/oh-my-opencode-slim">OMOslim 仓库</a>为准（2026-09 实测）。
+    <span class="muted">发现过时内容请报告导师，Vault-Tec 将签发修订令。</span>
+  </p>
+
+</main>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 开箱即用的 AI 编程环境：把你自己的 API key 填进浏览器配置页，双击一个 bat 就能进 AI 工作台（opencode + 插件全家桶）。你负责描述需求，AI 负责写代码。
 
-- 当前版本：0.5.0（变更记录见 `CHANGELOG.md`）
+- 当前版本：0.6.0（变更记录见 `CHANGELOG.md`）
 - 第一次使用建议先看 `玩家使用指南.md`（工作流建议与常见报错对照）
 
 ## 系统要求
@@ -21,6 +21,8 @@
 4. 点"保存配置"，关闭浏览器
 5. 重新双击 `启动.bat` → 进入工作台
 
+> 配置页上还有「使用教程」入口：点击后在新标签页打开离线教学站点（`setup\tutorial\`），可以随时跳过。
+
 ## 目录结构
 
 | 路径 | 作用 | 玩家能做什么 |
@@ -32,10 +34,10 @@
 | `CHANGELOG.md` | 版本变更记录 | - |
 | `玩家使用指南.md` | 高效使用工作流、自定义服务商教程 | - |
 | `data\` | 玩家数据：配置状态标记、工作目录记忆 | 可删（=重置回首次配置） |
-| `setup\` | 首次引导服务（浏览器配置页的后端） | 别改 |
+| `setup\` | 首次引导服务（浏览器配置页的后端）与内置教学站点（`setup\tutorial\`） | 别改 |
 | `opencode\bin\` | opencode CLI 可执行文件 | 别改 |
 | `opencode\auth\` | 登录密钥（API key） | 保留可续用 |
-| `opencode\config\opencode\` | 主配置：`opencode.json`、`oh-my-opencode-slim.json`、`tui.json`、`preferences.md`（个人倾向/工作流指令）、`skills\` 技能库 | 可改（建议只动 `local\`） |
+| `opencode\config\opencode\` | 主配置：`opencode.json`、`oh-my-opencode-slim.json`、`tui.json`、`cli.json`、`preferences.md`（个人倾向/工作流指令）、`skills\` 技能库 | 可改（建议只动 `local\`） |
 | `opencode\config\opencode\local\` | 玩家本地修改区：手动覆盖配置放这里 | 推荐改这里 |
 | `plugins\` | 插件：oh-my-opencode-slim / opencode-quota | 别改 |
 | `mcp\chrome-devtools-mcp\` | 浏览器自动化 MCP（AI 可控浏览器） | 别改 |

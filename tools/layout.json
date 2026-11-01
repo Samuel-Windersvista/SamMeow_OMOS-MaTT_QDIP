@@ -8,6 +8,7 @@
     { "name": "config-opencode", "kind": "file", "source": "templates/opencode.json", "target": "opencode/config/opencode/opencode.json" },
     { "name": "config-omoslim", "kind": "file", "source": "templates/oh-my-opencode-slim.json", "target": "opencode/config/opencode/oh-my-opencode-slim.json" },
     { "name": "config-tui", "kind": "file", "source": "templates/tui.json", "target": "opencode/config/opencode/tui.json" },
+    { "name": "config-cli", "kind": "file", "source": "templates/cli.json", "target": "opencode/config/opencode/cli.json" },
     { "name": "config-preferences", "kind": "file", "source": "templates/preferences.md", "target": "opencode/config/opencode/preferences.md" },
     { "name": "local-note", "kind": "file", "source": "templates/local/说明.txt", "target": "opencode/config/opencode/local/说明.txt" },
     { "name": "auth-dir", "kind": "emptydir", "target": "opencode/auth" },

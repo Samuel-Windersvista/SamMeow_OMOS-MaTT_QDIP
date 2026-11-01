@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>主流程速查表 · 独立驾驭 OpenCode 体系</title>
+<!-- 参考文档 = body 加 reference 类：更密、更宽、打印优先。
+     建议 A4 横向打印，或浏览器打印时选“横向”。 -->
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body class="reference">
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">REFERENCE 04</p>
+    <h1>主流程速查表 <span class="muted">v1.0</span></h1>
+    <p class="lesson-meta">
+      打印版 · 建议 A4 横向 <span class="sep">|</span>
+      配套课程：<a href="../lessons/0004-主流程.html">第 4 课 · 主流程</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <button class="no-print tag" style="cursor:pointer"
+              onclick="window.print()">打印本页</button>
+    </p>
+  </header>
+
+  <!-- ==================== A. 主链五站（全宽） ==================== -->
+  <section>
+    <h2><span class="secno">A</span>主链五站全表</h2>
+    <p class="small muted">每一站的箭头都对应一个<b>落盘产出</b>；小任务走折叠版。</p>
+    <div class="table-scroll">
+      <table class="dense">
+        <thead>
+          <tr><th>站点</th><th>在做什么</th><th>产出物（落盘）</th><th>你的动作</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>grill-with-docs</b></td>
+            <td>追问钉清目标与关键决策</td>
+            <td>GLOSSARY.md、ADR（决定记录）</td>
+            <td>回答追问、拍板</td>
+          </tr>
+          <tr>
+            <td><b>to-spec</b></td>
+            <td>把对话综合成规格</td>
+            <td>spec 文档</td>
+            <td>过目确认：有没有漏掉你的意思</td>
+          </tr>
+          <tr>
+            <td><b>to-tickets</b></td>
+            <td>拆成垂直切片工单</td>
+            <td>工单列表（每张可独立演示）</td>
+            <td>检查粒度：每张是不是完整的小功能</td>
+          </tr>
+          <tr>
+            <td><b>implement</b></td>
+            <td>按工单实现（内驱 tdd）</td>
+            <td>代码、测试、提交</td>
+            <td>在工单边界开新会话（第 2 课）</td>
+          </tr>
+          <tr>
+            <td><b>code-review</b></td>
+            <td>双轴审查：仓库标准 + 原始规格</td>
+            <td>并排审查报告</td>
+            <td>看报告，决定放行还是返工</td>
+          </tr>
+          <tr>
+            <td><b>复盘</b>（retro / reflect）</td>
+            <td>回顾这次工作，提炼改进</td>
+            <td>改进建议、可复用资产</td>
+            <td>一句话触发，翻一翻建议</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="two-col">
+
+    <!-- ==================== B. 链路图 ==================== -->
+    <section>
+      <h2><span class="secno">B</span>链路图</h2>
+      <div class="terminal">
+        <div class="terminal-title">主链路 -- 多窗口任务</div>
+        <pre><code><span class="o">grill-with-docs</span>  <span class="c">→ 追问钉清；边问边写 GLOSSARY.md / ADR</span>
+      <span class="o">↓</span>
+<span class="o">to-spec</span>          <span class="c">→ 综合成规格文档（不再追问）</span>
+      <span class="o">↓</span>
+<span class="o">to-tickets</span>       <span class="c">→ 拆成垂直切片工单（每张可独立演示）</span>
+      <span class="o">↓</span>
+<span class="o">implement ×N</span>     <span class="c">→ 每张工单：内驱 tdd，收尾 code-review</span></code></pre>
+      </div>
+      <div class="terminal">
+        <div class="terminal-title">折叠版 -- 单窗口任务</div>
+        <pre><code><span class="o">grill-with-docs → implement</span>
+<span class="c"># tdd 与 code-review 在 implement 内部自动跑完</span></code></pre>
+      </div>
+      <p class="small muted">流程不是仪式——按任务重量裁剪，这正是第 1 课分拣站的意义。</p>
+    </section>
+
+    <!-- ==================== C. 三个关键原则 ==================== -->
+    <section>
+      <h2><span class="secno">C</span>三个关键原则</h2>
+      <aside class="callout callout-tip">
+        <p class="box-label">一次问清胜过十次返工</p>
+        <p>grill 环节不许跳。目标模糊时先追问，是这套流程最值钱的习惯（第 1 课的心法一）。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">落盘是流程的载体</p>
+        <p>GLOSSARY.md、spec、工单——每一步的成果都是<b>文件</b>。所以换会话不可怕（第 2 课），流程接得上。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">每站都有“完成信号”</p>
+        <p>能说清“这一步完了”再往前走——spec 确认了、工单检查过了、审查报告看了。含糊过关，后面会加倍偿还。</p>
+      </aside>
+    </section>
+
+    <!-- ==================== D. 复盘 ==================== -->
+    <section>
+      <h2><span class="secno">D</span>复盘：让系统变聪明</h2>
+      <p>收尾不是“做完就散”——两个复盘技能让这套系统从每次工作里学习：</p>
+      <div class="terminal">
+        <div class="terminal-title">两个复盘技能</div>
+        <pre><code><span class="o">retro  </span>  <span class="c"># 回顾会话，按类别提改进建议（流程 / 检查 / 标准）</span>
+<span class="o">reflect</span>  <span class="c"># 发现重复劳动，建议沉淀成可复用资产（技能 / 配置 / 模板）</span></code></pre>
+      </div>
+      <aside class="callout callout-tip">
+        <p class="box-label">你的动作只有一句话</p>
+        <p>说一句 <b>“复盘一下”</b>。建议由它出，采不采纳你说了算——<b>把经验变成文件</b>。</p>
+      </aside>
+    </section>
+
+  </div><!-- /two-col -->
+
+  <p class="source">
+    <span class="box-label">SOURCE</span>
+    本速查表整理自第 4 课《主流程》与 <code>preferences.md</code>（任务入口判定一节的流程列）；
+    原始设计来自 Matt Pocock 技能系列（<a href="https://www.aihero.dev/skills-grill-with-docs">grill-with-docs</a> → <a href="https://www.aihero.dev/skills-to-spec">to-spec</a> → <a href="https://www.aihero.dev/skills-to-tickets">to-tickets</a>）。
+    <span class="muted">发现过时内容请报告导师，Vault-Tec 将签发修订令。</span>
+  </p>
+
+</main>
+</body>
+</html>

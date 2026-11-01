@@ -2,6 +2,35 @@
 
 本仓库（SamMeow QDIP 快速部署整合包）的版本变更记录。格式参照 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号取自 `tools/components.json`。各组件版本与来源见 README「组件来源清单」。
 
+## [0.6.0] - 2026-10-01
+
+构建产物：`build/qdip-generic-0.6.0.zip`
+
+### 计划性变更
+
+- **镜像基准确立为实装环境（ADR-0005）**：分发模板改为与实装配置逐字对齐，实装环境成为唯一镜像基准。`templates/oh-my-opencode-slim.json` 与 `templates/preferences.md` 改为实装文件的逐字节副本；实装与模板中的 `resolving-merge-conflicts` 死引用清零。
+- **领域文档换名**：`CONTEXT.md` → `GLOSSARY.md`，仓库内引用同步。
+
+### 新增
+
+- **教学站点整树入包 `templates/setup/tutorial/`**（19 文件）：`index.html`、`MISSION.md`、`RESOURCES.md`、`assets/`（2 个）、`lessons/`（7 个，含 `lesson-template.html`）、`reference/`（7 个，含 `cheatsheet-template.html`）；不含 `learning-records/` 与 `NOTES.md`。
+- **首启页「使用教程」入口区块 `#sec-tutorial`**：位于「工作目录」之后、「保存配置」之前，以新标签页打开 `/setup/tutorial/index.html`。
+- **`templates/cli.json` 入包**：镜像实装 `cli.json`（`$schema` v2、`diffs.wrap = "word"`、`session.{sidebar,scrollbar,thinking}`、`animations`），`plugins` 改写为包内相对路径（与 `tui.json` 相同的两个插件目标）。
+- **ADR-0003 / ADR-0004 / ADR-0005**：引导服务受控子目录托管、教学站点两处维护、镜像基准。
+- **产物校验新增规则 `tutorial/missing`**：断言教学入口文件与 `assets/` 目录已入包。
+
+### 修改
+
+- **opencode CLI 升级 1.18.30 → 1.18.33**（离线制品 `tools/cache/opencode-1.18.33`）。
+- **opencode-quota 升级 3.8.3 → 4.10.2**：`quota-runtime` 重建为 `4.10.2-deps`——该版本已无自带 nested `node_modules`，`@opentui/core`、`@opentui/solid`、`@opentelemetry/api`、`jsonc-parser` 等运行时依赖改由本清单提供，`better-sqlite3` 作为 optional 依赖纳入。
+- **matt-skills 快照更新 2026-09-11 → 2026-09-30**：48 技能，含 `pr`、无 `resolving-merge-conflicts`（随 Matt v1.3 语义）。
+- **主配置并入实装语义**：`templates/opencode.json` 新增 `autoupdate: "notify"` 与 agent 禁用块（`explore` / `general` / `build` / `plan`）；继续保留相对插件路径、`{env:...}` token 与捆绑的 chrome-devtools MCP。
+- **预设模板全量镜像实装**：三套 preset（`DeepSeek-Only` / `matt-bridge` / `superpowers-bridge`），council `councillor_retries: 3`。
+- **引导服务静态服务升级为 setup 受控子目录树**：decode + resolve + 前缀包含检查，`.md` 以 `text/plain` 提供，兼容中文文件名。
+- **`plugin/unresolved` 规则扩展**：同时读取 `plugin` 与 `plugins` 双键，并覆盖新增的 `cli.json`。
+- **`tools/layout.json` 新增 `config-cli`**：deploy 声明 15 → 16 条。
+- 四份 `codemap.md`、两份 `README.md` 与 `docs/` 按上述改动回写；`tools/components.json` 版本 0.5.0 → 0.6.0。
+
 ## [0.5.0] - 2026-09-17
 
 构建产物：`build/qdip-generic-0.5.0.zip`

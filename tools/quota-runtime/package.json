@@ -1,12 +1,19 @@
 {
   "name": "qdip-quota-runtime",
   "private": true,
-  "description": "opencode-quota 插件的运行时 external 依赖(随包 vendored 到 plugins/opencode-quota/node_modules)。@opentui/* 由 quota 包自带 nested node_modules(0.2.x 系列,与 omoslim 的 0.5.8 不冲突),此处只补其 package.json 声明的其余 dependencies + peer",
+  "description": "opencode-quota 插件的运行时依赖(随包 vendored 到 plugins/opencode-quota/node_modules)。对应 quota 4.10.2:该版本已无自带 nested node_modules,@opentui/* 改由此处提供;此处装齐其 package.json 声明的全量 dependencies + optional(better-sqlite3) + peer(@opencode-ai/plugin 镜像实装版本)",
   "dependencies": {
     "@clack/prompts": "^1.2.0",
     "@opencode-ai/plugin": "1.18.27",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentui/core": "0.4.5",
+    "@opentui/solid": "0.4.5",
     "comment-json": "^5.0.0",
-    "solid-js": "1.9.12",
+    "jsonc-parser": "^3.3.1",
+    "solid-js": "^1.9.12",
     "xdg-basedir": "^5.1.0"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^12.10.0"
   }
 }

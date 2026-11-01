@@ -1,9 +1,24 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "autoupdate": "notify",
   "plugin": [
     "../../../plugins/oh-my-opencode-slim",
     "../../../plugins/opencode-quota"
   ],
+  "agent": {
+    "explore": {
+      "disable": true
+    },
+    "general": {
+      "disable": true
+    },
+    "build": {
+      "disable": true
+    },
+    "plan": {
+      "disable": true
+    }
+  },
   "provider": {},
   "mcp": {
     "chrome-devtools": {

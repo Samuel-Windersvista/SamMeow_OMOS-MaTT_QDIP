@@ -23,4 +23,4 @@ The five canonical triage roles map 1:1 to their default label strings (`needs-t
 
 ### Domain docs
 
-Single-context layout: one `CONTEXT.md` plus `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+Single-context layout: one `GLOSSARY.md` plus `docs/adr/` at the repo root. See `docs/agents/domain.md`.

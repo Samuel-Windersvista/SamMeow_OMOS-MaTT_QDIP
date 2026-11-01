@@ -88,9 +88,9 @@ test('configure overrides only specified agent models, preserving other agents a
   const sp = slim.presets['matt-bridge'];
   assert.strictEqual(sp.orchestrator.model, 'deepseek/deepseek-v4-flash');
   assert.strictEqual(sp.oracle.model, 'openai/gpt-4o-mini');
-  assert.strictEqual(sp.fixer.model, 'deepseek/deepseek-v4-flash-vision-exp'); // 未选择，保持模板原值
+  assert.strictEqual(sp.fixer.model, 'deepseek/deepseek-flash'); // 未选择，保持模板原值
   assert.strictEqual(sp.orchestrator.variant, 'max'); // 其他字段不变
-  assert.strictEqual(sp['orchestrator-beta'].model, 'kimi-for-coding/k3'); // 未在可分配列表，保持原值
+  assert.strictEqual(sp['orchestrator-beta'].model, 'kimi-code-plan-cn/k3'); // 未在可分配列表，保持原值
 });
 
 test('configure writes council-alpha to both default and synthesizer presets', () => {
@@ -103,8 +103,8 @@ test('configure writes council-alpha to both default and synthesizer presets', (
   const slim = JSON.parse(fs.readFileSync(path.join(root, 'opencode', 'config', 'opencode', 'oh-my-opencode-slim.json'), 'utf8'));
   assert.strictEqual(slim.council.presets.default.alpha.model, 'deepseek/deepseek-v4-pro');
   assert.strictEqual(slim.council.presets.synthesizer.alpha.model, 'deepseek/deepseek-v4-pro');
-  assert.strictEqual(slim.council.presets.default.beta.model, 'deepseek/deepseek-v4-flash'); // 未选择，保持原值
-  assert.strictEqual(slim.council.presets.synthesizer.gamma.model, 'kimi-for-coding/k3');
+  assert.strictEqual(slim.council.presets.default.beta.model, 'deepseek/deepseek-flash'); // 未选择，保持原值
+  assert.strictEqual(slim.council.presets.synthesizer.gamma.model, 'kimi-code-plan-cn/k3');
 });
 
 test('configure without agentModels leaves oh-my-opencode-slim.json unchanged', () => {

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>任务路由速查表 · 独立驾驭 OpenCode 体系</title>
+<!-- 参考文档 = body 加 reference 类：更密、更宽、打印优先。
+     建议 A4 横向打印，或浏览器打印时选“横向”。 -->
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body class="reference">
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">REFERENCE 01</p>
+    <h1>任务路由速查表 <span class="muted">v1.0</span></h1>
+    <p class="lesson-meta">
+      打印版 · 建议 A4 横向 <span class="sep">|</span>
+      配套课程：<a href="../lessons/0001-任务入口判定.html">第 1 课 · 任务入口判定</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <button class="no-print tag" style="cursor:pointer"
+              onclick="window.print()">打印本页</button>
+    </p>
+  </header>
+
+  <!-- ==================== A. 七车道总表（全宽） ==================== -->
+  <section>
+    <h2><span class="secno">A</span>七车道总表</h2>
+    <p class="small muted">源自 <code>preferences.md</code>；"流程"列即 AI 接下来会走的技能链路。</p>
+    <div class="table-scroll">
+      <table class="dense">
+        <thead>
+          <tr><th>车道</th><th>判定信号</th><th>流程</th><th>你的职责</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>单窗口任务</b></td>
+            <td>目标一句话说清、&lt;150K token、单会话可完成</td>
+            <td><code>grill-with-docs</code> → <code>implement</code>（内驱 <code>tdd</code> → <code>code-review</code>）</td>
+            <td>说清目标、回答追问、验收</td>
+          </tr>
+          <tr>
+            <td><b>多窗口任务</b></td>
+            <td>预计 &gt;150K token、需跨会话拆分</td>
+            <td><code>grill-with-docs</code> → <code>to-spec</code> → <code>to-tickets</code> → 每张工单 <code>implement</code></td>
+            <td>同上；在工单边界开新会话</td>
+          </tr>
+          <tr>
+            <td><b>超大规划</b></td>
+            <td>连"要造什么"都无法在一个会话内定下来</td>
+            <td><code>wayfinder</code> → 决策票（<code>grilling</code>/<code>prototype</code>/<code>research</code>）→ 决策闭环 → <code>to-spec</code></td>
+            <td>逐张决策票拍板</td>
+          </tr>
+          <tr>
+            <td><b>修 bug</b></td>
+            <td>存在明确故障/报错</td>
+            <td><code>diagnosing-bugs</code>：先建复现循环，再修复</td>
+            <td>提供可复现现象与报错原文</td>
+          </tr>
+          <tr>
+            <td><b>查资料</b></td>
+            <td>纯研究任务</td>
+            <td><code>research</code>（不进开发流水线）</td>
+            <td>把问题问具体</td>
+          </tr>
+          <tr>
+            <td><b>配置 OpenCode</b></td>
+            <td>修改 opencode 自身配置</td>
+            <td><code>customize-opencode</code></td>
+            <td>说清要改什么；改完重载生效</td>
+          </tr>
+          <tr>
+            <td><b>单一小改动</b></td>
+            <td>&lt;20 行、单文件</td>
+            <td>直接编辑 + 验证</td>
+            <td>直接说，完事看一眼</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="two-col">
+
+    <!-- ==================== B. 判定心法 ==================== -->
+    <section>
+      <h2><span class="secno">B</span>两条判定心法</h2>
+      <aside class="callout callout-tip">
+        <p class="box-label">先钉清，再动手</p>
+        <p>只要存在一个需要人机对话的开放决策，先用 <code>grill-with-docs</code> 钉清——比事后返工便宜。拿不准大小，宁可先追问一轮。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">拿不准就问路由器</p>
+        <p>不确定走哪条车道？先问 <code>ask-matt</code>，它会按情境推荐路径，并提醒哪些步骤必须在同一上下文窗口内完成。</p>
+      </aside>
+    </section>
+
+    <!-- ==================== C. 主链路速记 ==================== -->
+    <section>
+      <h2><span class="secno">C</span>主链路速记</h2>
+      <div class="terminal">
+        <div class="terminal-title">三条主链 -- 记住这三行就够用</div>
+        <pre><code><span class="o">单窗口  </span>grill-with-docs → implement（tdd → code-review）
+<span class="o">多窗口  </span>grill-with-docs → to-spec → to-tickets → implement ×N
+<span class="o">超大    </span>wayfinder → 决策票循环 → to-spec</code></pre>
+      </div>
+      <aside class="callout callout-warning">
+        <p class="box-label">别塞错车道</p>
+        <p>大任务塞进小车道 = 中途上下文爆炸；小任务塞进大车道 = 十分钟的活干成半小时。拿不准就 grill 一轮。</p>
+      </aside>
+    </section>
+
+    <!-- ==================== D. 术语小词典 ==================== -->
+    <section>
+      <h2><span class="secno">D</span>术语小词典</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>术语</th><th>一句话</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>grill-with-docs</code></td><td>有状态追问；边问边写 GLOSSARY.md 与 ADR</td></tr>
+          <tr><td><code>grilling</code></td><td>追问原语：每轮抛出全部前沿问题</td></tr>
+          <tr><td><code>to-spec</code></td><td>把对话综合成规格文档（不再追问）</td></tr>
+          <tr><td><code>to-tickets</code></td><td>拆成垂直切片工单，声明阻塞关系</td></tr>
+          <tr><td><code>implement</code></td><td>按工单实现；内驱 tdd 与 code-review</td></tr>
+          <tr><td><code>tdd</code></td><td>红-绿-重构循环，只测约定的接缝</td></tr>
+          <tr><td><code>code-review</code></td><td>双轴审查：仓库标准 + 原始规格</td></tr>
+          <tr><td><code>wayfinder</code></td><td>超大工作的决策地图；每会话解决一票</td></tr>
+          <tr><td><code>diagnosing-bugs</code></td><td>先建可复现循环，再修复</td></tr>
+          <tr><td><code>research</code></td><td>后台代理查一手资料，产出引用笔记</td></tr>
+          <tr><td><code>customize-opencode</code></td><td>修改 opencode 自身配置</td></tr>
+          <tr><td><code>ask-matt</code></td><td>路由器：不确定走哪条车道就问它</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ==================== E. 高频混淆对 ==================== -->
+    <section>
+      <h2><span class="secno">E</span>三个高频混淆对</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>场景</th><th>车道</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>改项目里的文件（脚本、md、代码）</td><td>单一小改动</td></tr>
+          <tr><td>改 <code>~/.config/opencode/</code> 下的系统文件</td><td>配置 OpenCode</td></tr>
+          <tr><td>问题明确、只缺答案</td><td>查资料</td></tr>
+          <tr><td>连问题本身都没定型</td><td>超大规划</td></tr>
+          <tr><td>有明确报错/故障要修</td><td>修 bug</td></tr>
+          <tr><td>要造一个不存在的新东西</td><td>单窗口任务</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div><!-- /two-col -->
+
+  <p class="source">
+    <span class="box-label">SOURCE</span>
+    本速查表整理自 <code>preferences.md</code>（任务入口判定一节）与配套第 1 课。
+    技能释义以本机技能库（<code>.agents/skills/</code>、<code>.config/opencode/skills/</code>）为准。
+    <span class="muted">发现过时内容请报告导师，Vault-Tec 将签发修订令。</span>
+  </p>
+
+</main>
+</body>
+</html>

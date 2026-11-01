@@ -1,0 +1,720 @@
+/* ==========================================================================
+   lesson.css -- 课程共享样式表（课程页 lessons/ 与参考文档 reference/ 通用）
+   --------------------------------------------------------------------------
+   设计语言：Tufte 式文档排版（宽留白、强层级、窄行宽）
+            + VT-OS 绿色荧光终端点缀（克制：仅标线、标记、终端块）
+   离线可用：无 CDN、无外部字体、无外部 JS，file:// 直接打开
+   打印友好：@media print 内完成终端块反色、分页控制、链接显形
+   用法：    <link rel="stylesheet" href="../assets/lesson.css">
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 设计令牌 Design Tokens
+   -------------------------------------------------------------------------- */
+:root {
+  /* 字体栈：拉丁字体优先，CJK 系统字体回退，全程离线 */
+  --font-body: "Segoe UI", "Microsoft YaHei", "PingFang SC",
+               "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC",
+               sans-serif;
+  --font-mono: "Cascadia Code", "Cascadia Mono", "JetBrains Mono",
+               Consolas, "SF Mono", "Courier New",
+               "Microsoft YaHei", monospace;
+
+  /* 纸张与墨色：Tufte 经典暖白 + 近黑 */
+  --paper:     #fbfaf6;
+  --card:      #ffffff;
+  --ink:       #23241f;
+  --ink-soft:  #4c4e46;
+  --muted:     #82847a;
+  --line:      #ddd9cc;
+  --line-soft: #ebe8dd;
+
+  /* 荧光绿点缀（品牌色，克制使用） */
+  --green:        #1d7a44;   /* 正文可用的深绿，打印清晰 */
+  --green-bright: #35b263;   /* 屏幕上的荧光绿 */
+  --green-deep:   #0e3b21;   /* 深绿：终端底、标记文字 */
+  --green-tint:   #edf4ec;   /* 浅绿底 */
+  --green-ghost:  #f4f8f3;   /* 更浅的绿（行内 code 底） */
+
+  /* 辅助色：全表仅各一，保持克制 */
+  --warn:      #a34a15;      /* 警示：铁锈橙 */
+  --warn-tint: #faf0e6;
+  --slate:     #44546a;      /* 提示：石板蓝灰 */
+  --slate-tint:#eef1f5;
+
+  /* 终端块（屏幕态深绿底，打印时整体反色） */
+  --terminal-bg:   #0c1f13;
+  --terminal-bg-2: #11291b;
+  --terminal-fg:   #c6e9d1;
+  --terminal-dim:  #7fae8e;
+  --terminal-edge: #1d4a2e;
+
+  /* 尺度 */
+  --measure:      70ch;      /* 正文行宽：拉丁约 68ch / 中文约 34 字 */
+  --measure-wide: 78em;      /* 参考文档（cheatsheet）宽版行宽 */
+  --radius:       5px;
+  --space-section: 2.6rem;
+}
+
+/* --------------------------------------------------------------------------
+   2. 基础 Base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+@media screen {
+  html { background: var(--paper); }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.8;                 /* CJK 舒适行距 */
+  color: var(--ink);
+  background: transparent;
+}
+
+@media screen {
+  body { border-top: 3px solid var(--green); }  /* 品牌顶线，打印时消失 */
+}
+
+::selection { background: #d5ecdd; color: var(--green-deep); }
+
+a {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+a:hover { color: var(--green-deep); }
+
+p { margin: 1em 0 0; }
+
+strong { color: var(--ink); }
+
+/* 页面容器：可读行宽、自动居中、宽留白 */
+.lesson {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: 3rem 1.4rem 4rem;
+}
+@media (min-width: 700px) {
+  .lesson { padding: 4rem 2.2rem 5rem; }
+}
+
+/* --------------------------------------------------------------------------
+   3. 课程头 Lesson Header
+   -------------------------------------------------------------------------- */
+.kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: var(--green);
+}
+.kicker::before { content: "[*] "; color: var(--muted); }
+
+.lesson-header h1 {
+  margin: .5rem 0 0;
+  font-size: 1.95rem;
+  line-height: 1.35;
+  letter-spacing: .01em;
+  font-weight: 700;
+}
+
+.lesson-meta {
+  margin: .7rem 0 0;
+  padding-bottom: 1.6rem;
+  border-bottom: 1px solid var(--line);
+  font-size: .88rem;
+  color: var(--muted);
+}
+.lesson-meta .sep { margin: 0 .5em; color: var(--line); }
+
+/* 导语段：比正文略大，引出主题 */
+.lead {
+  margin-top: 1.6rem;
+  font-size: 1.1rem;
+  line-height: 1.85;
+  color: var(--ink-soft);
+}
+
+/* --------------------------------------------------------------------------
+   4. 标题层级 Heading Hierarchy
+   -------------------------------------------------------------------------- */
+h2 {
+  margin: var(--space-section) 0 0;
+  padding-bottom: .4rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 1.32rem;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+/* 节编号：荧光绿等宽数字，Tufte 式"边注感" */
+h2 .secno {
+  font-family: var(--font-mono);
+  font-size: .82em;
+  font-weight: 700;
+  color: var(--green);
+  margin-right: .55em;
+}
+
+h3 {
+  margin: 1.9rem 0 0;
+  font-size: 1.1rem;
+  line-height: 1.45;
+  font-weight: 700;
+}
+/* h3 前置绿色小方块标记 */
+h3::before {
+  content: "";
+  display: inline-block;
+  width: .5em;
+  height: .5em;
+  margin-right: .55em;
+  background: var(--green);
+  vertical-align: .08em;
+}
+
+h2 + h3 { margin-top: 1.4rem; }
+
+/* --------------------------------------------------------------------------
+   5. 列表 Lists
+   -------------------------------------------------------------------------- */
+ul, ol { margin: .8em 0 0; padding-left: 1.5em; }
+li { margin: .3em 0 0; }
+li::marker { color: var(--green); font-weight: 700; }
+
+/* 步骤列表（立即动手框内）：紧凑、编号加粗 */
+ol.compact { padding-left: 1.4em; }
+ol.compact li::marker { font-family: var(--font-mono); color: var(--green); }
+
+/* --------------------------------------------------------------------------
+   6. 行内代码与键盘键 Code & Kbd
+   -------------------------------------------------------------------------- */
+code {
+  font-family: var(--font-mono);
+  font-size: .85em;
+  color: var(--green-deep);
+  background: var(--green-ghost);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: .08em .38em;
+  overflow-wrap: anywhere;
+}
+
+/* 键盘键帽 */
+kbd {
+  font-family: var(--font-mono);
+  font-size: .8em;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: .1em .55em;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   7. 终端块 Terminal Block
+   -------------------------------------------------------------------------- */
+.terminal {
+  margin: 1.6rem 0 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.terminal-title {
+  padding: .5rem 1rem;
+  font-family: var(--font-mono);
+  font-size: .74rem;
+  letter-spacing: .1em;
+  color: var(--terminal-dim);
+  background: var(--terminal-bg-2);
+  border-bottom: 1px solid var(--terminal-edge);
+}
+.terminal-title::before {
+  content: ">>> ";
+  color: var(--green-bright);
+  font-weight: 700;
+}
+.terminal pre {
+  margin: 0;
+  padding: 1.05rem 1.15rem 1.15rem;
+  background: var(--terminal-bg);
+  color: var(--terminal-fg);
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  line-height: 1.75;
+  overflow-x: auto;
+  tab-size: 4;
+}
+/* 行内语义（在 <code> 内用 <span> 标注）：
+   .p = 提示符/用户输入   .c = 注释   .o = 程序输出 */
+.terminal .p { color: var(--green-bright); font-weight: 700; }
+.terminal .c { color: var(--terminal-dim); }
+.terminal .o { color: #eef7f0; }
+
+/* --------------------------------------------------------------------------
+   8. 标注框 Callouts（为什么重要 / 警告 / 提示）
+   -------------------------------------------------------------------------- */
+.callout {
+  margin: 1.7rem 0 0;
+  padding: .95rem 1.2rem 1.05rem;
+  background: #f6f4ed;
+  border-left: 3px solid var(--muted);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: .95rem;
+}
+.callout > :first-child { margin-top: 0; }
+.callout > :last-child { margin-bottom: 0; }
+
+.callout-why {
+  background: var(--green-tint);
+  border-left-color: var(--green);
+}
+.callout-why > .box-label::before { content: "[>] "; color: var(--green); }
+
+.callout-warning {
+  background: var(--warn-tint);
+  border-left-color: var(--warn);
+}
+.callout-warning > .box-label::before { content: "[!!] "; color: var(--warn); }
+
+.callout-tip {
+  background: var(--slate-tint);
+  border-left-color: var(--slate);
+}
+.callout-tip > .box-label::before { content: "[*] "; color: var(--slate); }
+
+/* --------------------------------------------------------------------------
+   9. 表格 Tables（booktabs 式：仅横线，无竖线）
+   -------------------------------------------------------------------------- */
+.table-scroll { overflow-x: auto; margin-top: 1.4rem; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .92rem;
+  line-height: 1.6;
+}
+caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: .45rem;
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+thead th {
+  padding: .55rem .65rem;
+  text-align: left;
+  font-weight: 700;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+tbody td {
+  padding: .5rem .65rem;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line-soft);
+}
+tbody tr:last-child td { border-bottom: 2px solid var(--ink); }
+thead th:first-child, tbody td:first-child { padding-left: .15rem; }
+
+/* 密集表：速查表 / 参考文档用 */
+table.dense { font-size: .8rem; }
+table.dense thead th { padding: .35rem .45rem; }
+table.dense tbody td { padding: .3rem .45rem; }
+
+/* --------------------------------------------------------------------------
+   10. 引用与来源 Citations & Sources
+   -------------------------------------------------------------------------- */
+/* 行内引注 */
+.cite { font-size: .85em; color: var(--muted); }
+
+/* 单条来源块 */
+.source {
+  margin: 1.5rem 0 0;
+  padding: .25rem 0 .25rem 1rem;
+  border-left: 2px solid var(--green);
+  font-size: .87rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.source .box-label { color: var(--green); margin-bottom: .15rem; }
+.source .box-label::before { content: "[#] "; }
+
+/* 参考文献列表（悬挂缩进） */
+.sources {
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: .87rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.sources li { padding-left: 2.2em; text-indent: -2.2em; margin-top: .45em; }
+.sources li::marker { color: var(--muted); }
+
+/* --------------------------------------------------------------------------
+   11. 功能性方框 Functional Boxes
+   -------------------------------------------------------------------------- */
+/* 统一的小标签：等宽、加字距、带 ASCII 标记（标记由具体变体 ::before 注入） */
+.box-label {
+  margin: 0 0 .5rem;
+  font-family: var(--font-mono);
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--ink-soft);
+}
+
+/* "立即动手"任务框 */
+.try-it {
+  margin: 1.9rem 0 0;
+  padding: 1.1rem 1.3rem 1.2rem;
+  background: var(--green-tint);
+  border: 1px solid #cfe0cf;
+  border-left: 4px solid var(--green);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.try-it > .box-label { color: var(--green); }
+.try-it > .box-label::before { content: "[OK] "; }
+.try-it > :first-child { margin-top: 0; }
+.try-it > :last-child { margin-bottom: 0; }
+.try-it ol { margin-top: .6rem; }
+
+/* "一手资料"框：Tufte 式双线 */
+.primary-source {
+  margin: 1.9rem 0 0;
+  padding: .95rem 1.1rem 1.05rem;
+  border-top: 3px double var(--ink);
+  border-bottom: 3px double var(--ink);
+}
+.primary-source > .box-label { color: var(--ink); }
+.primary-source > .box-label::before { content: ">> "; color: var(--green); }
+.primary-source > :first-child { margin-top: 0; }
+.primary-source > :last-child { margin-bottom: 0; }
+
+/* "问老师"页脚提醒 */
+.ask-teacher {
+  margin: 2.6rem 0 0;
+  padding: .95rem 1.2rem 1.05rem;
+  background: var(--card);
+  border: 1px dashed var(--muted);
+  border-radius: var(--radius);
+  font-size: .9rem;
+  color: var(--ink-soft);
+}
+.ask-teacher > .box-label { color: var(--slate); }
+.ask-teacher > .box-label::before { content: "[?] "; }
+.ask-teacher > :first-child { margin-top: 0; }
+.ask-teacher > :last-child { margin-bottom: 0; }
+
+/* --------------------------------------------------------------------------
+   12. 课程导航页脚 Lesson Nav
+   -------------------------------------------------------------------------- */
+.lesson-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  margin-top: 3rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono);
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.lesson-nav a {
+  text-decoration: none;
+  color: var(--green);
+  max-width: 48%;
+}
+.lesson-nav a:hover { text-decoration: underline; }
+.lesson-nav .nav-dir {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .14em;
+  color: var(--muted);
+}
+.lesson-nav .nav-title { font-weight: 700; }
+.lesson-nav a.prev::before { content: "<< "; }
+.lesson-nav a.next { margin-left: auto; text-align: right; }
+.lesson-nav a.next::after { content: " >>"; }
+.lesson-nav .disabled {
+  color: var(--line);
+  max-width: 48%;
+}
+.lesson-nav .disabled::before { content: "-- "; color: var(--line); }
+.lesson-nav .disabled::after { content: " --"; color: var(--line); }
+
+/* --------------------------------------------------------------------------
+   13. 测验组件 Quiz Widget（配合 quiz.js，亦可静态打印）
+   -------------------------------------------------------------------------- */
+.quiz { margin-top: 2.2rem; }
+
+.quiz-intro {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+.quiz-block {
+  margin-top: 1rem;
+  padding: 1rem 1.2rem 1.1rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.quiz-q { margin: 0; font-weight: 700; line-height: 1.65; }
+.quiz-no {
+  font-family: var(--font-mono);
+  font-size: .78em;
+  font-weight: 700;
+  color: var(--green);
+  margin-right: .5em;
+}
+
+.quiz-options {
+  display: grid;
+  gap: .5rem;
+  margin-top: .85rem;
+  counter-reset: quizopt;
+}
+.quiz-option {
+  counter-increment: quizopt;
+  display: block;
+  width: 100%;
+  padding: .55rem .85rem;
+  font: inherit;
+  font-size: .94rem;
+  line-height: 1.6;
+  text-align: left;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+/* 选项字母序号由 CSS 计数器统一生成：作答前所有选项外观完全一致 */
+.quiz-option::before {
+  content: counter(quizopt, upper-alpha) ". ";
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--muted);
+}
+.quiz-option:hover:not(:disabled) { border-color: var(--green); }
+.quiz-option:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+.quiz-option:disabled { cursor: default; }
+
+/* 作答后：未选项淡出，避免干扰 */
+.quiz-block.answered .quiz-option:disabled:not(.is-correct):not(.is-wrong) {
+  color: var(--muted);
+  border-color: var(--line-soft);
+  background: #fbfbf8;
+}
+.quiz-option.is-correct {
+  border-color: var(--green);
+  background: var(--green-tint);
+}
+.quiz-option.is-correct::before { color: var(--green); }
+.quiz-option.is-wrong {
+  border-color: var(--warn);
+  background: var(--warn-tint);
+}
+.quiz-option.is-wrong::before { color: var(--warn); }
+
+/* 判定标记（[OK] / [!!]，由 JS 注入） */
+.quiz-mark {
+  margin-left: .5em;
+  font-family: var(--font-mono);
+  font-size: .8em;
+  font-weight: 700;
+}
+.quiz-option.is-correct .quiz-mark { color: var(--green); }
+.quiz-option.is-wrong   .quiz-mark { color: var(--warn); }
+
+/* 解析文字 */
+.quiz-feedback {
+  margin: .85rem 0 0;
+  padding: .65rem .9rem;
+  font-size: .9rem;
+  line-height: 1.7;
+  background: var(--green-ghost);
+  border-left: 3px solid var(--green);
+  border-radius: 0 3px 3px 0;
+}
+.quiz-feedback.bad {
+  background: var(--warn-tint);
+  border-left-color: var(--warn);
+}
+.quiz-feedback > :first-child { margin-top: 0; }
+.quiz-feedback > :last-child { margin-bottom: 0; }
+
+/* 成绩汇总 */
+.quiz-summary {
+  margin-top: 1.2rem;
+  padding: 1rem 1.2rem;
+  background: var(--green-tint);
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  line-height: 1.7;
+}
+.quiz-summary[hidden] { display: none; }
+.quiz-summary strong { color: var(--green-deep); }
+.quiz-summary .quiz-score-line {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--green-deep);
+}
+.quiz-summary > :first-child { margin-top: 0; }
+.quiz-summary > :last-child { margin-bottom: 0; }
+
+.quiz-restart {
+  margin-top: .8rem;
+  padding: .35rem .9rem;
+  font-family: var(--font-mono);
+  font-size: .8rem;
+  color: var(--green-deep);
+  background: #fff;
+  border: 1px solid var(--green);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.quiz-restart:hover { background: var(--green-ghost); }
+.quiz-restart:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   14. 工具类 Utilities
+   -------------------------------------------------------------------------- */
+.tag {
+  display: inline-block;
+  padding: .1em .8em;
+  font-family: var(--font-mono);
+  font-size: .72rem;
+  letter-spacing: .08em;
+  color: var(--green-deep);
+  background: var(--green-tint);
+  border: 1px solid #cfe0cf;
+  border-radius: 999px;
+  vertical-align: .12em;
+}
+.muted { color: var(--muted); }
+.small { font-size: .86rem; }
+.right { text-align: right; }
+
+/* 屏幕-only 元素（如"打印本页"按钮） */
+@media print { .no-print { display: none !important; } }
+
+/* --------------------------------------------------------------------------
+   15. 参考文档变体 .reference（更密、更宽、打印优先、可双栏）
+   -------------------------------------------------------------------------- */
+body.reference { font-size: .95rem; line-height: 1.65; }
+
+.reference .lesson {
+  max-width: var(--measure-wide);
+  padding-top: 2.2rem;
+}
+.reference h1 { font-size: 1.6rem; }
+.reference h2 {
+  margin-top: 1.9rem;
+  font-size: 1.15rem;
+  padding-bottom: .3rem;
+}
+.reference h3 { margin-top: 1.3rem; font-size: 1.02rem; }
+.reference p { margin-top: .7em; }
+.reference .lesson-meta { padding-bottom: 1rem; }
+
+/* 速查表双栏 */
+.two-col {
+  column-count: 2;
+  column-gap: 2.4rem;
+}
+.two-col > section,
+.two-col > .terminal,
+.two-col > table,
+.two-col > .table-scroll { break-inside: avoid; }
+@media (max-width: 760px) { .two-col { column-count: 1; } }
+
+/* --------------------------------------------------------------------------
+   16. 打印规则 Print（参考文档常需纸质化）
+   -------------------------------------------------------------------------- */
+@page { margin: 1.8cm 1.6cm; }
+
+@media print {
+  :root { --space-section: 1.6rem; }
+
+  body {
+    font-size: 10.5pt;
+    line-height: 1.65;
+    border-top: none;               /* 屏幕品牌顶线不上纸 */
+  }
+  .lesson { max-width: none; padding: 0; }
+
+  /* 终端块反色：白纸 + 深绿字，省墨且清晰 */
+  .terminal { border: 1px solid #999; }
+  .terminal-title {
+    background: #f0f0ea;
+    color: #555;
+    border-bottom-color: #ccc;
+  }
+  .terminal-title::before { color: var(--green-deep); }
+  .terminal pre {
+    background: #fff;
+    color: #222;
+    border: none;
+  }
+  .terminal .p { color: var(--green-deep); }
+  .terminal .c { color: #777; }
+  .terminal .o { color: #333; }
+
+  /* 链接显形：课程导航与来源在纸上可寻 */
+  .lesson-nav a::after {
+    content: " <" attr(href) ">";
+    display: block;
+    font-size: .72em;
+    color: var(--muted);
+  }
+  .lesson-nav a.prev::before { content: "<< "; }
+  .source a[href]::after,
+  .primary-source a[href]::after { content: " <" attr(href) ">"; }
+
+  /* 分页控制 */
+  h2, h3 { break-after: avoid; }
+  .callout, .try-it, .primary-source, .ask-teacher,
+  .terminal, .quiz-block, .quiz-summary, .source {
+    break-inside: avoid;
+  }
+  table { break-inside: auto; }
+  thead { display: table-header-group; }   /* 跨页表重复表头 */
+  tr { break-inside: avoid; }
+  .lesson-nav { break-inside: avoid; }
+  a { color: var(--ink); text-decoration: underline; }
+}
+
+/* --------------------------------------------------------------------------
+   17. 动效与无障碍 Motion & A11y
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  * { scroll-behavior: auto !important; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}

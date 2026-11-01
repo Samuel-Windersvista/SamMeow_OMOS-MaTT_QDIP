@@ -69,6 +69,10 @@ function makeFixture() {
   writeJson(path.join(root, 'opencode/config/opencode/tui.json'), {
     plugin: ['../../../plugins/opencode-quota/dist/tui.tsx', '../../../plugins/oh-my-opencode-slim/tui2.js'],
   });
+  // cli.json 用复数键 plugins（与 tui.json 的 plugin 键区分）
+  writeJson(path.join(root, 'opencode/config/opencode/cli.json'), {
+    plugins: ['../../../plugins/opencode-quota/dist/tui.tsx', '../../../plugins/oh-my-opencode-slim/tui2.js'],
+  });
   write(path.join(root, 'opencode/config/opencode/preferences.md'), '# prefs\n');
   write(path.join(root, 'opencode/config/opencode/local/说明.txt'), '本地修改区\n');
   mkdir(path.join(root, 'opencode/auth'));
@@ -76,6 +80,10 @@ function makeFixture() {
   // setup
   write(path.join(root, 'setup/guide-server.js'), '// guide\n');
   write(path.join(root, 'setup/config-writer.js'), '// config writer\n');
+
+  // 教学站点（tutorial/missing 规则要求入口文件 + assets 目录）
+  mkdir(path.join(root, 'setup/tutorial/assets'));
+  write(path.join(root, 'setup/tutorial/index.html'), '<!doctype html>\n');
 
   // 文档
   write(path.join(root, '验证清单.md'), 'x\n');
@@ -231,6 +239,40 @@ test('plugin/unresolved：以 . 开头的插件路径不存在恰好一条', () 
   });
   const v = assertSingle(run(fx), 'plugin/unresolved');
   assert.strictEqual(v.path, 'opencode/config/opencode/opencode.json');
+});
+
+test('tutorial/missing：缺教学入口文件恰好一条', () => {
+  const fx = makeFixture();
+  rm(path.join(fx.root, 'setup/tutorial/index.html'));
+  const v = assertSingle(run(fx), 'tutorial/missing');
+  assert.strictEqual(v.path, 'setup/tutorial/index.html');
+});
+
+test('tutorial/missing：缺 assets 目录恰好一条', () => {
+  const fx = makeFixture();
+  rm(path.join(fx.root, 'setup/tutorial/assets'));
+  const v = assertSingle(run(fx), 'tutorial/missing');
+  assert.strictEqual(v.path, 'setup/tutorial/assets');
+});
+
+test('plugin/unresolved：cli.json 的 plugins 键被检查（相对路径缺失恰好一条）', () => {
+  const fx = makeFixture();
+  writeJson(path.join(fx.root, 'opencode/config/opencode/cli.json'), {
+    plugins: ['../../../plugins/missing-plugin'],
+  });
+  const v = assertSingle(run(fx), 'plugin/unresolved');
+  assert.strictEqual(v.path, 'opencode/config/opencode/cli.json');
+});
+
+test('plugin/unresolved：cli.json 引用的相对目标被删除 → 恰好一条', () => {
+  const fx = makeFixture();
+  // 让 tui.json 不再引用同一文件，把违规隔离到 cli.json
+  writeJson(path.join(fx.root, 'opencode/config/opencode/tui.json'), {
+    plugin: ['../../../plugins/oh-my-opencode-slim/tui2.js'],
+  });
+  rm(path.join(fx.root, 'plugins/opencode-quota/dist/tui.tsx'));
+  const v = assertSingle(run(fx), 'plugin/unresolved');
+  assert.strictEqual(v.path, 'opencode/config/opencode/cli.json');
 });
 
 test('config/unparseable：JSON 语法错误恰好一条', () => {

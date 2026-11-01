@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>排障速查表 · 独立驾驭 OpenCode 体系</title>
+<!-- 参考文档 = body 加 reference 类：更密、更宽、打印优先。
+     建议 A4 横向打印，或浏览器打印时选“横向”。 -->
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body class="reference">
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">REFERENCE 06</p>
+    <h1>排障速查表 <span class="muted">v1.0</span></h1>
+    <p class="lesson-meta">
+      打印版 · 建议 A4 横向 <span class="sep">|</span>
+      配套课程：<a href="../lessons/0006-排障与维护.html">第 6 课 · 排障与维护</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <button class="no-print tag" style="cursor:pointer"
+              onclick="window.print()">打印本页</button>
+    </p>
+  </header>
+
+  <!-- ==================== A. 症状分诊表（全宽） ==================== -->
+  <section>
+    <h2><span class="secno">A</span>症状分诊表</h2>
+    <p class="small muted">按“哪一层”归类，配合第 5 课地图使用。</p>
+    <div class="table-scroll">
+      <table class="dense">
+        <thead>
+          <tr><th>症状</th><th>可能原因</th><th>处理</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>某个代理报“配额耗尽 / 额度炸了”</td>
+            <td>该代理所用服务商的额度用尽</td>
+            <td>在预设配置里把它换到别的模型；新会话生效（案例见 D）</td>
+          </tr>
+          <tr>
+            <td>改了配置，毫无变化</td>
+            <td>改动尚未被读取</td>
+            <td>开新会话或重载；还不行再检查文件路径对不对</td>
+          </tr>
+          <tr>
+            <td>版本升级后，配置突然失效</td>
+            <td>配置键名随版本变化（踩过 <code>providers</code> → <code>provider</code>）</td>
+            <td>对照官方文档当前键名，改过来</td>
+          </tr>
+          <tr>
+            <td>后台任务迟迟没动静</td>
+            <td>任务卡住或服务商无响应</td>
+            <td>查看任务状态；卡死就取消重来——不要无限等</td>
+          </tr>
+          <tr>
+            <td>连不上模型 / 频繁超时</td>
+            <td>网络或代理问题</td>
+            <td>先查连通性（换网络、查代理），再怀疑配置</td>
+          </tr>
+          <tr>
+            <td>找不到某个设置 / 文件</td>
+            <td>没记住地图</td>
+            <td>翻第 5 课的文件地图，按层定位</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="two-col">
+
+    <!-- ==================== B. 安全三原则 ==================== -->
+    <section>
+      <h2><span class="secno">B</span>改配置三原则</h2>
+      <aside class="callout callout-tip">
+        <p class="box-label">1. 先备份</p>
+        <p>动任何配置文件之前，复制一份带日期后缀的备份（<code>*.bak</code>）——出事能一秒回滚，这是最便宜的安全网。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">2. 最小修改</p>
+        <p>一次只动一处。改两处，出了问题分不清是谁的锅。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">3. 新会话生效</p>
+        <p>配置改动在<b>新会话或重载</b>后才被读取。改完没反应，先别慌——开个新会话试试。</p>
+      </aside>
+      <p class="small muted">省心做法：在对话里说“帮我改配置”，系统会走配置车道（<code>customize-opencode</code>）——自动备份、窄修改、提醒你生效条件。</p>
+    </section>
+
+    <!-- ==================== C. 三层定位法 ==================== -->
+    <section>
+      <h2><span class="secno">C</span>三层定位法</h2>
+      <p class="small muted">遇到没见过的症状，按这个顺序想，不要瞎试：</p>
+      <div class="terminal">
+        <div class="terminal-title">定位顺序</div>
+        <pre><code><span class="o">1 哪一层？</span>   <span class="c"># 规则（宪法层）/ 技能没触发（技能层）</span>
+              <span class="c"># 代理·模型（编排层）/ 终端·会话（本体层）</span>
+<span class="o">2 哪个文件？</span>  <span class="c"># 到第 5 课文件地图里找对应那一行</span>
+<span class="o">3 最小修改</span>   <span class="c"># 改一处 → 开新会话 → 看症状是否消失</span>
+              <span class="c"># 没消失就回滚备份，换一个假设</span></code></pre>
+      </div>
+      <aside class="callout callout-warning">
+        <p class="box-label">别瞎试</p>
+        <p>一次改多处、不回滚、靠重装——都只会制造新问题。</p>
+      </aside>
+    </section>
+
+    <!-- ==================== D. 配额事件要点 ==================== -->
+    <section>
+      <h2><span class="secno">D</span>配额事件要点</h2>
+      <p class="small muted">2026-09-16 真实案例（派给 designer 的任务卡死）的四步复盘：</p>
+      <div class="terminal">
+        <div class="terminal-title">一次真实的配额事件</div>
+        <pre><code><span class="o">症状</span>  designer 任务卡死不动（等了几分钟没产出）
+<span class="o">定位</span>  不是任务本身——该代理服务商额度耗尽（配额层）
+<span class="o">处理</span>  备份配置 → 换 designer 的模型 → 清掉卡死任务 → 继续
+<span class="o">收尾</span>  核对已完成产出（别浪费）→ 记录到工作笔记</code></pre>
+      </div>
+      <aside class="callout callout-tip">
+        <p class="box-label">三条教训</p>
+        <p>①<b>配额按服务商算</b>——一个代理的额度影响所有用它的任务；②<b>备份是安全网</b>——换模型前先留退路；③<b>换模型不用重装</b>——一行配置的事。</p>
+      </aside>
+    </section>
+
+  </div><!-- /two-col -->
+
+  <p class="source">
+    <span class="box-label">SOURCE</span>
+    本速查表整理自第 6 课《排障与维护》、2026-09-16 配额事件处理记录（工作笔记）与 <code>preferences.md</code>（配置车道定义）；
+    配置键名与行为以 <a href="https://opencode.ai/docs/config">opencode.ai/docs/config</a> 为准。
+    <span class="muted">发现过时内容请报告导师，Vault-Tec 将签发修订令。</span>
+  </p>
+
+</main>
+</body>
+</html>

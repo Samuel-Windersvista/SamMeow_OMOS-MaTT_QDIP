@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会话边界速查表 · 独立驾驭 OpenCode 体系</title>
+<!-- 参考文档 = body 加 reference 类：更密、更宽、打印优先。
+     建议 A4 横向打印，或浏览器打印时选“横向”。 -->
+<link rel="stylesheet" href="../assets/lesson.css">
+</head>
+<body class="reference">
+<main class="lesson">
+
+  <header class="lesson-header">
+    <p class="kicker">REFERENCE 02</p>
+    <h1>会话边界速查表 <span class="muted">v1.0</span></h1>
+    <p class="lesson-meta">
+      打印版 · 建议 A4 横向 <span class="sep">|</span>
+      配套课程：<a href="../lessons/0002-会话边界.html">第 2 课 · 会话边界</a> <span class="sep">|</span>
+      更新于 2026-09 <span class="sep">|</span>
+      适用版本：QDIP 0.6.0（环境快照 2026-09-30）
+      <button class="no-print tag" style="cursor:pointer"
+              onclick="window.print()">打印本页</button>
+    </p>
+  </header>
+
+  <!-- ==================== A. 决策梯（全宽） ==================== -->
+  <section>
+    <h2><span class="secno">A</span>五种换台方式（按序选第一项合适的）</h2>
+    <div class="table-scroll">
+      <table class="dense">
+        <thead>
+          <tr><th>方式</th><th>何时选它</th><th>代价</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>1. continue</b></td>
+            <td>会话仍是第一手来源（阶段未结束、活没干完）</td>
+            <td>无</td>
+            <td>不动</td>
+          </tr>
+          <tr>
+            <td><b>2. clear</b></td>
+            <td>到了阶段边界，且该落盘的都落盘了</td>
+            <td>丢掉未落盘的一切</td>
+            <td><code>/new</code>（别名 <code>/clear</code>）</td>
+          </tr>
+          <tr>
+            <td><b>3. handoff</b></td>
+            <td>仅搬迁：换 harness、换目录、交同事</td>
+            <td>要生成并阅读文档</td>
+            <td><code>/handoff</code> 技能</td>
+          </tr>
+          <tr>
+            <td><b>4. subagent</b></td>
+            <td>范围足够紧、能 AFK 跑</td>
+            <td>需交代清楚任务包</td>
+            <td>丢给子代理后台跑</td>
+          </tr>
+          <tr>
+            <td><b>5. compact</b></td>
+            <td>最后手段：不想丢链条又必须腾空间</td>
+            <td>信息有损</td>
+            <td><code>/compact</code>（别名 <code>/summarize</code>）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="two-col">
+
+    <!-- ==================== B. 阶段节奏 ==================== -->
+    <section>
+      <h2><span class="secno">B</span>阶段节奏（多窗口任务）</h2>
+      <div class="terminal">
+        <div class="terminal-title">边界画在工单之间</div>
+        <pre><code><span class="o">grill-with-docs → to-spec → to-tickets</span>
+<span class="c"># 同一会话，不中断</span>
+<span class="c">──────── 边界：工单已落盘 ────────</span>
+<span class="o">implement 工单 1</span>   <span class="c"># 新会话</span>
+<span class="c">──────── 边界 ────────</span>
+<span class="o">implement 工单 2</span>   <span class="c"># 新会话</span></code></pre>
+      </div>
+      <aside class="callout callout-warning">
+        <p class="box-label">数字底线</p>
+        <p>单会话健康上限约 <b>150K token</b>（smart zone 边界）。到了这个量级，换台是必选项。</p>
+      </aside>
+    </section>
+
+    <!-- ==================== C. 三条铁律 ==================== -->
+    <section>
+      <h2><span class="secno">C</span>三条铁律</h2>
+      <aside class="callout callout-tip">
+        <p class="box-label">落盘先于换台</p>
+        <p>文件是耐久记忆，会话是可抛弃的。spec、工单、笔记写进磁盘，会话才允许死。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">边界只在阶段边缘</p>
+        <p>活干到一半别换台。换台时刻：阶段结束、工单完成、决策拍板。</p>
+      </aside>
+      <aside class="callout callout-tip">
+        <p class="box-label">compact 是最后手段</p>
+        <p>先问能不能 clear（干净重启，零信息损失）；不行才压缩。</p>
+      </aside>
+    </section>
+
+    <!-- ==================== D. 操作速记 ==================== -->
+    <section>
+      <h2><span class="secno">D</span>操作速记</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>操作</th><th>命令</th><th>快捷键</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>开新会话</td><td><code>/new</code>（<code>/clear</code>）</td><td><kbd>ctrl</kbd>+<kbd>x</kbd> <kbd>n</kbd></td></tr>
+          <tr><td>找回 / 切换会话</td><td><code>/sessions</code>（<code>/resume</code>）</td><td><kbd>ctrl</kbd>+<kbd>x</kbd> <kbd>l</kbd></td></tr>
+          <tr><td>压缩当前会话</td><td><code>/compact</code>（<code>/summarize</code>）</td><td><kbd>ctrl</kbd>+<kbd>x</kbd> <kbd>c</kbd></td></tr>
+        </tbody>
+      </table>
+      <p class="small muted">干净重启不等于烧掉记录——旧会话随时可从 <code>/sessions</code> 找回。</p>
+    </section>
+
+    <!-- ==================== E. 常见误判 ==================== -->
+    <section>
+      <h2><span class="secno">E</span>常见误用</h2>
+      <table class="dense">
+        <thead>
+          <tr><th>误用</th><th>后果</th><th>正确做法</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>该换不换</td>
+            <td>AI 健忘、跑偏、变贵</td>
+            <td>到阶段边界就换，别恋战</td>
+          </tr>
+          <tr>
+            <td>不该换乱换</td>
+            <td>线索断裂，背景重讲</td>
+            <td>活干完再换；先落盘再换</td>
+          </tr>
+          <tr>
+            <td>拿 compact 当默认</td>
+            <td>信息有损，细节丢失</td>
+            <td>能 clear 就别 compact</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div><!-- /two-col -->
+
+  <p class="source">
+    <span class="box-label">SOURCE</span>
+    本速查表整理自 <code>preferences.md</code>（会话边界一节）、opencode 官方文档 TUI 页面（2026-09 核实）与配套第 2 课。
+    <span class="muted">发现过时内容请报告导师，Vault-Tec 将签发修订令。</span>
+  </p>
+
+</main>
+</body>
+</html>
